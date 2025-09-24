@@ -1,0 +1,32 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+# Ambiente virtual
+venv/
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.sqlite3
+
+# Configurações locais
+*.env
+.DS_Store
+.idea/
+.vscode/
+
+# Migrations que não queres versionar (se quiseres evitar enviar a BD inicial)
+*/migrations/__pycache__/
+*/migrations/*.py
+
+# Logs
+*.log
+
+# Cache do Django
+*.pot
+*.pyc
+*.mo
+
+# Outros ficheiros temporários
+Thumbs.db
+
+# Ignorar settings local (contém configs da BD, etc.)
+agenciaviagens/settings.py
