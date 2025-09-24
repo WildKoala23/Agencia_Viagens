@@ -1,0 +1,10 @@
+<h1>Lista de Clientes</h1>
+<ul>
+  {% for cliente in clientes %}
+    <li>{{ cliente.nome }} - {{ cliente.email }}</li>
+  {% empty %}
+    <li>Nenhum cliente cadastrado.</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'inserir_cliente' %}">Inserir Cliente</a>
