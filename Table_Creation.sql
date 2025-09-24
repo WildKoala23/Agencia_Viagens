@@ -21,14 +21,6 @@ CREATE TABLE cliente (
     email TEXT UNIQUE
 );
 
-CREATE TABLE feedback (
-    feedback_id INTEGER PRIMARY KEY,
-    data_feedback DATE NOT NULL,
-    avaliacao INTEGER CHECK (avaliacao BETWEEN 1 AND 5),
-    comentario TEXT,
-    cliente_id INTEGER NOT NULL,
-    FOREIGN KEY (cliente_id) REFERENCES cliente(cliente_id)
-);
 
 CREATE TABLE destino (
     destino_id INTEGER PRIMARY KEY,
@@ -54,8 +46,8 @@ CREATE TABLE hotel (
 );
 
 CREATE TABLE pacote (
-    pacote_id SERIAL PRIMARY KEY,
-    preco NUMERIC(10,2) NOT NULL,
+    pacote_id INTEGER PRIMARY KEY,
+    preco MONEY NOT NULL,
     descricao TEXT,
     destino_id INTEGER NOT NULL,
 	voo_id INTEGER NOT NULL,
@@ -63,6 +55,17 @@ CREATE TABLE pacote (
     FOREIGN KEY (destino_id) REFERENCES destino(destino_id),
 	FOREIGN KEY (voo_id) REFERENCES voo(voo_id),
 	FOREIGN KEY (hotel_id) REFERENCES hotel(hotel_id)
+);
+
+CREATE TABLE feedback (
+    feedback_id INTEGER PRIMARY KEY,
+    data_feedback DATE NOT NULL,
+    avaliacao INTEGER CHECK (avaliacao BETWEEN 1 AND 5),
+    comentario TEXT,
+    cliente_id INTEGER NOT NULL,
+	pacote_id INTEGER NOT NULL,
+    FOREIGN KEY (cliente_id) REFERENCES cliente(cliente_id),
+    FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
 );
 
 
@@ -91,9 +94,3 @@ CREATE TABLE fatura (
     pagamento_id INTEGER NOT NULL,
     FOREIGN KEY (pagamento_id) REFERENCES pagamento(pagamento_id)
 );
-
-
-
--- ================================
--- FIM DO SCRIPT
--- ================================
