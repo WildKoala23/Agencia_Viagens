@@ -1,0 +1,17 @@
+<h1>Inserir Cliente</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+</form>
+
+<h2>Lista de Clientes</h2>
+<ul>
+    {% for cliente in clientes %}
+        <li>{{ cliente.nome }} - {{ cliente.email }}</li>
+    {% empty %}
+        <li>Nenhum cliente cadastrado.</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'home' %}">Voltar à Home</a>

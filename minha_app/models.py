@@ -11,10 +11,14 @@ class Cliente(models.Model):
     class Meta:
         managed = False
         db_table = 'cliente'
-
+    
+    def __str__(self):
+        return self.nome
+#-------------------------------------------------------------------------#
 
 class Destino(models.Model):
-    destino_id = models.IntegerField(primary_key=True)
+    destino_id = models.AutoField(primary_key=True)
+    descricao = models.TextField(null=True, blank=True)
     pais = models.TextField()
     cidade = models.TextField()
     descricao = models.TextField(null=True, blank=True)
@@ -23,6 +27,10 @@ class Destino(models.Model):
         managed = False
         db_table = 'destino'
 
+    def __str__(self):
+            return f"{self.cidade}, {self.pais}"
+
+#-------------------------------------------------------------------------#
 
 class Voo(models.Model):
     voo_id = models.AutoField(primary_key=True)
@@ -37,6 +45,9 @@ class Voo(models.Model):
         managed = False
         db_table = 'voo'
 
+    def __str__(self):
+        return f"{self.origem} - {self.data_voo} ({self.hora_partida})"
+#-------------------------------------------------------------------------#
 
 class Hotel(models.Model):
     hotel_id = models.AutoField(primary_key=True)
@@ -47,6 +58,9 @@ class Hotel(models.Model):
         managed = False
         db_table = 'hotel'
 
+    def __str__(self):
+        return self.nome
+#-------------------------------------------------------------------------#
 
 class Pacote(models.Model):
     pacote_id = models.AutoField(primary_key=True)
@@ -60,6 +74,9 @@ class Pacote(models.Model):
         managed = False
         db_table = 'pacote'
 
+    def __str__(self):
+        return f"Pacote {self.destino} - {self.preco}€"
+#-------------------------------------------------------------------------#
 
 class Feedback(models.Model):
     feedback_id = models.AutoField(primary_key=True)
@@ -73,6 +90,9 @@ class Feedback(models.Model):
         managed = False
         db_table = 'feedback'
 
+    def __str__(self):
+        return f"Feedback de {self.cliente} sobre {self.pacote} - {self.avaliacao}/5"
+#-------------------------------------------------------------------------#
 
 class Reserva(models.Model):
     reserva_id = models.AutoField(primary_key=True)
@@ -85,6 +105,9 @@ class Reserva(models.Model):
         managed = False
         db_table = 'reserva'
 
+    def __str__(self):
+        return f"Reserva {self.reserva_id} - {self.cliente.nome} ({self.data_inicio} a {self.data_fim})"
+#-------------------------------------------------------------------------#
 
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)
@@ -95,7 +118,11 @@ class Pagamento(models.Model):
     class Meta:
         managed = False
         db_table = 'pagamento'
+        
+    def __str__(self):
+        return f"Pagamento {self.pagamento_id} - {self.montante}€ em {self.data_pagamento}"
 
+#-------------------------------------------------------------------------#
 
 class Fatura(models.Model):
     fatura_id = models.AutoField(primary_key=True)
@@ -106,3 +133,7 @@ class Fatura(models.Model):
     class Meta:
         managed = False
         db_table = 'fatura'
+
+    def __str__(self):
+        return f"Fatura {self.fatura_id} - {self.valor_total}€ ({self.data_emissao})"
+#-------------------------------------------------------------------------#

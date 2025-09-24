@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Inserir Reserva</title>
+</head>
+<body>
+    <h1>Inserir Reserva</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Reservas</h2>
+    <ul>
+        {% for r in reservas %}
+            <li>
+                {{ r.cliente }} - {{ r.pacote }} <br>
+                {{ r.data_inicio }} até {{ r.data_fim }}
+            </li>
+        {% empty %}
+            <li>Nenhuma reserva cadastrada.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'home' %}">Voltar ao Início</a>
+</body>
+</html>

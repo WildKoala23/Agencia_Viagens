@@ -1,0 +1,18 @@
+<h1>Inserir / Ver Hotéis</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+</form>
+
+<h2>Lista de Hotéis</h2>
+<ul>
+    {% for hotel in hoteis %}
+        <li>{{ hotel.nome }} - {{ hotel.morada }}</li>
+    {% empty %}
+        <li>Nenhum hotel cadastrado.</li>
+    {% endfor %}
+</ul>
+
+<a href="{% url 'home' %}">Voltar à página inicial</a>

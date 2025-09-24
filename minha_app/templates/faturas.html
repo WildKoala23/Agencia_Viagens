@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Inserir Fatura</title>
+</head>
+<body>
+    <h1>Inserir Fatura</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Faturas</h2>
+    <ul>
+        {% for f in faturas %}
+            <li>
+                {{ f.pagamento }} - {{ f.valor_total }}€ em {{ f.data_emissao }}
+            </li>
+        {% empty %}
+            <li>Nenhuma fatura registada.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'home' %}">Voltar ao Início</a>
+</body>
+</html>

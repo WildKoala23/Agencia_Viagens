@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Inserir Pagamento</title>
+</head>
+<body>
+    <h1>Inserir Pagamento</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Pagamentos</h2>
+    <ul>
+        {% for p in pagamentos %}
+            <li>
+                {{ p.reserva }} - {{ p.montante }}€ em {{ p.data_pagamento }}
+            </li>
+        {% empty %}
+            <li>Nenhum pagamento registado.</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'home' %}">Voltar ao Início</a>
+</body>
+</html>

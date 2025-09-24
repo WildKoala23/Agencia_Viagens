@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Inserir Feedback</title>
+</head>
+<body>
+    <h1>Inserir Feedback</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Salvar</button>
+    </form>
+
+    <h2>Lista de Feedbacks</h2>
+    <ul>
+        {% for fb in feedbacks %}
+            <li>
+                {{ fb.data_feedback }} - {{ fb.cliente }} - {{ fb.pacote }} -
+                Avaliação: {{ fb.avaliacao }} ⭐ <br>
+                <em>{{ fb.comentario }}</em>
+            </li>
+        {% empty %}
+            <li>Nenhum feedback cadastrado.</li>
+        {% endfor %}
+    </ul>
+
+        <a href="{% url 'home' %}">Voltar ao Início</a>
+</body>
+</html>

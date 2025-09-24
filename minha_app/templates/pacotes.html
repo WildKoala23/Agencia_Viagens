@@ -1,0 +1,21 @@
+<h1>Inserir Pacote</h1>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+</form>
+
+<h2>Lista de Pacotes</h2>
+<ul>
+  {% for pacote in pacotes %}
+    <li>
+      {{ pacote.descricao }} - {{ pacote.preco }} € <br>
+      Destino: {{ pacote.destino }} <br>
+      Voo: {{ pacote.voo }} <br>
+      Hotel: {{ pacote.hotel }}
+    </li>
+  {% empty %}
+    <li>Nenhum pacote cadastrado.</li>
+  {% endfor %}
+</ul>
+    <a href="{% url 'home' %}">Voltar ao Início</a>
