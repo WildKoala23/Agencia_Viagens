@@ -9,7 +9,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Salvar</button>
+        <button type="submit">Guardar</button>
     </form>
 
     <h2>Lista de Feedbacks</h2>
@@ -21,7 +21,7 @@
                 <em>{{ fb.comentario }}</em>
             </li>
         {% empty %}
-            <li>Nenhum feedback cadastrado.</li>
+            <li>Nenhum feedback.</li>
         {% endfor %}
     </ul>
 

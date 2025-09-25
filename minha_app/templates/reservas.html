@@ -9,7 +9,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Salvar</button>
+        <button type="submit">Guardar</button>
     </form>
 
     <h2>Lista de Reservas</h2>
@@ -20,7 +20,7 @@
                 {{ r.data_inicio }} até {{ r.data_fim }}
             </li>
         {% empty %}
-            <li>Nenhuma reserva cadastrada.</li>
+            <li>Nenhuma reserva.</li>
         {% endfor %}
     </ul>
 

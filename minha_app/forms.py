@@ -4,13 +4,13 @@ from .models import Cliente, Destino, Voo, Hotel,Pacote, Feedback, Reserva, Paga
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nome', 'idade', 'nif', 'morada', 'email']
+        fields = '__all__'
    
    
 class DestinoForm(forms.ModelForm):
     class Meta:
         model = Destino
-        fields = ['pais', 'cidade', 'descricao']
+        fields = '__all__'
 
 class VooForm(forms.ModelForm):
     class Meta:
@@ -51,7 +51,7 @@ class PacoteForm(forms.ModelForm):
 class FeedbackForm(forms.ModelForm):
     class Meta:
         model = Feedback
-        fields = ['data_feedback', 'avaliacao', 'comentario', 'cliente', 'pacote']
+        fields = '__all__'
         labels = {
             'data_feedback': 'Data do Feedback (0000-00-00)',
             'avaliacao': 'Avaliação de 0 a 5',
@@ -63,7 +63,7 @@ class FeedbackForm(forms.ModelForm):
 class ReservaForm(forms.ModelForm):
     class Meta:
         model = Reserva
-        fields = ['data_inicio', 'data_fim', 'cliente', 'pacote']
+        fields = '__all__'
         labels = {
             'data_inicio': 'Data de Início (0000-00-00)',
             'data_fim': 'Data de Fim (0000-00-00)',
@@ -76,7 +76,7 @@ class ReservaForm(forms.ModelForm):
 class PagamentoForm(forms.ModelForm):
     class Meta:
         model = Pagamento
-        fields = ['data_pagamento', 'montante', 'reserva']
+        fields = '__all__'
         labels = {
             'data_pagamento': 'Data do Pagamento(0000-00-00)',
             'montante': 'Montante (€)',
@@ -86,7 +86,7 @@ class PagamentoForm(forms.ModelForm):
 class FaturaForm(forms.ModelForm):
     class Meta:
         model = Fatura
-        fields = ['data_emissao', 'valor_total', 'pagamento']
+        fields = '__all__'
         labels = {
             'data_emissao': 'Data de Emissão(0000-00-00)',
             'valor_total': 'Valor Total (€)',

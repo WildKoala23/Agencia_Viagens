@@ -2,7 +2,7 @@
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Salvar</button>
+    <button type="submit">Guardar</button>
 </form>
 
 <h2>Lista de Pacotes</h2>
@@ -15,7 +15,7 @@
       Hotel: {{ pacote.hotel }}
     </li>
   {% empty %}
-    <li>Nenhum pacote cadastrado.</li>
+    <li>Nenhum pacote.</li>
   {% endfor %}
 </ul>
     <a href="{% url 'home' %}">Voltar ao Início</a>

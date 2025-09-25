@@ -9,7 +9,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Salvar</button>
+        <button type="submit">Guardar</button>
     </form>
 
     <hr>
@@ -26,10 +26,10 @@
                 Porta: {{ voo.porta_embarque }}
             </li>
         {% empty %}
-            <li>Nenhum voo cadastrado.</li>
+            <li>Nenhum voo.</li>
         {% endfor %}
     </ul>
 
-    <a href="{% url 'home' %}">Voltar à Home</a>
+    <a href="{% url 'home' %}">Voltar ao Início</a>
 </body>
 </html>

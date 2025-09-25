@@ -9,7 +9,7 @@
     <form method="post">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Salvar</button>
+        <button type="submit">Guardar</button>
     </form>
 
     <hr>
@@ -19,10 +19,10 @@
         {% for destino in destinos %}
             <li>{{ destino.pais }} - {{ destino.cidade }}{% if destino.descricao %} ({{ destino.descricao }}){% endif %}</li>
         {% empty %}
-            <li>Nenhum destino cadastrado.</li>
+            <li>Nenhum destino.</li>
         {% endfor %}
     </ul>
 
-    <a href="{% url 'home' %}">Voltar à Home</a>
+    <a href="{% url 'home' %}">Voltar ao Início</a>
 </body>
 </html>
