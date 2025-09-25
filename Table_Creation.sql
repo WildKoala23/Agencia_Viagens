@@ -1,6 +1,6 @@
--- ================================
--- CRIAÇÃO DAS TABELAS (corrigidas com IDs auto)
--- ================================
+-- ===================
+-- CRIAÇÃO DAS TABELAS 
+-- ===================
 
 DROP TABLE IF EXISTS fatura CASCADE; 
 DROP TABLE IF EXISTS pagamento CASCADE;
