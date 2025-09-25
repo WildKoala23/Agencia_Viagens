@@ -1,7 +1,7 @@
 from django.db import models
 
 class Cliente(models.Model):
-    cliente_id = models.AutoField(primary_key=True)   # deixa o Postgres gerar
+    cliente_id = models.AutoField(primary_key=True)
     nome = models.TextField()
     idade = models.IntegerField(null=True, blank=True)
     nif = models.IntegerField(unique=True, null=True, blank=True)
@@ -64,7 +64,7 @@ class Hotel(models.Model):
 
 class Pacote(models.Model):
     pacote_id = models.AutoField(primary_key=True)
-    preco = models.DecimalField(max_digits=10, decimal_places=2)  # MONEY → Decimal
+    preco = models.DecimalField(max_digits=10, decimal_places=2) 
     descricao = models.TextField(null=True, blank=True)
     destino = models.ForeignKey(Destino, on_delete=models.CASCADE)
     voo = models.ForeignKey(Voo, on_delete=models.CASCADE)
@@ -112,7 +112,7 @@ class Reserva(models.Model):
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)
     data_pagamento = models.DateField()
-    montante = models.DecimalField(max_digits=10, decimal_places=2)  # MONEY → Decimal
+    montante = models.DecimalField(max_digits=10, decimal_places=2)  
     reserva = models.ForeignKey(Reserva, on_delete=models.CASCADE)
 
     class Meta:
@@ -127,7 +127,7 @@ class Pagamento(models.Model):
 class Fatura(models.Model):
     fatura_id = models.AutoField(primary_key=True)
     data_emissao = models.DateField()
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2)  # MONEY → Decimal
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2)  
     pagamento = models.ForeignKey(Pagamento, on_delete=models.CASCADE)
 
     class Meta:
