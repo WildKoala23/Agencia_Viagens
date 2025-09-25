@@ -29,8 +29,3 @@ __pycache__/
 Thumbs.db
 
 # Ignorar settings local (contém configs da BD, etc.)
-<<<<<<< HEAD
-agenciaviagens/settings.py
-=======
-agenciaviagens/settings.py
->>>>>>> 15226962ad2eee263a30a9e2ed280e1ae38424fb
