@@ -2,7 +2,7 @@
 
 ## Descrição do projecto
 Este projeto visa simular o funcionamento de uma agência de viagens online, permitindo que os utilizadores possam pesquisar, consultar e reservar pacotes turísticos de forma simples e intuitiva. A aplicação oferece uma experiência completa, desde a pesquisa por destino, preço ou avaliação, até à reserva e pagamento seguro dos serviços.
-Os clientes podem criar uma conta, iniciar sessão, pesquisar pacotes, visualizar detalhes completos, efetuar reservas, cancelar viagens e deixar feedback sobre as suas experiências. Já os funcionários e administradores têm acesso a ferramentas de gestão que permitem atualizar pacotes, controlar reservas e gerir as contas dos utilizadores
+Os clientes podem criar uma conta, iniciar sessão, pesquisar pacotes, visualizar detalhes completos, efetuar reservas, cancelar viagens e deixar avaliação sobre as suas experiências. Já os funcionários e administradores têm acesso a ferramentas de gestão que permitem atualizar pacotes, controlar reservas e gerir as contas dos utilizadores
 
 
 #### Miro: 
