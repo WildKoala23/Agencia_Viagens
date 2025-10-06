@@ -6,7 +6,7 @@ Francisco Vitorino 25288\
 Guilherme Pedrinho 25215\
 Rafael Rodrigues 25170\
 Rodrigo Marques 25971\
-Tiago Carvalgo 22598\
+Tiago Carvalgo 22598
 
 ## Descrição do projecto
 Este projeto visa simular o funcionamento de uma agência de viagens online, permitindo que os utilizadores possam pesquisar, consultar e reservar pacotes turísticos de forma simples e intuitiva. A aplicação oferece uma experiência completa, desde a pesquisa por destino, preço ou avaliação, até à reserva e pagamento seguro dos serviços.
