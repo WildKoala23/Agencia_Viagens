@@ -1,8 +1,6 @@
-# Projeto da cadeira Base de Dados 2
+# Projeto da cadeira Base de Dados 2 (GRUPO 21)
 
 ## Elementos no grupo
-
-Grupo 21
 
 Francisco Vitorino 25288\
 Guilherme Pedrinho 25215\
