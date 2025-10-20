@@ -1,17 +1,42 @@
-<h1>Inserir Cliente</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Clientes</title>
+    <link rel="stylesheet" href="{% static 'clientes.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
+        <br>
+        <div class="card">
+            <h1>Inserir Cliente</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Guardar Cliente</button>
+            </form>
+        </div>
 
-<h2>Lista de Clientes</h2>
-<ul>
-    {% for cliente in clientes %}
-        <li>{{ cliente.nome }} - {{ cliente.email }}</li>
-    {% empty %}
-        <li>Nenhum cliente.</li>
-    {% endfor %}
-</ul>
-
-<a href="{% url 'home' %}">Voltar ao Início</a>
+        <div class="card">
+            <h2>Lista de Clientes</h2>
+            <ul>
+                {% for cliente in clientes %}
+                    <li>
+                        <div class="cliente-info">
+                            <span class="cliente-nome">{{ cliente.nome }}</span>
+                            <span class="cliente-email">{{ cliente.email }}</span>
+                        </div>
+                    </li>
+                {% empty %}
+                    <div class="empty-state">
+                        Nenhum cliente registado ainda.
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
