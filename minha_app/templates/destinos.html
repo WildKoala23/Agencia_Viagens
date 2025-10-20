@@ -1,28 +1,44 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Destinos</title>
+    <link rel="stylesheet" href="{% static 'clientes.css' %}">
 </head>
 <body>
-    <h1>Inserir Destino</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
 
-    <hr>
+        <div class="card">
+            <h1>Inserir Destino</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Guardar Destino</button>
+            </form>
+        </div>
 
-    <h2>Lista de Destinos</h2>
-    <ul>
-        {% for destino in destinos %}
-            <li>{{ destino.pais }} - {{ destino.cidade }}{% if destino.descricao %} ({{ destino.descricao }}){% endif %}</li>
-        {% empty %}
-            <li>Nenhum destino.</li>
-        {% endfor %}
-    </ul>
-
-    <a href="{% url 'home' %}">Voltar ao Início</a>
+        <div class="card">
+            <h2>Lista de Destinos</h2>
+            <ul>
+                {% for destino in destinos %}
+                    <li>
+                        <div class="cliente-info">
+                            <span class="cliente-nome">{{ destino.pais }} - {{ destino.cidade }}</span>
+                            {% if destino.descricao %}
+                                <span class="cliente-email">{{ destino.descricao }}</span>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% empty %}
+                    <div class="empty-state">
+                        Nenhum destino registado ainda.
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 </body>
 </html>
