@@ -87,7 +87,6 @@ h2 {
 }
 
 h2::before {
-    content: '📋';
     font-size: 28px;
 }
 
@@ -177,7 +176,6 @@ ul li:hover {
 }
 
 ul li::before {
-    content: '👤';
     font-size: 20px;
 }
 
@@ -189,7 +187,6 @@ ul li::before {
 }
 
 .empty-state::before {
-    content: '📭';
     display: block;
     font-size: 48px;
     margin-bottom: 15px;
