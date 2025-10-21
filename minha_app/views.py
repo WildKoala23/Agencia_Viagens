@@ -51,6 +51,9 @@ def voos(request):
         form = VooForm()
 
     voos = Voo.objects.all()
+
+    print(voos)
+
     return render(request, 'voos.html', {
         'form': form,
         'voos': voos

@@ -25,17 +25,18 @@
             <h2>Lista de Voos</h2>
             <ul>
                 {% for voo in voos %}
+                <p>{{voo}}</p>
                     <li>
                         <div class="cliente-info">
                             <span class="cliente-nome">
                                 Voo {{ voo.voo_id }} — {{ voo.origem }}
                             </span>
                             <span class="cliente-email">
-                                Data: {{ voo.data_voo }} | 
-                                Partida: {{ voo.hora_partida }} | 
+                                Data: {{ voo.data_saida }} | 
+                                Partida: {{ voo.data_chegada }} | 
                                 Chegada: {{ voo.hora_chegada }} | 
-                                Duração: {{ voo.duracao }} | 
-                                Porta: {{ voo.porta_embarque }}
+                                Duração: {{ voo.origem }} | 
+                                Porta: {{ voo.destino }}
                             </span>
 
                             <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
