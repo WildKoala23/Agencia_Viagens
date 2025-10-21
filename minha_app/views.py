@@ -104,7 +104,12 @@ def pacotes(request):
     else:
         form = PacoteForm()
 
-    pacotes = Pacote.objects.all()
+    # Buscar pacotes sem select_related para evitar problemas de cursor
+    pacotes = list(Pacote.objects.all().values(
+        'pacote_id', 'nome', 'descricao_item', 
+        'data_inicio', 'data_fim', 'preco_total', 'estado'
+    ))
+    
     return render(request, 'pacotes.html', {
         'form': form,
         'pacotes': pacotes
