@@ -1,8 +1,6 @@
-from django.shortcuts import render, redirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Cliente, Destino, Voo, Hotel, Pacote, Feedback,Reserva, Pagamento, Fatura
 from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, ReservaForm, PagamentoForm, FaturaForm
-
 
 #---------------------------------------------------------------#
 def home(request):
@@ -24,6 +22,13 @@ def clientes(request):
         'clientes': clientes
     })
 
+def eliminar_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, user_id=cliente_id)
+    if request.method == 'POST':
+        cliente.delete()
+        return redirect('clientes')
+    return redirect('clientes')
+
 #---------------------------------------------------------------#
 
 def destinos(request):
@@ -40,7 +45,16 @@ def destinos(request):
         'form': form,
         'destinos': destinos
     })
+
+def eliminar_destino(request, destino_id):
+    destino = get_object_or_404(Destino, destino_id=destino_id)
+    if request.method == 'POST':
+        destino.delete()
+        return redirect('destinos')
+    return redirect('destinos')
+
 #---------------------------------------------------------------#
+
 def voos(request):
     if request.method == "POST":
         form = VooForm(request.POST)
@@ -51,17 +65,21 @@ def voos(request):
         form = VooForm()
 
     voos = Voo.objects.all()
-
-    print(voos)
-
     return render(request, 'voos.html', {
         'form': form,
         'voos': voos
     })
 
+def eliminar_voo(request, voo_id):
+    voo = get_object_or_404(Voo, voo_id=voo_id)
+    if request.method == 'POST':
+        voo.delete()
+        return redirect('voos')
+    return redirect('voos')
+
 #---------------------------------------------------------------#
 
-def hotel(request):
+def hotéis(request):
     if request.method == "POST":
         form = HotelForm(request.POST)
         if form.is_valid():
@@ -157,22 +175,4 @@ def faturas(request):
         'form': form,
         'faturas': faturas
     })
-
-#-----------------Eliminar----------------------------------------------#
-
-def eliminar_destino(request, destino_id):
-    destino = get_object_or_404(Destino, pk=destino_id)
-    destino.delete()
-    return redirect('destinos')
-
-def eliminar_cliente(request, cliente_id):
-    cliente = get_object_or_404(Cliente, pk=cliente_id)
-    cliente.delete()
-    return redirect('clientes')
-
-def eliminar_voos(request, voo_id):
-    voo = get_object_or_404(Voo, pk=voo_id)
-    voo.delete()
-    return redirect('voo')
-#---------------------------------------------------------------#
 
