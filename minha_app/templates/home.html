@@ -1,22 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <title>Home - Agência de Viagens</title>
-</head>
-<body>
-    <h1>Agência de Viagens</h1>
-    <ul>
-        <li><a href="{% url 'clientes' %}">Inserir / Ver Clientes</a></li>
-        <li><a href="{% url 'destinos' %}">Inserir / Ver Destinos</a></li>
-        <li><a href="{% url 'voos' %}">Inserir / Ver Voos</a></li>
-        <li><a href="{% url 'hoteis' %}">Inserir / Ver Hotéis</a></li>
-        <li><a href="{% url 'pacotes' %}">Inserir / Ver Pacotes</a></li>
-        <li><a href="{% url 'feedbacks' %}">Inserir / Ver Feedbacks</a></li>
-        <li><a href="{% url 'reservas' %}">Inserir / Ver Reservas</a></li>
-        <li><a href="{% url 'pagamentos' %}">Inserir / Ver Pagamentos</a></li>
-        <li><a href="{% url 'faturas' %}">Inserir / Ver Faturas</a></li>
+{% extends "base.html" %} {% block title %} Home Page {% endblock %}
+{% block content %}
 
-    </ul>
-</body>
-</html>
+{% endblock %}
+
