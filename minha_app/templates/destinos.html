@@ -22,22 +22,26 @@
 
         <div class="card">
             <h2>Lista de Destinos</h2>
-            <ul>
-                {% for destino in destinos %}
-                    <li>
-                        <div class="cliente-info">
-                            <span class="cliente-nome">{{ destino.pais }} - {{ destino.cidade }}</span>
-                            {% if destino.descricao %}
-                                <span class="cliente-email">{{ destino.descricao }}</span>
-                            {% endif %}
-                        </div>
-                    </li>
-                {% empty %}
-                    <div class="empty-state">
-                        Nenhum destino registado ainda.
-                    </div>
-                {% endfor %}
-            </ul>
+           <ul>
+    {% for destino in destinos %}
+        <li>
+            <div class="cliente-info">
+                <span class="cliente-nome">{{ destino.pais }} - {{ destino.cidade }}</span>
+                {% if destino.descricao %}
+                    <span class="cliente-email">{{ destino.descricao }}</span>
+                {% endif %}
+            <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn">Eliminar</button>
+                </form>
+            </div>
+        </li>
+    {% empty %}
+        <div class="empty-state">
+            Nenhum destino registado ainda.
+        </div>
+    {% endfor %}
+</ul>
         </div>
     </div>
 </body>

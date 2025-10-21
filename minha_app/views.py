@@ -39,7 +39,6 @@ def destinos(request):
         'destinos': destinos
     })
 #---------------------------------------------------------------#
-
 def voos(request):
     if request.method == "POST":
         form = VooForm(request.POST)
@@ -153,4 +152,18 @@ def faturas(request):
         'form': form,
         'faturas': faturas
     })
+
+#-----------------Eliminar----------------------------------------------#
+from django.shortcuts import get_object_or_404
+
+def eliminar_destino(request, destino_id):
+    destino = get_object_or_404(Destino, pk=destino_id)
+    destino.delete()
+    return redirect('destinos')
+
+def eliminar_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, pk=cliente_id)
+    cliente.delete()
+    return redirect('clientes')
+#---------------------------------------------------------------#
 
