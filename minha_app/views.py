@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Cliente, Destino, Voo, Hotel, Pacote, Feedback,Reserva, Pagamento, Fatura
+from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Reserva, Pagamento, Factura
 from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, ReservaForm, PagamentoForm, FaturaForm
 
 #---------------------------------------------------------------#
@@ -16,14 +16,14 @@ def clientes(request):
     else:
         form = ClienteForm()
 
-    clientes = Cliente.objects.all()
+    clientes = Utilizador.objects.all()
     return render(request, 'clientes.html', {
         'form': form,
         'clientes': clientes
     })
 
 def eliminar_cliente(request, cliente_id):
-    cliente = get_object_or_404(Cliente, user_id=cliente_id)
+    cliente = get_object_or_404(Utilizador, user_id=cliente_id)
     if request.method == 'POST':
         cliente.delete()
         return redirect('clientes')
@@ -175,7 +175,7 @@ def faturas(request):
     else:
         form = FaturaForm()
 
-    faturas = Fatura.objects.all()
+    faturas = Factura.objects.all()
     return render(request, 'faturas.html', {
         'form': form,
         'faturas': faturas
