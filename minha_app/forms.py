@@ -1,9 +1,9 @@
 from django import forms
-from .models import Cliente, Destino, Voo, Hotel, Pacote, Feedback, Reserva, Pagamento, Fatura
+from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Reserva, Pagamento, Factura
 
 class ClienteForm(forms.ModelForm):
     class Meta:
-        model = Cliente
+        model = Utilizador
         fields = '__all__'
    
    
@@ -103,7 +103,7 @@ class PagamentoForm(forms.ModelForm):
 
 class FaturaForm(forms.ModelForm):
     class Meta:
-        model = Fatura
+        model = Factura
         fields = '__all__'
         labels = {
             'compra_id': 'ID da Compra',
