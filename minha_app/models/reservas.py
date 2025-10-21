@@ -1,6 +1,6 @@
 from django.db import models
-from .clients import Cliente
-from .package import Pacote
+from .clientes import Cliente
+from .pacote import Pacote
 
 
 class Reserva(models.Model):

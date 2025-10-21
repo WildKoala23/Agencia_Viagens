@@ -1,5 +1,5 @@
 from django.db import models
-from .payment import Pagamento
+from .pagamento import Pagamento
 
 class Fatura(models.Model):
     fatura_id = models.AutoField(primary_key=True)

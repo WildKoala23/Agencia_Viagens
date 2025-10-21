@@ -1,6 +1,6 @@
 from django.db import models
-from .destination import Destino
-from .flights import Voo
+from .destino import Destino
+from .voos import Voo
 from .hotel import Hotel
 
 class Pacote(models.Model):

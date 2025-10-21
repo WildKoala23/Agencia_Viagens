@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
 from .models import Cliente, Destino, Voo, Hotel, Pacote, Feedback,Reserva, Pagamento, Fatura
 from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, ReservaForm, PagamentoForm, FaturaForm
+
 
 #---------------------------------------------------------------#
 def home(request):
@@ -56,7 +58,7 @@ def voos(request):
 
 #---------------------------------------------------------------#
 
-def hotéis(request):
+def hotel(request):
     if request.method == "POST":
         form = HotelForm(request.POST)
         if form.is_valid():
@@ -154,7 +156,6 @@ def faturas(request):
     })
 
 #-----------------Eliminar----------------------------------------------#
-from django.shortcuts import get_object_or_404
 
 def eliminar_destino(request, destino_id):
     destino = get_object_or_404(Destino, pk=destino_id)
@@ -165,5 +166,10 @@ def eliminar_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, pk=cliente_id)
     cliente.delete()
     return redirect('clientes')
+
+def eliminar_voos(request, voo_id):
+    voo = get_object_or_404(Voo, pk=voo_id)
+    voo.delete()
+    return redirect('voo')
 #---------------------------------------------------------------#
 

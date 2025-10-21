@@ -1,5 +1,5 @@
 from django.db import models
-from .reservation import Reserva
+from .reservas import Reserva
 
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)
