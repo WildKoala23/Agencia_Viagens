@@ -26,10 +26,7 @@
     {% for destino in destinos %}
         <li>
             <div class="cliente-info">
-                <span class="cliente-nome">{{ destino.pais }} - {{ destino.cidade }}</span>
-                {% if destino.descricao %}
-                    <span class="cliente-email">{{ destino.descricao }}</span>
-                {% endif %}
+                <span class="cliente-nome">{{ destino.pais }}</span>
             <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
                     {% csrf_token %}
                     <button type="submit" class="delete-btn">Eliminar</button>
