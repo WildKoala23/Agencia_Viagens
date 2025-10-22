@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Reserva, Pagamento, Factura
-from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, ReservaForm, PagamentoForm, FaturaForm
+from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Pagamento, Factura
+from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, PagamentoForm, FaturaForm
 
 #---------------------------------------------------------------#
 def home(request):
@@ -132,22 +132,6 @@ def feedbacks(request):
         'feedbacks': feedbacks
     })
 
-#---------------------------------------------------------------#
-
-def reservas(request):
-    if request.method == "POST":
-        form = ReservaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('reservas')
-    else:
-        form = ReservaForm()
-
-    reservas = Reserva.objects.all()
-    return render(request, 'reservas.html', {
-        'form': form,
-        'reservas': reservas
-    })
 #---------------------------------------------------------------#
 
 def pagamentos(request):

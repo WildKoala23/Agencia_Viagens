@@ -35,7 +35,7 @@ class PacoteDestino(models.Model):
     class Meta:
         managed = False
         db_table = 'pacote_destino'
-        unique_together = (('pacote', 'destino'),)  # Composite primary key
+        unique_together = (('pacote_id', 'destino_id'),)  # Composite primary key
        
     def __str__(self):
         return f"Pacote {self.pacote.pacote_id} -> Destino {self.destino.nome}"

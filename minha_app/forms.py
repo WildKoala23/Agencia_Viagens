@@ -1,5 +1,5 @@
 from django import forms
-from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Reserva, Pagamento, Factura
+from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Pagamento, Factura
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -75,19 +75,7 @@ class FeedbackForm(forms.ModelForm):
             'comentario': 'Comentário',
             'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
         }
-
-class ReservaForm(forms.ModelForm):
-    class Meta:
-        model = Reserva
-        fields = '__all__'
-        labels = {
-            'data_inicio': 'Data de Início (0000-00-00)',
-            'data_fim': 'Data de Fim (0000-00-00)',
-            'cliente': 'Cliente',
-            'pacote': 'Pacote',
-        }
-
-        
+       
 
 class PagamentoForm(forms.ModelForm):
     class Meta:
