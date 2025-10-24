@@ -3,13 +3,15 @@
 
 {% block content %}
 
-{% include "carousel.html" with slides=slides carousel_id="carouselHome" height="600px" %}
+{% include "components/carousel.html" with slides=slides carousel_id="carouselHome" height="600px" %}
 
-{% include "search.html" %}
+{% include "components/search.html" %}
 
 <div class="mt-5 text-center">
     <h2 class="fw-bold">Planeie as suas próximas férias!</h2>
     <p class="text-muted">Escolha o destino perfeito e comece já a sonhar</p>
 </div>
+
+{% include "components/footer.html" %}
 
 {% endblock %}
