@@ -1,18 +1,20 @@
-<h1>Inserir / Ver Hotéis</h1>
+{% extends 'base.html' %}
+{% block content %}
+<h1>Hotéis Disponíveis</h1>
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+{% if hoteis %}
+    <ul>
+        {% for hotel in hoteis %}
+            <li>
+                <strong>{{ hotel.nome }}</strong><br>
+                {{ hotel.endereco }}<br>
+                {{ hotel.preco_diario }} € / noite<br>
+                <span>{{ hotel.descricao_item }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>Não há hotéis cadastrados.</p>
+{% endif %}
 
-<h2>Lista de Hotéis</h2>
-<ul>
-    {% for hotel in hoteis %}
-        <li>{{ hotel.nome }} - {{ hotel.morada }}</li>
-    {% empty %}
-        <li>Nenhum hotel.</li>
-    {% endfor %}
-</ul>
-
-<a href="{% url 'home' %}">Voltar ao Início</a>
+{% endblock %}

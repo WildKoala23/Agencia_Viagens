@@ -7,4 +7,5 @@ urlpatterns = [
     path("pacotes", views.pacotes, name="pacotes"),
     path("voos", views.voos, name="voos"),
     path("eliminar/<int:voo_id>/", views.eliminar_voo, name="eliminar_voo"),
+    path("hoteis/", views.hotel, name="hoteis"),
 ]
