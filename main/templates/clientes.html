@@ -24,17 +24,22 @@
             <h2>Lista de Clientes</h2>
             <ul>
                 {% for cliente in clientes %}
-                    <li>
-                        <div class="cliente-info">
-                            <span class="cliente-nome">{{ cliente.nome }}</span>
-                            <span class="cliente-email">{{ cliente.email }}</span>
-                        </div>
-                    </li>
-                {% empty %}
-                    <div class="empty-state">
-                        Nenhum cliente registado ainda.
-                    </div>
-                {% endfor %}
+    <li>
+        <div class="cliente-info">
+            <span class="cliente-nome">{{ cliente.nome }}</span>
+            <span class="cliente-email">{{ cliente.email }}</span>
+
+            <form action="{% url 'eliminar_cliente' cliente.cliente_id %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">Eliminar</button>
+            </form>
+        </div>
+    </li>
+{% empty %}
+    <div class="empty-state">
+        Nenhum cliente registado ainda.
+    </div>
+{% endfor %}
             </ul>
         </div>
     </div>

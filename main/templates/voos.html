@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Voos</title>
+    <link rel="stylesheet" href="{% static 'clientes.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
+        <br>
+
+        <div class="card">
+            <h1>Inserir Voo</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Guardar Voo</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Lista de Voos</h2>
+            <ul>
+                {% for voo in voos %}
+                <p>{{voo}}</p>
+                    <li>
+                        <div class="cliente-info">
+                            <span class="cliente-nome">
+                                Voo {{ voo.voo_id }} — {{ voo.origem }}
+                            </span>
+                            <span class="cliente-email">
+                                Data: {{ voo.data_saida }} | 
+                                Partida: {{ voo.data_chegada }} | 
+                                Chegada: {{ voo.hora_chegada }} | 
+                                Duração: {{ voo.origem }} | 
+                                Porta: {{ voo.destino }}
+                            </span>
+
+                            <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-btn">Eliminar</button>
+                            </form>
+                        </div>
+                    </li>
+                {% empty %}
+                    <div class="empty-state">
+                        Nenhum voo registado ainda.
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

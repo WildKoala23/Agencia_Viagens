@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Destinos</title>
+    <link rel="stylesheet" href="{% static 'clientes.css' %}">
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
+
+        <div class="card">
+            <h1>Inserir Destino</h1>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Guardar Destino</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Lista de Destinos</h2>
+           <ul>
+    {% for destino in destinos %}
+        <li>
+            <div class="cliente-info">
+                <span class="cliente-nome">{{ destino.pais }}</span>
+            <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-btn">Eliminar</button>
+                </form>
+            </div>
+        </li>
+    {% empty %}
+        <div class="empty-state">
+            Nenhum destino registado ainda.
+        </div>
+    {% endfor %}
+</ul>
+        </div>
+    </div>
+</body>
+</html>

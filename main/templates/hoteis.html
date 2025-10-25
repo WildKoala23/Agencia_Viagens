@@ -1,0 +1,34 @@
+<h1>Gestão de Hotéis</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Adicionar Hotel</button>
+</form>
+
+<hr>
+
+<h2>Lista de Hotéis</h2>
+<table border="1">
+    <tr>
+        <th>Nome</th>
+        <th>Descrição</th>
+        <th>Preço</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for hotel in hoteis %}
+    <tr>
+        <td>{{ hotel.nome }}</td>
+        <td>{{ hotel.descricao_item }}</td>
+        <td>{{ hotel.preco_diario }} €</td>
+        <td>
+            <form method="POST" action="{% url 'eliminar_hotel' hotel.hotel_id %}">
+                {% csrf_token %}
+                <button type="submit">Remover</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
