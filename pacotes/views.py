@@ -65,6 +65,14 @@ def hotel(request):
         'hoteis': hoteis
     })
 
+def eliminar_hotel(request, hotel_id):
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    if request.method == 'POST':
+        hotel.delete()
+        return redirect('hoteis')
+    return redirect('hoteis')
+
+
 def pacotes(request):
     if request.method == "POST":
         form = PacoteForm(request.POST)

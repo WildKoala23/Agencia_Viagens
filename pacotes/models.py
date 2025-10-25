@@ -41,7 +41,7 @@ class Voo(models.Model):
     
     def __str__(self):
         return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
-    
+
 class Destino(models.Model):
     destino_id = models.AutoField(primary_key=True)
     pais = models.TextField()
@@ -52,9 +52,8 @@ class Destino(models.Model):
         db_table = 'destino'
 
     def __str__(self):
-            return f"{self.cidade}, {self.pais}"
-    
-      
+        return f"{self.nome}, {self.pais}"
+
 class Hotel(models.Model):
     hotel_id = models.AutoField(primary_key=True)
     destino = models.ForeignKey(

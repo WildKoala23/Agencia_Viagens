@@ -1,20 +1,34 @@
-{% extends 'base.html' %}
-{% block content %}
-<h1>Hotéis Disponíveis</h1>
+<h1>Gestão de Hotéis</h1>
 
-{% if hoteis %}
-    <ul>
-        {% for hotel in hoteis %}
-            <li>
-                <strong>{{ hotel.nome }}</strong><br>
-                {{ hotel.endereco }}<br>
-                {{ hotel.preco_diario }} € / noite<br>
-                <span>{{ hotel.descricao_item }}</span>
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>Não há hotéis cadastrados.</p>
-{% endif %}
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Adicionar Hotel</button>
+</form>
 
-{% endblock %}
+<hr>
+
+<h2>Lista de Hotéis</h2>
+<table border="1">
+    <tr>
+        <th>Nome</th>
+        <th>Descrição</th>
+        <th>Preço</th>
+        <th>Ações</th>
+    </tr>
+
+    {% for hotel in hoteis %}
+    <tr>
+        <td>{{ hotel.nome }}</td>
+        <td>{{ hotel.descricao_item }}</td>
+        <td>{{ hotel.preco_diario }} €</td>
+        <td>
+            <form method="POST" action="{% url 'eliminar_hotel' hotel.hotel_id %}">
+                {% csrf_token %}
+                <button type="submit">Remover</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
