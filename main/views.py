@@ -1,6 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Pagamento, Factura
-from .forms import ClienteForm, DestinoForm,VooForm,HotelForm, PacoteForm, FeedbackForm, PagamentoForm, FaturaForm
+from pacotes.models import *
+from pacotes.forms import *
+from pagamentos.models import *
+from pagamentos.models import *
+from users.models import *
+from users.models import *
 
 #---------------------------------------------------------------#
 def home(request):

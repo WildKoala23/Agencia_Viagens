@@ -1,12 +1,6 @@
 from django import forms
-from .models import Utilizador, Destino, Voo, Hotel, Pacote, Feedback, Pagamento, Factura
+from .models import Destino, Voo, Hotel, Pacote
 
-class ClienteForm(forms.ModelForm):
-    class Meta:
-        model = Utilizador
-        fields = '__all__'
-   
-   
 class DestinoForm(forms.ModelForm):
     class Meta:
         model = Destino
@@ -27,7 +21,6 @@ class VooForm(forms.ModelForm):
             'preco': 'Preço (€)',
         }
 
-
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
@@ -36,7 +29,6 @@ class HotelForm(forms.ModelForm):
             'nome': 'Nome do Hotel',
             'endereco': 'Endereço',
         }
-
 
 class PacoteForm(forms.ModelForm):
     fatura_linha_id = forms.IntegerField(label='ID da Linha de Fatura', required=False)
@@ -64,38 +56,3 @@ class PacoteForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
-
-class FeedbackForm(forms.ModelForm):
-    class Meta:
-        model = Feedback
-        fields = '__all__'
-        labels = {
-            'pacote': 'Pacote',
-            'avaliacao': 'Avaliação (1-5)',
-            'comentario': 'Comentário',
-            'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
-        }
-       
-
-class PagamentoForm(forms.ModelForm):
-    class Meta:
-        model = Pagamento
-        fields = '__all__'
-        labels = {
-            'compra_id': 'ID da Compra',
-            'data_pagamento': 'Data do Pagamento (AAAA-MM-DD)',
-            'valor': 'Valor (€)',
-            'estado': 'Estado',
-            'metodo': 'Método de Pagamento',
-        }
-
-class FaturaForm(forms.ModelForm):
-    class Meta:
-        model = Factura
-        fields = '__all__'
-        labels = {
-            'compra_id': 'ID da Compra',
-            'pagamento_id': 'ID do Pagamento',
-            'data_emissao': 'Data/Hora de Emissão',
-            'valor_total': 'Valor Total (€)',
-        }

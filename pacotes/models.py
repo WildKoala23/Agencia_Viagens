@@ -1,0 +1,138 @@
+from django.db import models
+from pagamentos.models import FacturaLinha
+
+
+class Pacote(models.Model):
+    pacote_id = models.AutoField(primary_key=True)
+    fatura_linha = models.ForeignKey(
+        FacturaLinha, 
+        on_delete=models.CASCADE,
+        db_column='fatura_linha_id'
+    )
+    nome = models.TextField()
+    descricao_item = models.TextField()
+    data_inicio = models.DateField()
+    data_fim = models.DateField()
+    preco_total = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.TextField()
+    
+    class Meta:
+        managed = False
+        db_table = 'pacote'
+    
+    def __str__(self):
+        return f"{self.nome} - {self.preco_total}€"
+    
+
+class Voo(models.Model):
+    voo_id = models.AutoField(primary_key=True)
+    destino_id = models.IntegerField()  # Should be FK to Destino
+    companhia = models.TextField()
+    numero_voo = models.IntegerField()
+    data_saida = models.DateField()
+    data_chegada = models.DateField()
+    origem = models.TextField()
+    destino = models.TextField()
+    preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
+    
+    class Meta:
+        managed = False
+        db_table = 'voo'
+    
+    def __str__(self):
+        return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
+    
+class Destino(models.Model):
+    destino_id = models.AutoField(primary_key=True)
+    pais = models.TextField()
+    nome = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'destino'
+
+    def __str__(self):
+            return f"{self.cidade}, {self.pais}"
+    
+      
+class Hotel(models.Model):
+    hotel_id = models.AutoField(primary_key=True)
+    destino = models.ForeignKey(
+        Destino, 
+        on_delete=models.CASCADE,
+        db_column='destino_id'
+    )
+    nome = models.CharField(max_length=200)
+    endereco = models.TextField(null=True, blank=True)
+    preco_diario = models.DecimalField(max_digits=10, decimal_places=2)
+    descricao_item = models.TextField()
+    
+    class Meta:
+        managed = False
+        db_table = 'hotel'
+    
+    def __str__(self):
+        return self.nome
+    
+
+class PacoteDestino(models.Model):
+    destino_id = models.ForeignKey(
+        Destino, 
+        on_delete=models.CASCADE,
+        db_column='destino_id'
+    )
+    pacote_id = models.ForeignKey(
+        Pacote, 
+        on_delete=models.CASCADE,
+        db_column='pacote_id'
+    )
+    
+    class Meta:
+        managed = False
+        db_table = 'pacote_destino'
+        unique_together = (('pacote_id', 'destino_id'),)  # Composite primary key
+       
+    def __str__(self):
+        return f"Pacote {self.pacote.pacote_id} -> Destino {self.destino.nome}"
+    
+
+class PacoteHotel(models.Model):
+    hotel_id = models.ForeignKey(
+        Hotel,
+        on_delete=models.CASCADE,
+        db_column='hotel_id'
+    )
+    pacote_id = models.ForeignKey(
+        Pacote,
+        on_delete=models.CASCADE,
+        db_column='pacote_id'
+    )
+    
+    class Meta:
+        managed = False
+        db_table = 'pacote_hotel'
+        unique_together = (('pacote_id', 'hotel_id'),)  # Composite primary key
+    
+    def __str__(self):
+        return f"Pacote {self.pacote_id.pacote_id} -> Hotel {self.hotel_id.nome}"
+    
+class PacoteVoo(models.Model):
+    voo_id = models.ForeignKey(
+        Voo,
+        on_delete=models.CASCADE,
+        db_column='voo_id'
+    )
+    pacote_id = models.ForeignKey(
+        Pacote,
+        on_delete=models.CASCADE,
+        db_column='pacote_id'
+    )
+   
+    class Meta:
+        managed = False
+        db_table = 'pacote_voo'
+        unique_together = (('pacote_id', 'voo_id'),)  # Composite primary key
+    
+    def __str__(self):
+        return f"Pacote {self.pacote_id.pacote_id} -> Voo {self.voo_id.numero_voo}"
+    
