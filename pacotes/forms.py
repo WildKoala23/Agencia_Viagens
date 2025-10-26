@@ -7,19 +7,46 @@ class DestinoForm(forms.ModelForm):
         fields = '__all__'
 
 class VooForm(forms.ModelForm):
+    destino_nome = forms.ModelChoiceField(
+        queryset=Destino.objects.all(),
+        label="Destino (Aeroporto de Chegada)",
+        empty_label="Selecione um destino",
+        to_field_name="nome",
+    )
+
     class Meta:
         model = Voo
-        fields = ['destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'origem', 'destino', 'preco']
+        fields = ['destino_nome', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'origem', 'destino', 'preco']
         labels = {
-            'destino_id': 'ID do Destino',
             'companhia': 'Companhia Aérea',
             'numero_voo': 'Número do Voo',
             'data_saida': 'Data de Saída (AAAA-MM-DD)',
             'data_chegada': 'Data de Chegada (AAAA-MM-DD)',
-            'origem': 'Origem',
-            'destino': 'Destino',
+            'origem': 'Origem (Aeroporto de Partida)',
+            'destino': 'Destino (Aeroporto de Chegada)',
             'preco': 'Preço (€)',
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Preenche o campo destino_nome com o destino atual, se estivermos a editar
+        if self.instance and getattr(self.instance, 'destino_id', None):
+            try:
+                self.fields['destino_nome'].initial = Destino.objects.get(pk=self.instance.destino_id)
+            except Destino.DoesNotExist:
+                pass
+
+    def save(self, commit=True):
+        voo = super().save(commit=False)
+        destino_selecionado = self.cleaned_data.get('destino_nome')
+        if destino_selecionado:
+            voo.destino_id = destino_selecionado.pk
+            voo.destino = destino_selecionado.nome
+        if commit:
+            voo.save()
+        return voo
+
+       
 
 class HotelForm(forms.ModelForm):
     class Meta:

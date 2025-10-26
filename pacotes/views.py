@@ -27,28 +27,34 @@ def eliminar_destino(request, destino_id):
 
 
 
-def voos(request):
+def voos(request, voo_id=None):
+    # Se for edição, carrega o voo
+    if voo_id:
+        voo = get_object_or_404(Voo, voo_id=voo_id)
+    else:
+        voo = None
+
     if request.method == "POST":
-        form = VooForm(request.POST)
+        form = VooForm(request.POST, instance=voo)
         if form.is_valid():
             form.save()
             return redirect('voos')
     else:
-        form = VooForm()
+        form = VooForm(instance=voo)
 
     voos = Voo.objects.all()
     return render(request, 'voos.html', {
         'form': form,
-        'voos': voos
+        'voos': voos,
+        'voo_editar': voo
     })
+
 
 def eliminar_voo(request, voo_id):
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
         voo.delete()
-        return redirect('voos')
     return redirect('voos')
-
 
 def hotel(request):
     if request.method == "POST":
