@@ -24,18 +24,21 @@
                 aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-item nav-link active" href="{% url 'home' %}">Home</a>
-                <a class="nav-item nav-link" href="{% url 'clientes' %}">Clientes</a>
-                <a class="nav-item nav-link" href="{% url 'destinos' %}">Destinos</a>
-                <a class="nav-item nav-link" href="{% url 'faturas' %}">Faturas</a>
-                <a class="nav-item nav-link" href="{% url 'feedbacks' %}">Feedbacks</a>
-                <a class="nav-item nav-link" href="{% url 'pacotes' %}">Pacotes</a>
-                <a class="nav-item nav-link" href="{% url 'pagamentos' %}">Pagamentos</a>
-                <a class="nav-item nav-link" href="{% url 'voos' %}">Voos</a>
-            </div>
-        </div>
+        <div class="navbar-nav">
+    <a class="nav-item nav-link active" href="{% url 'home' %}">Home</a>
+    <a class="nav-item nav-link" href="">Pacotes</a>
+
+    {% if 'dashboard' in request.path %}
+        <a class="nav-item nav-link" href="{% url 'clientes' %}">Clientes</a>
+        <a class="nav-item nav-link" href="{% url 'destinos' %}">Destinos</a>
+        <a class="nav-item nav-link" href="{% url 'faturas' %}">Faturas</a>
+        <a class="nav-item nav-link" href="{% url 'pacotes' %}">Inserir Pacotes</a>
+        <a class="nav-item nav-link" href="{% url 'feedbacks' %}">Feedbacks</a>
+        <a class="nav-item nav-link" href="{% url 'pagamentos' %}">Pagamentos</a>
+        <a class="nav-item nav-link" href="{% url 'voos' %}">Voos</a>
+    {% endif %}
+</div>
+
         <a class="navbar-text text-decoration-none text-dark ms-auto" href="{% url 'dashboard' %}">
             <i class="bi bi-gear-fill" style="font-size: 1.5rem;"></i>
         </a>

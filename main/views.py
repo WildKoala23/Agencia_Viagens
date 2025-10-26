@@ -23,15 +23,14 @@ def home(request):
 
 
 def dashboard(request):
-    # Buscar pacotes populares
-    pacotes = Pacote.objects.all()[:6]  # ou .order_by('-data_inicio')[:6] se quiseres ordenar
-    
+    pacotes = Pacote.objects.all()[:6]  
+    total_feedbacks = Feedback.objects.count()
+
     context = {
-        'proxima_reserva': 'Lisboa 2025',   # depois substituis por dados reais
-        'total_reservas': 15,               # idem
-        'saldo_creditos': 200.50,
-        'ultimas_atividades': 3,
+        'visita_site': '2345',  
+        'total_reservas': 15,
+        'lucro_total': 200.50,
+        'ultimos_feeds': total_feedbacks, 
         'pacotes': pacotes,
     }
-
     return render(request, 'dashboard.html', context)
