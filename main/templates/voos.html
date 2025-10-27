@@ -20,9 +20,16 @@
                 <button type="submit" class="btn-save">Guardar Voo</button>
             </form>
         </div>
-
         <div class="card">
-            <h2>Lista de Voos</h2>
+            <div class="voos-header">
+                <h2>Lista de Voos</h2>
+
+                <form method="get" class="search-form">
+                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input" >
+                    <button type="submit" class="btn-search">🔍 Procurar</button>
+                </form>
+            </div>
+
             <ul>
                 {% for voo in voos %}
                     <li>
@@ -32,8 +39,7 @@
                                     ✈️ {{ voo.origem }} → {{ voo.destino }}
                                 </span>
                                 <span class="voo-extra">
-                                    Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }} | 
-                                   
+                                    Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
                                 </span>
                             </div>
 
@@ -55,5 +61,14 @@
             </ul>
         </div>
     </div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        // Só faz scroll se foi feita uma pesquisa
+        const listaVoos = document.querySelector(".voos-header");
+        if (listaVoos) {
+            listaVoos.scrollIntoView({ behavior: "smooth" });
+        }    }});
+</script>
 </body>
 </html>
