@@ -86,7 +86,18 @@ class FeedbackForm(forms.ModelForm):
         fields = '__all__'
         labels = {
             'pacote': 'Pacote',
-            'avaliacao': 'Avaliação (1-5)',
+            'avaliacao': 'Avaliação (1-5 estrelas)',
             'comentario': 'Comentário',
-            'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
+            'data_feedback': 'Data do Feedback',
         }
+        widgets = {
+            'avaliacao': forms.NumberInput(attrs={'min': 1, 'max': 5, 'type': 'number'}),
+            'comentario': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Deixe seu comentário sobre o pacote...'}),
+            'data_feedback': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def clean_avaliacao(self):
+        avaliacao = self.cleaned_data.get('avaliacao')
+        if avaliacao and (avaliacao < 1 or avaliacao > 5):
+            raise forms.ValidationError('A avaliação deve estar entre 1 e 5.')
+        return avaliacao
