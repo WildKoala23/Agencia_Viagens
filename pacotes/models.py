@@ -1,14 +1,7 @@
 from django.db import models
-from pagamentos.models import FacturaLinha
-
 
 class Pacote(models.Model):
     pacote_id = models.AutoField(primary_key=True)
-    fatura_linha = models.ForeignKey(
-        FacturaLinha, 
-        on_delete=models.CASCADE,
-        db_column='fatura_linha_id'
-    )
     nome = models.TextField()
     descricao_item = models.TextField()
     data_inicio = models.DateField()
@@ -17,46 +10,45 @@ class Pacote(models.Model):
     estado = models.TextField()
     
     class Meta:
-        managed = False
         db_table = 'pacote'
     
     def __str__(self):
         return f"{self.nome} - {self.preco_total}€"
     
-
-class Voo(models.Model):
-    voo_id = models.AutoField(primary_key=True)
-    destino_id = models.IntegerField()  # Should be FK to Destino
-    companhia = models.TextField()
-    numero_voo = models.IntegerField()
-    data_saida = models.DateField()
-    data_chegada = models.DateField()
-    origem = models.TextField()
-    destino = models.TextField()
-    preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
-    
-    class Meta:
-        managed = False
-        db_table = 'voo'
-    
-    def __str__(self):
-        return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
-
 class Destino(models.Model):
     destino_id = models.AutoField(primary_key=True)
     pais = models.TextField()
     nome = models.TextField()
 
     class Meta:
-        managed = False
         db_table = 'destino'
 
     def __str__(self):
         return f"{self.nome}, {self.pais}"
 
+class Voo(models.Model):
+    voo_id = models.AutoField(primary_key=True)
+    destino = models.ForeignKey(
+        Destino, 
+        on_delete=models.CASCADE,
+        db_column='destino_id'
+    )
+    companhia = models.TextField()
+    numero_voo = models.IntegerField()
+    data_saida = models.DateField()
+    data_chegada = models.DateField()
+    preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
+    
+    class Meta:
+        db_table = 'voo'
+    
+    def __str__(self):
+        return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
+
+
 class Hotel(models.Model):
     hotel_id = models.AutoField(primary_key=True)
-    destino = models.ForeignKey(
+    destino_id = models.ForeignKey(
         Destino, 
         on_delete=models.CASCADE,
         db_column='destino_id'
@@ -67,7 +59,6 @@ class Hotel(models.Model):
     descricao_item = models.TextField()
     
     class Meta:
-        managed = False
         db_table = 'hotel'
     
     def __str__(self):
@@ -87,7 +78,6 @@ class PacoteDestino(models.Model):
     )
     
     class Meta:
-        managed = False
         db_table = 'pacote_destino'
         unique_together = (('pacote_id', 'destino_id'),)  # Composite primary key
        
@@ -108,7 +98,6 @@ class PacoteHotel(models.Model):
     )
     
     class Meta:
-        managed = False
         db_table = 'pacote_hotel'
         unique_together = (('pacote_id', 'hotel_id'),)  # Composite primary key
     
@@ -128,10 +117,27 @@ class PacoteVoo(models.Model):
     )
    
     class Meta:
-        managed = False
+        
         db_table = 'pacote_voo'
         unique_together = (('pacote_id', 'voo_id'),)  # Composite primary key
     
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Voo {self.voo_id.numero_voo}"
+    
+class Feedback(models.Model):
+    feedback_id = models.AutoField(primary_key=True)
+    pacote = models.ForeignKey(
+        'pacotes.Pacote', 
+        on_delete=models.CASCADE,
+        db_column='pacote_id'
+    )
+    avaliacao = models.IntegerField()
+    comentario = models.TextField()
+    data_feedback = models.DateField()
+    
+    class Meta:
+        db_table = 'feedback'
+    
+    def __str__(self):
+        return f"Feedback sobre {self.pacote} - {self.avaliacao}/5"
     
