@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
+from django.db.models import Q
 
 # Create your views here.
 
@@ -27,28 +28,44 @@ def eliminar_destino(request, destino_id):
 
 
 
-def voos(request):
+def voos(request, voo_id=None):
+    # Se for edição, carrega o voo
+    if voo_id:
+        voo = get_object_or_404(Voo, voo_id=voo_id)
+    else:
+        voo = None
+
+    # Guardar voo (POST)
     if request.method == "POST":
-        form = VooForm(request.POST)
+        form = VooForm(request.POST, instance=voo)
         if form.is_valid():
             form.save()
             return redirect('voos')
     else:
-        form = VooForm()
+        form = VooForm(instance=voo)
 
-    voos = Voo.objects.all()
+    # ---  PESQUISA ---
+    query = request.GET.get('q') 
+    if query:
+        voos = Voo.objects.filter(
+            Q(origem__icontains=query) | Q(destino__icontains=query)
+        )
+    else:
+        voos = Voo.objects.all()
+    # ---  FIM DA PESQUISA ---
+
     return render(request, 'voos.html', {
         'form': form,
-        'voos': voos
+        'voos': voos,
+        'voo_editar': voo,
     })
+
 
 def eliminar_voo(request, voo_id):
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
         voo.delete()
-        return redirect('voos')
     return redirect('voos')
-
 
 def hotel(request):
     if request.method == "POST":
@@ -63,6 +80,23 @@ def hotel(request):
     return render(request, 'hoteis.html', {
         'form': form,
         'hoteis': hoteis
+    })
+
+def editar_hotel(request, hotel_id):
+    """Editar um hotel existente"""
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+
+    if request.method == "POST":
+        form = HotelForm(request.POST, instance=hotel)
+        if form.is_valid():
+            form.save()
+            return redirect('hoteis')
+    else:
+        form = HotelForm(instance=hotel)
+
+    return render(request, 'editar_hotel.html', {
+        'form': form,
+        'hotel': hotel
     })
 
 def eliminar_hotel(request, hotel_id):
