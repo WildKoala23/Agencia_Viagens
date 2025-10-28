@@ -38,7 +38,7 @@ class Voo(models.Model):
 
 class Hotel(models.Model):
     hotel_id = models.AutoField(primary_key=True)
-    destino = models.ForeignKey(
+    destino_id = models.ForeignKey(
         Destino, 
         on_delete=models.CASCADE,
         db_column='destino_id'
