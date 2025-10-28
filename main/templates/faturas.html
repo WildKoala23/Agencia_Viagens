@@ -1,28 +1,213 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <title>Inserir Fatura</title>
-</head>
-<body>
-    <h1>Inserir Fatura</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
+{% extends 'base.html' %}
 
-    <h2>Lista de Faturas</h2>
-    <ul>
-        {% for f in faturas %}
-            <li>
-                {{ f.pagamento }} - {{ f.valor_total }}€ em {{ f.data_emissao }}
-            </li>
-        {% empty %}
-            <li>Nenhuma fatura registada.</li>
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">🧾 Gestão de Faturas</h1>
+    
+    <!-- Django Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         {% endfor %}
-    </ul>
+    {% endif %}
+    
+    <!-- Cards de Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Total Faturas</h5>
+                    <h2 class="display-4">{{ total_faturas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body text-center">
+                    <h5 class="card-title">⏳ Pendentes</h5>
+                    <h2 class="display-4">{{ faturas_pendentes }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body text-center">
+                    <h5 class="card-title">✅ Pagas</h5>
+                    <h2 class="display-4">{{ faturas_pagas }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'criar_fatura_completa' %}" class="text-decoration-none">
+                <div class="card text-white bg-primary h-100">
+                    <div class="card-body text-center d-flex align-items-center justify-content-center">
+                        <div>
+                            <h5 class="card-title">➕ Nova Fatura</h5>
+                            <p class="mb-0">Criar Completa</p>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
 
-    <a href="{% url 'home' %}">Voltar ao Início</a>
-</body>
-</html>
+    <!-- Formulário para Nova Fatura Simples -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">➕ Criar Fatura Simples</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Compra ID:</label>
+                        {{ form.compra_id }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Pagamento ID:</label>
+                        {{ form.pagamento_id }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Hora Emissão:</label>
+                        {{ form.data_emissao }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Valor Total (€):</label>
+                        {{ form.valor_total }}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">💾 Criar Fatura</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista de Faturas -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="mb-0">📋 Lista de Faturas</h3>
+        </div>
+        <div class="card-body">
+            {% if faturas %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Compra</th>
+                                <th>Data Emissão</th>
+                                <th>Valor Total</th>
+                                <th>Estado</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for f in faturas %}
+                            <tr>
+                                <td><strong>#{{ f.fatura_id }}</strong></td>
+                                <td>Compra #{{ f.compra_id }}</td>
+                                <td>{{ f.data_emissao }}</td>
+                                <td><strong>{{ f.valor_total }}€</strong></td>
+                                <td>
+                                    {% if f.pagamento.estado == 'PAGO' %}
+                                        <span class="badge bg-success">✅ Paga</span>
+                                    {% elif f.pagamento.estado == 'PENDENTE' %}
+                                        <span class="badge bg-warning text-dark">⏳ Pendente</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">❌ Cancelada</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        {% if f.pagamento.estado != 'PAGO' %}
+                                            <!-- Editar só se não está paga -->
+                                            <a href="{% url 'editar_fatura' f.fatura_id %}" 
+                                               class="btn btn-sm btn-warning"
+                                               title="Editar">
+                                                ✏️
+                                            </a>
+                                            
+                                            <!-- Eliminar só se não está paga -->
+                                            <form method="POST" 
+                                                  action="{% url 'eliminar_fatura' f.fatura_id %}" 
+                                                  style="display: inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" 
+                                                        class="btn btn-sm btn-danger"
+                                                        onclick="return confirm('Eliminar fatura #{{ f.fatura_id }}?')"
+                                                        title="Eliminar">
+                                                    🗑️
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="badge bg-secondary">🔒 Bloqueada</span>
+                                        {% endif %}
+                                        
+                                        <!-- Recalcular sempre disponível -->
+                                        <a href="{% url 'atualizar_total_fatura' f.fatura_id %}" 
+                                           class="btn btn-sm btn-info"
+                                           title="Recalcular Total">
+                                            🔄
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhuma fatura registada ainda.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Top 10 Clientes -->
+    {% if facturas_por_cliente %}
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">👑 Top 10 Clientes (Maior Gasto)</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cliente</th>
+                            <th>Email</th>
+                            <th>Total Faturas</th>
+                            <th>Valor Total Gasto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cliente in facturas_por_cliente %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ cliente.nome }}</strong></td>
+                            <td>{{ cliente.email }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ cliente.total_facturas }}</span>
+                            </td>
+                            <td class="text-success">
+                                <strong>{{ cliente.valor_total_gasto|floatformat:2 }}€</strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-3">
+        <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Voltar ao Início</a>
+    </div>
+</div>
+{% endblock %}
