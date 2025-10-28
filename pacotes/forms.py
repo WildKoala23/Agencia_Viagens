@@ -1,5 +1,5 @@
 from django import forms
-from .models import Destino, Voo, Hotel, Pacote
+from .models import Destino, Voo, Hotel, Pacote, Feedback
 
 class DestinoForm(forms.ModelForm):
     class Meta:
@@ -79,3 +79,14 @@ class PacoteForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+    
+class FeedbackForm(forms.ModelForm):
+    class Meta:
+        model = Feedback
+        fields = '__all__'
+        labels = {
+            'pacote': 'Pacote',
+            'avaliacao': 'Avaliação (1-5)',
+            'comentario': 'Comentário',
+            'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
+        }

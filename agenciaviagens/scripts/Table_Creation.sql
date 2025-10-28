@@ -40,7 +40,6 @@ CREATE TABLE destino (
     destino_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     pais TEXT NOT NULL,
     nome TEXT NOT NULL,
-    descricao TEXT
 );
 
 -- Tabela voo
@@ -71,9 +70,12 @@ CREATE TABLE hotel (
 -- Tabela fatura_linha
 CREATE TABLE fatura_linha (
     fatura_linha_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    pacote_id INT,
     descricao TEXT,
     quantidade INTEGER,
     preco_unitario DECIMAL(10, 2)
+    FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
+
 );
 
 -- Tabela pacote
@@ -86,7 +88,6 @@ CREATE TABLE pacote (
     data_fim DATE NOT NULL,
     preco_total DECIMAL(10, 2) NOT NULL,
     estado TEXT,
-    FOREIGN KEY (fatura_linha_id) REFERENCES fatura_linha(fatura_linha_id)
 );
 
 -- Tabela feedback
@@ -113,10 +114,12 @@ CREATE TABLE reserva (
 -- Tabela compra
 CREATE TABLE compra (
     compra_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    pacote_id INTEGER
     user_id INTEGER NOT NULL,
     data_compra DATE NOT NULL,
     valor_total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES utilizador(user_id)
+    FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
 );
 
 -- Tabela pagamento
