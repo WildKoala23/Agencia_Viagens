@@ -26,7 +26,7 @@
 
                 <form method="get" class="search-form">
                     <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input" >
-                    <button type="submit" class="btn-search">🔍 Procurar</button>
+                    <button type="submit" class="btn-search"> Procurar</button>
                 </form>
             </div>
 
@@ -36,7 +36,7 @@
                         <div class="voo-info">
                             <div class="voo-detalhes">
                                 <span class="voo-nome">
-                                    ✈️ {{ voo.origem }} → {{ voo.destino }}
+                                     {{ voo.origem }} → {{ voo.destino }}
                                 </span>
                                 <span class="voo-extra">
                                     Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}

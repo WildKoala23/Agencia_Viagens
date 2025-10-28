@@ -356,6 +356,11 @@ li {
     flex: 1;
 }
 
+#id_endereco,
+#id_descricao_item {
+    resize: none; /* impede redimensionamento */
+}
+
 .voo-nome {
     font-size: 18px;
     font-weight: 600;
