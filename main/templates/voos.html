@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Voos</title>
-    <link rel="stylesheet" href="{% static 'clientes.css' %}">
+    <link rel="stylesheet" href="{% static 'voos.css' %}">
 </head>
 <body>
     <div class="container">
@@ -17,32 +17,40 @@
             <form method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
-                <button type="submit">Guardar Voo</button>
+                <button type="submit" class="btn-save">Guardar Voo</button>
             </form>
         </div>
-
         <div class="card">
-            <h2>Lista de Voos</h2>
+            <div class="voos-header">
+                <h2>Lista de Voos</h2>
+
+                <form method="get" class="search-form">
+                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input" >
+                    <button type="submit" class="btn-search"> Procurar</button>
+                </form>
+            </div>
+
             <ul>
                 {% for voo in voos %}
-                <p>{{voo}}</p>
                     <li>
-                        <div class="cliente-info">
-                            <span class="cliente-nome">
-                                Voo {{ voo.voo_id }} — {{ voo.origem }}
-                            </span>
-                            <span class="cliente-email">
-                                Data: {{ voo.data_saida }} | 
-                                Partida: {{ voo.data_chegada }} | 
-                                Chegada: {{ voo.hora_chegada }} | 
-                                Duração: {{ voo.origem }} | 
-                                Porta: {{ voo.destino }}
-                            </span>
+                        <div class="voo-info">
+                            <div class="voo-detalhes">
+                                <span class="voo-nome">
+                                     {{ voo.origem }} → {{ voo.destino }}
+                                </span>
+                                <span class="voo-extra">
+                                    Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
+                                </span>
+                            </div>
 
-                            <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="delete-btn">Eliminar</button>
-                            </form>
+                            <div class="voo-acoes">
+                                <a href="{% url 'editar_voo' voo.voo_id %}" class="edit-btn">Editar</a>
+
+                                <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="delete-btn">Eliminar</button>
+                                </form>
+                            </div>
                         </div>
                     </li>
                 {% empty %}
@@ -53,5 +61,14 @@
             </ul>
         </div>
     </div>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        // Só faz scroll se foi feita uma pesquisa
+        const listaVoos = document.querySelector(".voos-header");
+        if (listaVoos) {
+            listaVoos.scrollIntoView({ behavior: "smooth" });
+        }    }});
+</script>
 </body>
 </html>

@@ -1,34 +1,88 @@
-<h1>Gestão de Hotéis</h1>
+{% load static %}
 
-<form method="POST">
+{% block navbar %}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'voos.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'home' %}" class="back-link">
+        <span>←</span> Voltar ao Início
+    </a>
+
+    <div class="grid-layout">
+        <!-- Formulário de Inserção -->
+        <div class="card">
+            <h1>Inserir Hotel</h1>
+            <form method="post">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Adicionar Hotel</button>
+    {% for field in form %}
+        {% if field.name != 'preco_diario' %}
+            <div class="form-group">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.errors %}
+                    <small class="text-danger">{{ field.errors }}</small>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+    <div class="form-group">
+        <label for="id_preco_diario">Preço diário (€):</label>
+        <input type="number" name="preco_diario" id="id_preco_diario"
+               step="any" min="0" placeholder="0.00"
+               value="{{ form.preco_diario.value|default_if_none:'' }}">
+    </div>
+    
+    <br> <!-- ADICIONA O ESPAÇO ACIMA DO BOTÃO -->
+
+    <button type="submit" class="btn-save">Guardar Hotel</button>
 </form>
 
-<hr>
+        </div>
 
-<h2>Lista de Hotéis</h2>
-<table border="1">
-    <tr>
-        <th>Nome</th>
-        <th>Descrição</th>
-        <th>Preço</th>
-        <th>Ações</th>
-    </tr>
+        <!-- Lista de Hotéis -->
+        <div class="card">
+            <div class="voos-header">
+                <h2>Lista de Hotéis</h2>
+                <form method="get" class="search-form">
+                    <input type="text" name="q" class="search-input" 
+                           placeholder="Pesquisar por nome..." 
+                           value="{{ request.GET.q|default:'' }}">
+                    <button type="submit" class="btn-search"> Procurar</button>
+                </form>
+            </div>
 
-    {% for hotel in hoteis %}
-    <tr>
-        <td>{{ hotel.nome }}</td>
-        <td>{{ hotel.descricao_item }}</td>
-        <td>{{ hotel.preco_diario }} €</td>
-        <td>
-            <form method="POST" action="{% url 'eliminar_hotel' hotel.hotel_id %}">
-                {% csrf_token %}
-                <button type="submit">Remover</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
-
+            <ul>
+                {% for hotel in hoteis %}
+                    <li>
+                        <div class="voo-info">
+                            <div class="voo-detalhes">
+                                <span class="voo-nome">
+                                     {{ hotel.nome }}
+                                </span>
+                                <span class="voo-extra">
+                                    {{ hotel.descricao_item }} | Preço diário: {{ hotel.preco_diario }} €
+                                </span>
+                            </div>
+                            <div class="voo-acoes">
+                                <a href="{% url 'editar_hotel' hotel.hotel_id %}" class="edit-btn">Editar</a>
+                                <form action="{% url 'eliminar_hotel' hotel.hotel_id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="delete-btn" onclick="return confirm('Tem certeza que deseja eliminar este hotel?')">Eliminar</button>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+                {% empty %}
+                    <div class="empty-state">
+                        Nenhum hotel registado ainda.
+                    </div>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

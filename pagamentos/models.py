@@ -21,7 +21,7 @@ class Compra(models.Model):
     estado = models.TextField()
     
     class Meta:
-        managed = False
+        
         db_table = 'compra'
     
     def __str__(self):
@@ -35,7 +35,7 @@ class Factura(models.Model):
     valor_total = models.DecimalField(max_digits=10, decimal_places=2) 
 
     class Meta:
-        managed = False
+        
         db_table = 'fatura'
 
     def __str__(self):
@@ -54,7 +54,7 @@ class FacturaLinha(models.Model):
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     
     class Meta:
-        managed = False
+        
         db_table = 'fatura_linha'
        
     def __str__(self):
@@ -70,7 +70,7 @@ class Pagamento(models.Model):
     metodo = models.TextField()
     
     class Meta:
-        managed = False
+        
         db_table = 'pagamento'
        
     def __str__(self):

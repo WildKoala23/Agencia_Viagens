@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Hotel{% endblock %}
+
+{% block content %}
+<h2>Editar Hotel</h2>
+
+<form method="POST" class="mb-4">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Guardar Alterações</button>
+</form>
+
+<form method="POST" action="{% url 'eliminar_hotel' hotel.hotel_id %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar Hotel</button>
+    <a href="{% url 'hoteis' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+{% endblock %}

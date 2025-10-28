@@ -6,7 +6,6 @@ class TipoUser(models.Model):
     descricao_item = models.TextField()
     
     class Meta:
-        managed = False
         db_table = 'tipo_user'
     
     def __str__(self):
@@ -25,26 +24,8 @@ class Utilizador(models.Model):
     telefone = models.IntegerField()
     
     class Meta:
-        managed = False
         db_table = 'utilizador'
     
     def __str__(self):
         return self.nome
        
-class Feedback(models.Model):
-    feedback_id = models.AutoField(primary_key=True)
-    pacote = models.ForeignKey(
-        'pacotes.Pacote', 
-        on_delete=models.CASCADE,
-        db_column='pacote_id'
-    )
-    avaliacao = models.IntegerField()
-    comentario = models.TextField()
-    data_feedback = models.DateField()
-    
-    class Meta:
-        managed = False
-        db_table = 'feedback'
-    
-    def __str__(self):
-        return f"Feedback sobre {self.pacote} - {self.avaliacao}/5"
