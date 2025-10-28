@@ -1,6 +1,4 @@
 from django.db import models
-from pagamentos.models import FacturaLinha
-
 
 class Pacote(models.Model):
     pacote_id = models.AutoField(primary_key=True)
@@ -17,24 +15,6 @@ class Pacote(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.preco_total}€"
     
-
-class Voo(models.Model):
-    voo_id = models.AutoField(primary_key=True)
-    destino_id = models.IntegerField()  # Should be FK to Destino
-    companhia = models.TextField()
-    numero_voo = models.IntegerField()
-    data_saida = models.DateField()
-    data_chegada = models.DateField()
-    origem = models.TextField()
-    destino = models.TextField()
-    preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
-    
-    class Meta:
-        db_table = 'voo'
-    
-    def __str__(self):
-        return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
-
 class Destino(models.Model):
     destino_id = models.AutoField(primary_key=True)
     pais = models.TextField()
@@ -46,9 +26,29 @@ class Destino(models.Model):
     def __str__(self):
         return f"{self.nome}, {self.pais}"
 
+class Voo(models.Model):
+    voo_id = models.AutoField(primary_key=True)
+    destino = models.ForeignKey(
+        Destino, 
+        on_delete=models.CASCADE,
+        db_column='destino_id'
+    )
+    companhia = models.TextField()
+    numero_voo = models.IntegerField()
+    data_saida = models.DateField()
+    data_chegada = models.DateField()
+    preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
+    
+    class Meta:
+        db_table = 'voo'
+    
+    def __str__(self):
+        return f"{self.origem} -> {self.destino} - {self.companhia} {self.numero_voo} ({self.data_saida})"
+
+
 class Hotel(models.Model):
     hotel_id = models.AutoField(primary_key=True)
-    destino = models.ForeignKey(
+    destino_id = models.ForeignKey(
         Destino, 
         on_delete=models.CASCADE,
         db_column='destino_id'

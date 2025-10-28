@@ -50,8 +50,6 @@ CREATE TABLE voo (
     numero_voo INTEGER NOT NULL,
     data_saida DATE NOT NULL,
     data_chegada DATE NOT NULL,
-    origem TEXT NOT NULL,
-    destino TEXT NOT NULL,
     preco DECIMAL(19, 2) NOT NULL,
     FOREIGN KEY (destino_id) REFERENCES destino(destino_id)
 );
@@ -70,18 +68,19 @@ CREATE TABLE hotel (
 -- Tabela fatura_linha
 CREATE TABLE fatura_linha (
     fatura_linha_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    fatura_id INT,
     pacote_id INT,
     descricao TEXT,
     quantidade INTEGER,
     preco_unitario DECIMAL(10, 2)
     FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
+    FOREIGN KEY (fatura_id) REFERENCES fatura(fatura_id)
 
 );
 
 -- Tabela pacote
 CREATE TABLE pacote (
     pacote_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    fatura_linha_id INTEGER NOT NULL,
     nome TEXT NOT NULL,
     descricao_item TEXT,
     data_inicio DATE NOT NULL,
@@ -101,25 +100,27 @@ CREATE TABLE feedback (
 );
 
 -- Tabela reserva
-CREATE TABLE reserva (
-    reserva_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    data_inicio DATE NOT NULL,
-    data_fim DATE NOT NULL,
-    cliente_id INTEGER NOT NULL,
-    pacote_id INTEGER NOT NULL,
-    FOREIGN KEY (cliente_id) REFERENCES utilizador(user_id),
-    FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
-);
+-- CREATE TABLE reserva (
+--     reserva_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     data_inicio DATE NOT NULL,
+--     data_fim DATE NOT NULL,
+--     cliente_id INTEGER NOT NULL,
+--     pacote_id INTEGER NOT NULL,
+--     FOREIGN KEY (cliente_id) REFERENCES utilizador(user_id),
+--     FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
+-- );
 
 -- Tabela compra
 CREATE TABLE compra (
     compra_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    pacote_id INTEGER
+    pacote_id INTEGER,
+    pagamento_id INTEGER,
     user_id INTEGER NOT NULL,
     data_compra DATE NOT NULL,
     valor_total DECIMAL(10, 2) NOT NULL,
     FOREIGN KEY (user_id) REFERENCES utilizador(user_id)
     FOREIGN KEY (pacote_id) REFERENCES pacote(pacote_id)
+    FOREIGN KEY (pagamento_id) REFERENCES pagamento(pagamento_id)
 );
 
 -- Tabela pagamento
