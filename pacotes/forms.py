@@ -1,5 +1,7 @@
 from django import forms
 from .models import Destino, Voo, Hotel, Pacote, Feedback
+from django.forms import DateTimeInput
+
 
 class DestinoForm(forms.ModelForm):
     class Meta:
@@ -9,14 +11,20 @@ class DestinoForm(forms.ModelForm):
 class VooForm(forms.ModelForm):
     class Meta:
         model = Voo
-        fields = ['companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
+        fields = ['destino', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
         labels = {
             'companhia': 'Companhia Aérea',
             'numero_voo': 'Número do Voo',
-            'data_saida': 'Data de Saída (AAAA-MM-DD)',
-            'data_chegada': 'Data de Chegada (AAAA-MM-DD)',
+            'data_saida': 'Data de Saída (AAAA-MM-DD HH:MM)',
+            'data_chegada': 'Data de Chegada (AAAA-MM-DD HH:MM)',
             'preco': 'Preço (€)',
+            'destino': 'Destino',
         }
+        widgets = {
+            'data_saida': DateTimeInput(attrs={'type': 'datetime-local'}),
+            'data_chegada': DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
 
     def save(self, commit=True):
         voo = super().save(commit=False)

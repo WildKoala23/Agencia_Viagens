@@ -36,7 +36,8 @@
                         <div class="voo-info">
                             <div class="voo-detalhes">
                                 <span class="voo-nome">
-                                     {{ voo.origem }} → {{ voo.destino }}
+                                     {{ voo.companhia }} → {{ voo.destino.nome }}
+
                                 </span>
                                 <span class="voo-extra">
                                     Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
@@ -68,7 +69,7 @@
         const listaVoos = document.querySelector(".voos-header");
         if (listaVoos) {
             listaVoos.scrollIntoView({ behavior: "smooth" });
-        }    }});
+        }}});
 </script>
 </body>
 </html>

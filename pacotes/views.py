@@ -45,10 +45,10 @@ def voos(request, voo_id=None):
         form = VooForm(instance=voo)
 
     # ---  PESQUISA ---
-    query = request.GET.get('q') 
-    if query:
+    if q := request.GET.get("q"):
         voos = Voo.objects.filter(
-            Q(origem__icontains=query) | Q(destino__icontains=query)
+            Q(destino__nome__icontains=q) |
+            Q(companhia__icontains=q)
         )
     else:
         voos = Voo.objects.all()

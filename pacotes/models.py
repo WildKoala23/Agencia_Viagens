@@ -35,8 +35,8 @@ class Voo(models.Model):
     )
     companhia = models.TextField()
     numero_voo = models.IntegerField()
-    data_saida = models.DateField()
-    data_chegada = models.DateField()
+    data_saida = models.DateTimeField()
+    data_chegada = models.DateTimeField()
     preco = models.DecimalField(max_digits=19, decimal_places=2, db_column='preco')
     
     class Meta:
