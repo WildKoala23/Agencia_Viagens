@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
+from django.db.models import Q
 
 # Create your views here.
 
@@ -34,6 +35,7 @@ def voos(request, voo_id=None):
     else:
         voo = None
 
+    # Guardar voo (POST)
     if request.method == "POST":
         form = VooForm(request.POST, instance=voo)
         if form.is_valid():
@@ -42,11 +44,20 @@ def voos(request, voo_id=None):
     else:
         form = VooForm(instance=voo)
 
-    voos = Voo.objects.all()
+    # ---  PESQUISA ---
+    query = request.GET.get('q') 
+    if query:
+        voos = Voo.objects.filter(
+            Q(origem__icontains=query) | Q(destino__icontains=query)
+        )
+    else:
+        voos = Voo.objects.all()
+    # ---  FIM DA PESQUISA ---
+
     return render(request, 'voos.html', {
         'form': form,
         'voos': voos,
-        'voo_editar': voo
+        'voo_editar': voo,
     })
 
 
