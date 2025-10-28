@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="header-section">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0">Dashboard</h1>
+            <div class="d-flex align-items-center gap-2">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-5">
+        <div class="col-md-3">
+            <div class="stats-card reserva">
+                <div class="stats-icon"><i class="fas fa-plane"></i></div>
+                <div class="stats-label">Visitas ao Site</div>
+                <div class="stats-value">{{ visita_site }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card total">
+                <div class="stats-icon"><i class="fas fa-list"></i></div>
+                <div class="stats-label">TOTAL DE RESERVAS</div>
+                <div class="stats-value">{{ total_reservas }}</div>
+                <div class="stats-subtitle">Últimos 12 meses</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card creditos">
+                <div class="stats-icon"><i class="fas fa-wallet"></i></div>
+                <div class="stats-label">Lucro Total</div>
+                <div class="stats-value">€{{ lucro_total }}</div>
+                <div class="stats-subtitle">Disponível</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card atividades">
+                <div class="stats-icon"><i class="fas fa-clock"></i></div>
+                <div class="stats-label">Feedbacks</div>
+                <div class="stats-value">{{ ultimos_feeds }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pacotes Populares -->
+    <h4 class="section-title">Pacotes Populares</h4>
+    <div class="row g-4 mb-5">
+        {% for pacote in pacotes %}
+        <div class="col-md-4">
+            <div class="package-card">
+                <div class="package-image">Imagem Destino</div>
+                <div class="package-body">
+                    <div class="package-title">{{ pacote.nome }}</div>
+                    <div class="package-location">{{ pacote.descricao_item|truncatewords:10 }}</div>
+                    <div class="package-duration">{{ pacote.data_inicio }} → {{ pacote.data_fim }}</div>
+                    <div class="package-price">€{{ pacote.preco_total }}</div>
+                    <a href="#" class="btn-details">Ver Detalhes</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">Nenhum pacote disponível no momento.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

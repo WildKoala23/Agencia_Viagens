@@ -22,4 +22,15 @@ def home(request):
     return render(request, "home.html", {"slides": slides})
 
 
+def dashboard(request):
+    pacotes = Pacote.objects.all()[:6]  
+    total_feedbacks = Feedback.objects.count()
 
+    context = {
+        'visita_site': '2345',  
+        'total_reservas': 15,
+        'lucro_total': 200.50,
+        'ultimos_feeds': total_feedbacks, 
+        'pacotes': pacotes,
+    }
+    return render(request, 'dashboard.html', context)
