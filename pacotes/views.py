@@ -82,6 +82,23 @@ def hotel(request):
         'hoteis': hoteis
     })
 
+def editar_hotel(request, hotel_id):
+    """Editar um hotel existente"""
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+
+    if request.method == "POST":
+        form = HotelForm(request.POST, instance=hotel)
+        if form.is_valid():
+            form.save()
+            return redirect('hoteis')
+    else:
+        form = HotelForm(instance=hotel)
+
+    return render(request, 'editar_hotel.html', {
+        'form': form,
+        'hotel': hotel
+    })
+
 def eliminar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     if request.method == 'POST':

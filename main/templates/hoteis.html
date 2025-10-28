@@ -1,55 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestão de Hotéis{% endblock %}
+
+{% block content %}
 <h1>Gestão de Hotéis</h1>
 
-<form method="POST">
+<form method="POST" class="mb-4">
     {% csrf_token %}
-
-    <!-- Renderiza todos os campos do form exceto preco_diario -->
     {% for field in form %}
         {% if field.name != 'preco_diario' %}
-            <p>
+            <div class="mb-2">
                 {{ field.label_tag }}
                 {{ field }}
                 {% if field.errors %}
-                    <span style="color:red">{{ field.errors }}</span>
+                    <small class="text-danger">{{ field.errors }}</small>
                 {% endif %}
-            </p>
+            </div>
         {% endif %}
     {% endfor %}
-
-    <!-- Campo de preço customizado -->
-    <p>
+    <div class="mb-3">
         <label for="id_preco_diario">Preço diário (€):</label>
-        <input type="number" name="preco_diario" id="id_preco_diario" step="any" min="0" value="{{ form.preco_diario.value|default_if_none:'' }}">
-        {% if form.preco_diario.errors %}
-            <span style="color:red">{{ form.preco_diario.errors }}</span>
-        {% endif %}
-    </p>
-
-    <button type="submit">Adicionar Hotel</button>
+        <input type="number" name="preco_diario" id="id_preco_diario"
+               step="any" min="0" class="form-control"
+               value="{{ form.preco_diario.value|default_if_none:'' }}">
+    </div>
+    <button type="submit" class="btn btn-success">Adicionar Hotel</button>
 </form>
 
 <hr>
 
 <h2>Lista de Hotéis</h2>
-<table border="1">
-    <tr>
-        <th>Nome</th>
-        <th>Descrição</th>
-        <th>Preço</th>
-        <th>Ações</th>
-    </tr>
-
-    {% for hotel in hoteis %}
-    <tr>
-        <td>{{ hotel.nome }}</td>
-        <td>{{ hotel.descricao_item }}</td>
-        <td>{{ hotel.preco_diario }} €</td>
-        <td>
-            <form method="POST" action="{% url 'eliminar_hotel' hotel.hotel_id %}">
-                {% csrf_token %}
-                <button type="submit">Remover</button>
-            </form>
-        </td>
-    </tr>
-    {% endfor %}
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Descrição</th>
+            <th>Preço</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for hotel in hoteis %}
+        <tr>
+            <td>{{ hotel.nome }}</td>
+            <td>{{ hotel.descricao_item }}</td>
+            <td>{{ hotel.preco_diario }} €</td>
+            <td>
+                <!-- Botão Editar -->
+                <a href="{% url 'editar_hotel' hotel.hotel_id %}" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil-square"></i> Editar
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center">Nenhum hotel encontrado.</td></tr>
+        {% endfor %}
+    </tbody>
 </table>
+{% endblock %}
