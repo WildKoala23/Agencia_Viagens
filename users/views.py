@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import *
+from .models import *
 
 # Create your views here.
 def clientes(request):
@@ -38,3 +39,12 @@ def feedbacks(request):
         'form': form,
         'feedbacks': feedbacks
     })
+
+def user(req):
+    data = Utilizador.objects.all()
+    print(data)
+    return render(req, 'baseUser.html')
+
+# def comprasUser(req, id):
+
+#     return render(req, 'comprasUser.html')
