@@ -20,8 +20,17 @@ def home(request):
          "text": "Momentos inesquecíveis esperam por si"},
     ]
 
-    # 🔹 Busca todos os pacotes ativos
     pacotes = Pacote.objects.filter(estado="Ativo")
+
+    #Pesquisa por nome
+    query = request.GET.get("q")
+    if query:
+        pacotes = pacotes.filter(nome__icontains=query)
+
+    # Filtro por mês
+    mes = request.GET.get("mes")
+    if mes:
+        pacotes = pacotes.filter(data_inicio__month=mes)
 
     context = {
         "slides": slides,
@@ -29,6 +38,7 @@ def home(request):
     }
 
     return render(request, "home.html", context)
+
 
 
 def dashboard(request):
@@ -43,3 +53,5 @@ def dashboard(request):
         'pacotes': pacotes,
     }
     return render(request, 'dashboard.html', context)
+
+
