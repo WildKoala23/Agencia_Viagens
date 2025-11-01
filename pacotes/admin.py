@@ -21,9 +21,9 @@ class VooAdmin(admin.ModelAdmin):
 
 @admin.register(Hotel)
 class HotelAdmin(admin.ModelAdmin):
-    list_display = ('hotel_id', 'nome', 'destino', 'preco_diario')
+    list_display = ('hotel_id', 'nome', 'destino_id', 'preco_diario')
     search_fields = ('nome', 'endereco')
-    list_filter = ('destino',)
+    list_filter = ('destino_id',)
 
 
 @admin.register(Pacote)
