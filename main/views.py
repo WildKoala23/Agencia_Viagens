@@ -21,7 +21,7 @@ def home(request):
     ]
 
     # 🔹 Busca todos os pacotes ativos
-    pacotes = Pacote.objects.filter(estado="Ativo")[:6]
+    pacotes = Pacote.objects.filter(estado="Ativo")
 
     context = {
         "slides": slides,
@@ -32,7 +32,7 @@ def home(request):
 
 
 def dashboard(request):
-    pacotes = Pacote.objects.all()[:6]  
+    pacotes = Pacote.objects.all()
     total_feedbacks = Feedback.objects.count()
 
     context = {
