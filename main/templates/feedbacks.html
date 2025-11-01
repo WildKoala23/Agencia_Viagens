@@ -1,30 +1,179 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <title>Inserir Feedback</title>
-</head>
-<body>
-    <h1>Inserir Feedback</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
+{% extends 'base.html' %}
 
-    <h2>Lista de Feedbacks</h2>
-    <ul>
-        {% for fb in feedbacks %}
-            <li>
-                {{ fb.data_feedback }} - {{ fb.cliente }} - {{ fb.pacote }} -
-                Avaliação: {{ fb.avaliacao }} ⭐ <br>
-                <em>{{ fb.comentario }}</em>
-            </li>
-        {% empty %}
-            <li>Nenhum feedback.</li>
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">💬 Feedbacks dos Clientes</h1>
+    
+    <!-- Django Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
         {% endfor %}
-    </ul>
+    {% endif %}
+    
+    <!-- Formulário para Novo Feedback -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">➕ Adicionar Novo Feedback</h3>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="id_pacote" class="form-label">Pacote:</label>
+                        {{ form.pacote }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="id_avaliacao" class="form-label">Avaliação (1-5):</label>
+                        {{ form.avaliacao }}
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label for="id_data_feedback" class="form-label">Data:</label>
+                        {{ form.data_feedback }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="id_comentario" class="form-label">Comentário:</label>
+                    {{ form.comentario }}
+                </div>
+                <button type="submit" class="btn btn-success">💾 Guardar Feedback</button>
+            </form>
+        </div>
+    </div>
 
-        <a href="{% url 'home' %}">Voltar ao Início</a>
-</body>
-</html>
+    <!-- Estatísticas -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h4 class="mb-0">⭐ Top 5 Pacotes Melhor Avaliados</h4>
+                </div>
+                <div class="card-body">
+                    {% if top_pacotes %}
+                        <ul class="list-group list-group-flush">
+                            {% for pacote in top_pacotes %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>
+                                    <strong>{{ pacote.nome }}</strong><br>
+                                    <small class="text-muted">{{ pacote.total_feedbacks }} feedback(s)</small>
+                                </span>
+                                <span class="badge bg-primary rounded-pill fs-6">
+                                    {{ pacote.avaliacao_media|floatformat:1 }} ⭐
+                                </span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Ainda não há dados suficientes.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">⚠️ Clientes sem Feedback</h4>
+                </div>
+                <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                    {% if clientes_sem_feedback %}
+                        <ul class="list-group list-group-flush">
+                            {% for cliente in clientes_sem_feedback %}
+                            <li class="list-group-item">
+                                <strong>{{ cliente.user__nome }}</strong><br>
+                                <small class="text-muted">
+                                    Comprou: <strong>{{ cliente.pacote__nome }}</strong><br>
+                                    Em: {{ cliente.data_compra|date:"d/m/Y" }}
+                                </small>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">Todos os clientes deixaram feedback! 🎉</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Feedbacks -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white">
+            <h3 class="mb-0">📋 Lista de Feedbacks Recentes</h3>
+        </div>
+        <div class="card-body">
+            {% if feedbacks %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Pacote</th>
+                                <th>Avaliação</th>
+                                <th>Comentário</th>
+                                <th>Data</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fb in feedbacks %}
+                            <tr>
+                                <td>#{{ fb.feedback_id }}</td>
+                                <td><strong>{{ fb.pacote.nome }}</strong></td>
+                                <td>
+                                    <!-- Estrelas -->
+                                    <div class="text-warning">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= fb.avaliacao %}
+                                                ⭐
+                                            {% else %}
+                                                ☆
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted">({{ fb.avaliacao }}/5)</small>
+                                </td>
+                                <td>{{ fb.comentario|truncatewords:15 }}</td>
+                                <td>{{ fb.data_feedback|date:"d/m/Y" }}</td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="{% url 'editar_feedback' fb.feedback_id %}" 
+                                           class="btn btn-sm btn-warning"
+                                           title="Editar">
+                                            ✏️
+                                        </a>
+                                        <form method="POST" 
+                                              action="{% url 'eliminar_feedback' fb.feedback_id %}" 
+                                              style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-danger"
+                                                    onclick="return confirm('Tem certeza que deseja eliminar este feedback?')"
+                                                    title="Eliminar">
+                                                🗑️
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Nenhum feedback registado ainda.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-3">
+        <a href="{% url 'home' %}" class="btn btn-secondary">🏠 Voltar ao Início</a>
+    </div>
+</div>
+{% endblock %}
