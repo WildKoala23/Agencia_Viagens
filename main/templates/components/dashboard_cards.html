@@ -1,0 +1,33 @@
+<!-- templates/components/dashboard_cards.html -->
+<div class="row g-3 mb-5">
+    <div class="col-md-3">
+        <div class="stats-card reserva">
+            <div class="stats-icon"><i class="fas fa-plane"></i></div>
+            <div class="stats-label">Visitas ao Site</div>
+            <div class="stats-value">{{ visita_site }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card total">
+            <div class="stats-icon"><i class="fas fa-list"></i></div>
+            <div class="stats-label">TOTAL DE RESERVAS</div>
+            <div class="stats-value">{{ total_reservas }}</div>
+            <div class="stats-subtitle">Últimos 12 meses</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card creditos">
+            <div class="stats-icon"><i class="fas fa-wallet"></i></div>
+            <div class="stats-label">Lucro Total</div>
+            <div class="stats-value">€{{ lucro_total }}</div>
+            <div class="stats-subtitle">Disponível</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card atividades">
+            <div class="stats-icon"><i class="fas fa-clock"></i></div>
+            <div class="stats-label">Feedbacks</div>
+            <div class="stats-value">{{ ultimos_feeds }}</div>
+        </div>
+    </div>
+</div>

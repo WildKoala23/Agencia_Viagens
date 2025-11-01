@@ -19,7 +19,16 @@ def home(request):
          "title": "Explore novos destinos",
          "text": "Momentos inesquecíveis esperam por si"},
     ]
-    return render(request, "home.html", {"slides": slides})
+
+    # 🔹 Busca todos os pacotes ativos
+    pacotes = Pacote.objects.filter(estado="Ativo")[:6]
+
+    context = {
+        "slides": slides,
+        "pacotes": pacotes,
+    }
+
+    return render(request, "home.html", context)
 
 
 def dashboard(request):

@@ -1,30 +1,8 @@
-{% extends 'base.html' %}
-{% load static %}
+<!-- templates/components/package_cards.html -->
+<div class="container my-5">
+    <h4 class="section-title text-center mb-4">Pacotes Populares</h4>
 
-{% block title %}Dashboard{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{% static 'dashboard.css' %}">
-{% endblock %}
-
-{% block content %}
-<div class="header-section">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h4 mb-0">Dashboard</h1>
-            <div class="d-flex align-items-center gap-2"></div>
-        </div>
-    </div>
-</div>
-
-<div class="container">
-
-    <!-- Inclui os cards -->
-    {% include 'components/dashboard_cards.html' %}
-
-    <!-- Pacotes Populares -->
-    <h4 class="section-title">Pacotes Populares</h4>
-    <div class="row g-4 mb-5">
+    <div class="row g-4">
         {% for pacote in pacotes %}
         <div class="col-md-4">
             <div class="package-card">
@@ -45,4 +23,3 @@
         {% endfor %}
     </div>
 </div>
-{% endblock %}
