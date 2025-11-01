@@ -1,58 +1,64 @@
 from django.db import models
-from users.models import Utilizador
-from pacotes.models import Pacote
 
-# Create your models here.
+
+class FacturaLinha(models.Model):
+    fatura_linha_id = models.AutoField(primary_key=True)
+    descricao = models.TextField(blank=True, null=True, db_column='descricao')
+    quantidade = models.IntegerField(blank=True, null=True)
+    preco_unitario = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    
+    class Meta:
+        db_table = 'fatura_linha'
+       
+    def __str__(self):
+        return f"Linha {self.fatura_linha_id} - {self.descricao}: {self.preco_unitario}€"
+
+
 class Compra(models.Model):
     compra_id = models.AutoField(primary_key=True)
-    pagamento_id = models.IntegerField()
-    fatura_id = models.IntegerField()
     user = models.ForeignKey(
-        Utilizador, 
+        'users.Utilizador', 
         on_delete=models.CASCADE,
         db_column='user_id'
     )
-    pacote = models.ForeignKey(
-        'pacotes.Pacote', 
-        on_delete=models.CASCADE,
-        db_column='pacote_id'
-    )
     data_compra = models.DateField()
     valor_total = models.DecimalField(max_digits=10, decimal_places=2)
-    estado = models.TextField()
     
     class Meta:
-        
         db_table = 'compra'
     
     def __str__(self):
-        return f"Compra {self.compra_id} - {self.user.username} - {self.valor_total}€"
-    
+        return f"Compra {self.compra_id} - {self.user.nome} - {self.valor_total}€"
+
+
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)
-    compra_id = models.IntegerField()  # Should be FK to Compra
-    data_pagamento = models.DateField()
-    valor = models.DecimalField(max_digits=10, decimal_places=2)  
-    estado = models.TextField()
-    metodo = models.TextField()
-    
-    class Meta:
-        
-        db_table = 'pagamento'
-       
-    def __str__(self):
-        return f"Pagamento {self.pagamento_id} - {self.valor}€ em {self.data_pagamento}" 
-    
-      
-class Factura(models.Model):
-    fatura_id = models.AutoField(primary_key=True)
-    compra_id = models.ForeignKey(
-        Compra, 
+    compra = models.ForeignKey(
+        Compra,
         on_delete=models.CASCADE,
         db_column='compra_id'
     )
-    pagamento_id = models.ForeignKey(
-        Pagamento, 
+    data_pagamento = models.DateField()
+    valor = models.DecimalField(max_digits=10, decimal_places=2)  
+    estado = models.TextField(blank=True, null=True)
+    metodo = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        db_table = 'pagamento'
+       
+    def __str__(self):
+        return f"Pagamento {self.pagamento_id} - {self.valor}€ - {self.estado}"
+
+
+class Factura(models.Model):
+    fatura_id = models.AutoField(primary_key=True)
+    compra = models.ForeignKey(
+        Compra,
+        on_delete=models.CASCADE,
+        db_column='compra_id'
+    )
+    pagamento = models.ForeignKey(
+        Pagamento,
         on_delete=models.CASCADE,
         db_column='pagamento_id'
     )
@@ -60,33 +66,7 @@ class Factura(models.Model):
     valor_total = models.DecimalField(max_digits=10, decimal_places=2) 
 
     class Meta:
-        
         db_table = 'fatura'
 
     def __str__(self):
-        return f'Factura: {self.fatura_id} -> {self.data_emissao}'
-    
-
-class FacturaLinha(models.Model):
-    fatura_linha_id = models.AutoField(primary_key=True)
-    fatura = models.ForeignKey(
-        Factura, 
-        on_delete=models.CASCADE,
-        db_column='fatura_id'
-    )
-    pacote = models.ForeignKey(
-        Pacote, 
-        on_delete=models.CASCADE,
-        db_column='pacote_id'
-    )
-    descricao_item = models.TextField()
-    preco = models.DecimalField(max_digits=10, decimal_places=2)
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
-    
-    class Meta:
-        db_table = 'fatura_linha'
-       
-    def __str__(self):
-        return f"Fatura {self.fatura.fatura_id} - {self.descricao_item}: {self.subtotal}€"
-    
-
+        return f'Factura: {self.fatura_id} - {self.valor_total}€'
