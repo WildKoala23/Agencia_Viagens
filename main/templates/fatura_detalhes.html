@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalhes da Fatura #{{ fatura.fatura_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'fatura_detalhes.css' %}">
+</head>
+<body>
+    <div class="container fatura-detalhes-container">
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">Erro!</h4>
+            <p>{{ error }}</p>
+            <hr>
+            <a href="{% url 'faturas' %}" class="btn btn-danger">Voltar às Faturas</a>
+        </div>
+        {% else %}
+        
+        <!-- Cabeçalho da Fatura -->
+        <div class="invoice-header">
+            <div class="row">
+                <div class="col-md-8">
+                    <h1>Fatura #{{ fatura.fatura_id }}</h1>
+                    <p class="mb-0">Data de Emissão: {{ fatura.data_emissao|date:"d/m/Y H:i" }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <h2 class="mb-0">{{ fatura.valor_total }}€</h2>
+                    {% if fatura.estado_pagamento == 'pago' %}
+                        <span class="badge bg-success fs-6">PAGO</span>
+                    {% elif fatura.estado_pagamento == 'pendente' %}
+                        <span class="badge bg-warning fs-6">PENDENTE</span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6">{{ fatura.estado_pagamento|upper }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Cliente e Pagamento -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="info-section">
+                    <h4 class="text-primary">Informações do Cliente</h4>
+                    <hr>
+                    <p><strong>Nome:</strong> {{ fatura.nome_cliente }}</p>
+                    <p><strong>Email:</strong> {{ fatura.email }}</p>
+                    <p><strong>ID Cliente:</strong> #{{ fatura.user_id }}</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="info-section">
+                    <h4 class="text-primary">Informações de Pagamento</h4>
+                    <hr>
+                    <p><strong>ID Compra:</strong> #{{ fatura.compra_id }}</p>
+                    <p><strong>ID Pagamento:</strong> 
+                        {% if fatura.pagamento_id %}
+                            #{{ fatura.pagamento_id }}
+                        {% else %}
+                            <span class="text-muted">Sem pagamento associado</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Tipo de Pagamento:</strong> 
+                        {% if fatura.tipo_pagamento %}
+                            <span class="badge bg-info">{{ fatura.tipo_pagamento }}</span>
+                        {% else %}
+                            <span class="text-muted">N/A</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linhas da Fatura -->
+        <div class="card items-card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Itens da Fatura</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover items-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Pacote</th>
+                                <th>Destino</th>
+                                <th>Descrição</th>
+                                <th class="text-end">Preço</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for linha in linhas %}
+                            <tr>
+                                <td>{{ linha.fatura_linha_id }}</td>
+                                <td>
+                                    <strong>{{ linha.nome_pacote }}</strong>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">{{ linha.destino_nome }}</span>
+                                </td>
+                                <td>
+                                    {% if linha.descricao_item %}
+                                        {{ linha.descricao_item }}
+                                    {% else %}
+                                        <small class="text-muted">{{ linha.descricao_pacote|truncatewords:10 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">{{ linha.preco }}€</td>
+                                <td class="text-end fw-bold">{{ linha.subtotal }}€</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="no-items">Nenhum item encontrado nesta fatura.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total -->
+        <div class="total-section text-end">
+            <div class="row">
+                <div class="col-md-8 offset-md-4">
+                    <h3 class="mb-3">Resumo</h3>
+                    <hr>
+                    <p><strong>Total de Itens:</strong> {{ linhas|length }}</p>
+                    <h2 class="text-primary"><strong>Total a Pagar: {{ fatura.valor_total }}€</strong></h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="action-buttons mt-4">
+            <a href="{% url 'faturas' %}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar às Faturas
+            </a>
+            <button class="btn btn-success" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir Fatura
+            </button>
+        </div>
+
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

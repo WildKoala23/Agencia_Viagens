@@ -2,29 +2,99 @@
 <html lang="pt">
 <head>
     <meta charset="UTF-8">
-    <title>Inserir Feedback</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedbacks dos Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'feedbacks.css' %}">
 </head>
 <body>
-    <h1>Inserir Feedback</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
+    <div class="container feedbacks-container">
+        <div class="feedbacks-header">
+            <h1><i class="fas fa-star"></i> Feedbacks dos Clientes</h1>
+        </div>
 
-    <h2>Lista de Feedbacks</h2>
-    <ul>
-        {% for fb in feedbacks %}
-            <li>
-                {{ fb.data_feedback }} - {{ fb.cliente }} - {{ fb.pacote }} -
-                Avaliação: {{ fb.avaliacao }} ⭐ <br>
-                <em>{{ fb.comentario }}</em>
-            </li>
-        {% empty %}
-            <li>Nenhum feedback.</li>
-        {% endfor %}
-    </ul>
+        <!-- Botão para ver estatísticas -->
+        <div class="btn-estatisticas">
+            <a href="{% url 'feedback_estatisticas' %}" class="btn btn-success">
+                <i class="fas fa-chart-bar"></i> Ver Estatísticas de Avaliações
+            </a>
+        </div>
 
-        <a href="{% url 'home' %}">Voltar ao Início</a>
+        <!-- Formulário para inserir novo feedback -->
+        <div class="card form-card">
+            <div class="card-header">
+                <h3><i class="fas fa-comment-dots"></i> Deixar Feedback</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane"></i> Enviar Feedback
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de Feedbacks -->
+        <h2 class="mb-4"><i class="fas fa-comments"></i> Últimos Feedbacks</h2>
+        
+        {% if feedbacks %}
+        <div class="feedbacks-list">
+            {% for fb in feedbacks %}
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <div>
+                        <h3 class="feedback-pacote">{{ fb.nome_pacote }}</h3>
+                        {% if fb.destino_nome %}
+                            <span class="feedback-destino">
+                                <i class="fas fa-map-marker-alt"></i> {{ fb.destino_nome }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="feedback-rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= fb.avaliacao %}
+                            <span class="star">★</span>
+                        {% else %}
+                            <span class="star empty">☆</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                
+                {% if fb.comentario %}
+                    <p class="feedback-comentario">"{{ fb.comentario }}"</p>
+                {% else %}
+                    <p class="feedback-comentario sem-comentario">Sem comentário adicional</p>
+                {% endif %}
+                
+                <div class="feedback-data">
+                    <i class="far fa-calendar-alt"></i>
+                    <span>{{ fb.data_feedback|date:"d/m/Y" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-feedbacks">
+            <div class="no-feedbacks-icon">
+                <i class="far fa-comments"></i>
+            </div>
+            <p>Ainda não há feedbacks. Seja o primeiro a avaliar!</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Voltar ao Início
+            </a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

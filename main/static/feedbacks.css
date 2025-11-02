@@ -1,0 +1,273 @@
+/* =====================================================
+   CSS para Página de Feedbacks
+   ===================================================== */
+
+/* Container principal */
+.feedbacks-container {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+/* Cabeçalho */
+.feedbacks-header {
+    margin-bottom: 2rem;
+}
+
+.feedbacks-header h1 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* Card do formulário */
+.form-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.form-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.form-card .card-header {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    border-radius: 15px 15px 0 0;
+    padding: 1.25rem 1.5rem;
+}
+
+.form-card .card-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.form-card .card-body {
+    padding: 1.5rem;
+}
+
+/* Lista de feedbacks */
+.feedbacks-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+/* Card individual de feedback */
+.feedback-card {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.feedback-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+}
+
+.feedback-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Header do card */
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f1f3f5;
+}
+
+.feedback-pacote {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.feedback-destino {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.3rem;
+}
+
+/* Estrelas de avaliação */
+.feedback-rating {
+    display: flex;
+    gap: 0.3rem;
+    font-size: 1.5rem;
+}
+
+.star {
+    color: #ffd700;
+    text-shadow: 0 0 3px rgba(255, 215, 0, 0.5);
+}
+
+.star.empty {
+    color: #dee2e6;
+}
+
+/* Comentário */
+.feedback-comentario {
+    color: #495057;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 1rem 0;
+    font-style: italic;
+}
+
+.feedback-comentario.sem-comentario {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+/* Data */
+.feedback-data {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #f1f3f5;
+}
+
+.feedback-data i {
+    color: #f093fb;
+}
+
+/* Mensagem quando não há feedbacks */
+.no-feedbacks {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.no-feedbacks-icon {
+    font-size: 4rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.no-feedbacks p {
+    color: #6c757d;
+    font-size: 1.1rem;
+}
+
+/* Botões */
+.btn-primary {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    padding: 0.7rem 2rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(240, 147, 251, 0.4);
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+    border: none;
+    padding: 0.7rem 2rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(134, 143, 150, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border: none;
+    padding: 0.7rem 2rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(17, 153, 142, 0.4);
+}
+
+/* Botão de estatísticas */
+.btn-estatisticas {
+    margin-bottom: 2rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .feedbacks-container {
+        padding: 1rem;
+    }
+    
+    .feedbacks-list {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .feedback-card {
+        padding: 1rem;
+    }
+    
+    .feedback-pacote {
+        font-size: 1rem;
+    }
+    
+    .feedback-rating {
+        font-size: 1.2rem;
+    }
+}
+
+/* Animação de entrada */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feedback-card {
+    animation: fadeInUp 0.5s ease;
+}
+
+.feedback-card:nth-child(1) { animation-delay: 0.1s; }
+.feedback-card:nth-child(2) { animation-delay: 0.2s; }
+.feedback-card:nth-child(3) { animation-delay: 0.3s; }
+.feedback-card:nth-child(4) { animation-delay: 0.4s; }
+.feedback-card:nth-child(5) { animation-delay: 0.5s; }

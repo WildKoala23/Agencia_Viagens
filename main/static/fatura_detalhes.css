@@ -1,0 +1,358 @@
+/* =====================================================
+   CSS para Página de Detalhes da Fatura
+   ===================================================== */
+
+/* Container principal */
+.fatura-detalhes-container {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+/* Cabeçalho da fatura */
+.invoice-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+.invoice-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.invoice-header p {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+    opacity: 0.9;
+}
+
+.invoice-header h2 {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.invoice-header .badge {
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 30px;
+    margin-top: 0.5rem;
+}
+
+/* Seções de informação */
+.info-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.info-section h4 {
+    color: #667eea;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 0.5rem;
+}
+
+.info-section p {
+    margin-bottom: 0.75rem;
+    color: #2c3e50;
+}
+
+.info-section strong {
+    color: #34495e;
+    font-weight: 600;
+}
+
+/* Card dos itens */
+.items-card {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.items-card .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.25rem 1.5rem;
+}
+
+.items-card .card-header h4 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.items-card .card-body {
+    padding: 0;
+}
+
+/* Tabela de itens */
+.items-table {
+    margin-bottom: 0;
+}
+
+.items-table thead {
+    background-color: #f8f9fa;
+}
+
+.items-table thead th {
+    color: #2c3e50;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.items-table tbody tr {
+    transition: background-color 0.3s ease;
+}
+
+.items-table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.items-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.items-table tbody td strong {
+    color: #2c3e50;
+    font-size: 1.05rem;
+}
+
+.items-table tbody td small {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+/* Seção de total */
+.total-section {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.total-section h3 {
+    color: #1976d2;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.total-section h2 {
+    color: #0d47a1;
+    font-weight: 800;
+    font-size: 2rem;
+}
+
+.total-section p {
+    color: #424242;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Badges personalizados */
+.badge.bg-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+}
+
+.badge.bg-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+}
+
+.badge.bg-danger {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%) !important;
+    padding: 0.6rem 1.5rem;
+    font-size: 1rem;
+}
+
+.badge.bg-info {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+}
+
+.badge.bg-secondary {
+    background: linear-gradient(135deg, #868f96 0%, #596164 100%) !important;
+}
+
+/* Botões de ação */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.btn-secondary {
+    background: linear-gradient(135deg, #868f96 0%, #596164 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(134, 143, 150, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border: none;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+}
+
+/* Alerta de erro */
+.alert-danger {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.alert-danger h4 {
+    font-weight: 700;
+}
+
+.alert-danger .btn-danger {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    border-radius: 25px;
+}
+
+/* Mensagem sem itens */
+.no-items {
+    padding: 3rem;
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+    font-size: 1.1rem;
+}
+
+/* Impressão */
+@media print {
+    .action-buttons {
+        display: none;
+    }
+    
+    .fatura-detalhes-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .invoice-header {
+        background: #667eea !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .info-section,
+    .items-card,
+    .total-section {
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .fatura-detalhes-container {
+        padding: 1rem;
+    }
+    
+    .invoice-header {
+        padding: 1.5rem;
+    }
+    
+    .invoice-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .invoice-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .items-table {
+        font-size: 0.85rem;
+    }
+    
+    .items-table thead th,
+    .items-table tbody td {
+        padding: 0.6rem;
+    }
+    
+    .total-section h2 {
+        font-size: 1.5rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+    }
+}
+
+/* Animação de entrada */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fatura-detalhes-container > * {
+    animation: fadeIn 0.6s ease;
+}
+
+.info-section:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.info-section:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.items-card {
+    animation-delay: 0.3s;
+}
+
+.total-section {
+    animation-delay: 0.4s;
+}

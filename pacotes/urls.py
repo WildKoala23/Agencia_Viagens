@@ -16,5 +16,6 @@ urlpatterns = [
     path("hoteis/eliminar/<int:hotel_id>/", views.eliminar_hotel, name="eliminar_hotel"),
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
+    path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
 
 ]
