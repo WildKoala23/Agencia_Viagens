@@ -1,10 +1,16 @@
 {% extends "baseUser.html" %}
+{% load static %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'comprasUser.css' %}">
+{% endblock %}
+
 {% block title %}User Page{% endblock %}
 {% block page_title %}Minhas Reservas{% endblock %}
 
 {% block content %}
-
-<table class="table">
+<div class="table-container">
+  <table class="table">
     <thead>
       <tr>
         <th scope="col">Registo</th>
@@ -15,17 +21,14 @@
       </tr>
     </thead>
     <tbody>
-    {% for curso in cursos %}
-        <th scope="row">{{curso.Registo}}</th>
-        <td>{{ curso.Denominacao }}</td>
-        <td>{{ curso.ECTS }}</td>
-        <td>{{ curso.Desc_Estado }}</td>
-        <td>{{ curso.Escola }}</td>
-    {% endfor %}
+      <tr>
+        <td>1</td>
+        <td>Teste</td>
+        <td>6</td>
+        <td>Aprovado</td>
+        <td>Universidade do Porto</td>
+      </tr>
     </tbody>
   </table>
-
-
-{% include "components/footer.html" %}
-
+</div>
 {% endblock %}
