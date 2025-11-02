@@ -1,8 +1,29 @@
 {% extends "baseUser.html" %}
 {% block title %}User Page{% endblock %}
+{% block page_title %}Minhas Reservas{% endblock %}
 
 {% block content %}
 
+<table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Registo</th>
+        <th scope="col">Denominação</th>
+        <th scope="col">ECTS</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Instituição de ensino superior</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for curso in cursos %}
+        <th scope="row">{{curso.Registo}}</th>
+        <td>{{ curso.Denominacao }}</td>
+        <td>{{ curso.ECTS }}</td>
+        <td>{{ curso.Desc_Estado }}</td>
+        <td>{{ curso.Escola }}</td>
+    {% endfor %}
+    </tbody>
+  </table>
 
 
 {% include "components/footer.html" %}

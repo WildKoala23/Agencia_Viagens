@@ -26,7 +26,20 @@ def eliminar_destino(request, destino_id):
         return redirect('destinos')
     return redirect('destinos')
 
+def feedbacks(request):
+    if request.method == "POST":
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('feedbacks')
+    else:
+        form = FeedbackForm()
 
+    feedbacks = Feedback.objects.all()
+    return render(request, 'feedbacks.html', {
+        'form': form,
+        'feedbacks': feedbacks
+    })
 
 def voos(request, voo_id=None):
     # Se for edição, carrega o voo

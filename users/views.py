@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import connection
 from .forms import *
 from .models import *
 
@@ -25,26 +26,15 @@ def eliminar_cliente(request, cliente_id):
         return redirect('clientes')
     return redirect('clientes')
 
-def feedbacks(request):
-    if request.method == "POST":
-        form = FeedbackForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('feedbacks')
-    else:
-        form = FeedbackForm()
 
-    feedbacks = Feedback.objects.all()
-    return render(request, 'feedbacks.html', {
-        'form': form,
-        'feedbacks': feedbacks
-    })
 
 def user(req):
-    data = Utilizador.objects.all()
-    print(data)
+
     return render(req, 'baseUser.html')
 
-# def comprasUser(req, id):
-
-#     return render(req, 'comprasUser.html')
+def comprasUser(req):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM comprasUtilizador(1)")
+        rows = cursor.fetchall()
+        print(rows)
+    return render(req, 'comprasUser.html')

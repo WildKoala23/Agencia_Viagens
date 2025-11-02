@@ -15,5 +15,6 @@ urlpatterns = [
     path('hoteis/editar/<int:hotel_id>/', views.editar_hotel, name='editar_hotel'),
     path("hoteis/eliminar/<int:hotel_id>/", views.eliminar_hotel, name="eliminar_hotel"),
     
-    
+    path('feedbacks/', views.feedbacks, name='feedbacks'),
+
 ]

@@ -11,52 +11,53 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" 
           crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="{% static 'sidebar.css' %}"">
+    <link rel="stylesheet" href="{% static 'baseUser.css' %}">
     {% block styles %}{% endblock %}
 </head>
 <body>
     <!-- Sidebar -->
-    <nav id="sidebar">
-        <div class="sidebar-header">
-            <a href="{% url 'home' %}" class="brand-link">
-                <i class="bi bi-airplane-fill"></i>
-                <span>Atlas Gateway</span>
-            </a>
-        </div>
-        <ul class="nav flex-column">
-            <li class="nav-item">
-                <a class="nav-link" href="">
-                    <i class="bi bi-speedometer2"></i>Dashboard
+    <body>
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="brand-link">
+                    <i class="bi bi-airplane-fill"></i>
+                    <span>Atlas Gateway</span>
                 </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
-                    <i class="bi bi-box-seam"></i>Pacotes
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
-                    <i class="bi bi-chat-left-text"></i>Feedback
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
-                    <i class="bi bi-cart-check" href=""></i>Compras
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="">
-                    <i class="bi bi-person-circle"></i>Perfil
-                </a>
-            </li>
-        </ul>
-    </nav>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="#"><i class="bi bi-speedometer2"></i>Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href=""><i class="bi bi-box-seam"></i>Pacotes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="bi bi-chat-left-text"></i>Feedback</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'comprasUser' %}"><i class="bi bi-cart-check"></i>Compras</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="bi bi-person-circle"></i>Perfil</a>
+                </li>
+            </ul>
+        </nav>
+    
+        <!-- Top Navigation -->
+        <nav class="top-navbar">
+            <div class="navbar-title">
+                <h1>{% block page_title %}Minhas Reservas{% endblock %}</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-name">
+                    <p>João Silva</p>
+                </div>
+                <div class="circle-initials">JS</div>
+            </div>
+        </nav>
 
-        <div class="container-fluid p-4">
-            {% block content %}
-            {% endblock %}
-        </div>
-    </div>
+    </body>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
