@@ -5,8 +5,7 @@ from pacotes.models import Pacote
 # Create your models here.
 class Compra(models.Model):
     compra_id = models.AutoField(primary_key=True)
-    pagamento_id = models.IntegerField()
-    fatura_id = models.IntegerField()
+    pagamento_id = models.IntegerField(null=True, blank=True)
     user = models.ForeignKey(
         Utilizador, 
         on_delete=models.CASCADE,
@@ -26,7 +25,7 @@ class Compra(models.Model):
         db_table = 'compra'
     
     def __str__(self):
-        return f"Compra {self.compra_id} - {self.user.username} - {self.valor_total}€"
+        return f"Compra {self.compra_id} - {self.user.nome} - {self.valor_total}€"
     
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)

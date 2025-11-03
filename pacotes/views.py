@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.db import connection
 from .forms import *
 from django.db.models import Q
 
@@ -35,11 +36,61 @@ def feedbacks(request):
     else:
         form = FeedbackForm()
 
-    feedbacks = Feedback.objects.all()
+    # Buscar feedbacks usando a VIEW criada na BD (SQL DIRETO - SUA PARTE)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM view_feedbacks_completos")
+        columns = [col[0] for col in cursor.description]
+        feedbacks = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
     return render(request, 'feedbacks.html', {
         'form': form,
         'feedbacks': feedbacks
     })
+
+
+def feedback_estatisticas(request):
+    """
+    Mostra estatísticas gerais de feedbacks e avaliações de pacotes
+    (SQL DIRETO - SUA PARTE - usando FUNCTIONs e VIEWs da BD)
+    """
+    with connection.cursor() as cursor:
+        # Estatísticas gerais
+        cursor.execute("SELECT * FROM get_estatisticas_feedbacks()")
+        columns = [col[0] for col in cursor.description]
+        result = cursor.fetchone()
+        estatisticas_gerais = dict(zip(columns, result)) if result else {}
+        
+        # Calcular percentagens para as barras de progresso
+        if estatisticas_gerais and estatisticas_gerais.get('total_feedbacks', 0) > 0:
+            total = estatisticas_gerais['total_feedbacks']
+            estatisticas_gerais['percentual_5_estrelas'] = round((estatisticas_gerais['total_5_estrelas'] / total) * 100, 1)
+            estatisticas_gerais['percentual_4_estrelas'] = round((estatisticas_gerais['total_4_estrelas'] / total) * 100, 1)
+            estatisticas_gerais['percentual_3_estrelas'] = round((estatisticas_gerais['total_3_estrelas'] / total) * 100, 1)
+            estatisticas_gerais['percentual_2_estrelas'] = round((estatisticas_gerais['total_2_estrelas'] / total) * 100, 1)
+            estatisticas_gerais['percentual_1_estrela'] = round((estatisticas_gerais['total_1_estrela'] / total) * 100, 1)
+        else:
+            estatisticas_gerais['percentual_5_estrelas'] = 0
+            estatisticas_gerais['percentual_4_estrelas'] = 0
+            estatisticas_gerais['percentual_3_estrelas'] = 0
+            estatisticas_gerais['percentual_2_estrelas'] = 0
+            estatisticas_gerais['percentual_1_estrela'] = 0
+        
+        # Top pacotes avaliados
+        cursor.execute("SELECT * FROM get_top_pacotes_avaliados(10)")
+        columns = [col[0] for col in cursor.description]
+        top_pacotes = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        
+        # Estatísticas por pacote
+        cursor.execute("SELECT * FROM view_estatisticas_pacotes")
+        columns = [col[0] for col in cursor.description]
+        estatisticas_pacotes = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+    return render(request, 'feedback_estatisticas.html', {
+        'estatisticas_gerais': estatisticas_gerais,
+        'top_pacotes': top_pacotes,
+        'estatisticas_pacotes': estatisticas_pacotes
+    })
+
 
 def voos(request, voo_id=None):
     # Se for edição, carrega o voo
