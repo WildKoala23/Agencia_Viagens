@@ -23,6 +23,8 @@ class VooForm(forms.ModelForm):
         widgets = {
             'data_saida': DateTimeInput(attrs={'type': 'datetime-local'}),
             'data_chegada': DateTimeInput(attrs={'type': 'datetime-local'}),
+            'companhia': forms.TextInput(attrs={'style': 'resize:none;'}),
+        
         }
 
 
