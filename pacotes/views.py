@@ -151,7 +151,6 @@ def eliminar_voo(request, voo_id):
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
         voo.delete()
-        messages.success(request, "🗑️ Voo eliminado com sucesso.")
     return redirect('voos')
 
 
