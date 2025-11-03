@@ -110,21 +110,17 @@ def voos(request, voo_id=None):
             try:
                 with transaction.atomic():
                     form.save()
-                messages.success(request, "✈️ Voo guardado com sucesso!")
                 return redirect('voos')
 
             except (IntegrityError, ProgrammingError, DatabaseError) as e:
                 erro_texto = str(e)
 
-                # 🔹 Extrai apenas o texto antes do CONTEXT (mensagem do RAISE EXCEPTION)
                 if "CONTEXT" in erro_texto:
                     erro_texto = erro_texto.split("CONTEXT")[0].strip()
 
-                # 🔹 Remove prefixos técnicos e limpa o texto
                 erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
                 erro_texto = erro_texto.replace("Erro do banco de dados:", "").strip()
 
-                # 🔹 Mostra a mensagem limpa ao utilizador
                 messages.error(request, erro_texto or "Erro ao inserir voo. Verifique os dados.")
         else:
             messages.error(request, "❌ Erro ao validar o formulário. Verifique os dados.")
