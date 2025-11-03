@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
+from django.core import serializers
 from .forms import *
 from .models import *
 
@@ -40,8 +41,6 @@ def eliminar_cliente(request, cliente_id):
         return redirect('inserir_clientes')
     return redirect('inserir_clientes')
 
-
-
 def user(req):
 
     return render(req, 'baseUser.html')
@@ -49,6 +48,6 @@ def user(req):
 def comprasUser(req):
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(1)")
-        rows = cursor.fetchall()
-        print(rows)
-    return render(req, 'comprasUser.html')
+        data = cursor.fetchall()
+        print(data)
+    return render(req, 'comprasUser.html', {"data": data})

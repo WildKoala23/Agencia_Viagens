@@ -25,22 +25,15 @@
     </thead>
     <tbody>
       <tr>
-        <td>1</td>
-        <td>Pacote A</td>
-        <td>Lisboa</td>
-        <td>01/11/2025</td>
-        <td>05/11/2025</td>
-        <td>Confirmada</td>
-        <td>€450</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>Pacote B</td>
-        <td>Porto</td>
-        <td>10/11/2025</td>
-        <td>15/11/2025</td>
-        <td>Pendente</td>
-        <td>€600</td>
+        {% for i in data %}
+          <td>{{i.0}}</td>
+          <td>{{i.1}}</td>
+          <td>{{i.2}}</td>
+          <td>{{i.3}}</td>
+          <td>{{i.4}}</td>
+          <td>{{i.5}}</td>
+          <td>{{i.6}}</td>
+        {% endfor %}
       </tr>
     </tbody>
   </table>
