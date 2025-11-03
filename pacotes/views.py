@@ -132,6 +132,10 @@ def eliminar_voo(request, voo_id):
     return redirect('voos')
 
 def hotel(request):
+    """
+    Mostra todos os hotéis (a partir da view SQL vw_hoteis)
+    e permite adicionar novos hotéis via formulário.
+    """
     if request.method == "POST":
         form = HotelForm(request.POST)
         if form.is_valid():
@@ -140,7 +144,12 @@ def hotel(request):
     else:
         form = HotelForm()
 
-    hoteis = Hotel.objects.all()
+    # Buscar dados diretamente da VIEW SQL
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM vw_hoteis ORDER BY nome_hotel;")  # <-- alterado aqui
+        columns = [col[0] for col in cursor.description]
+        hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
     return render(request, 'hoteis.html', {
         'form': form,
         'hoteis': hoteis
