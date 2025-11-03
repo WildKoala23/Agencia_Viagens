@@ -17,6 +17,24 @@ class Pacote(models.Model):
     def __str__(self):
         return f"{self.nome} - {self.preco_total}€"
     
+class PacoteView(models.Model):
+    pacote_id = models.AutoField(primary_key=True)
+    nome = models.TextField()
+    descricao_item = models.TextField()
+    data_inicio = models.DateField()
+    data_fim = models.DateField()
+    preco_total = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.TextField()
+    imagem = models.TextField()
+
+    class Meta:
+        managed = False
+        db_table = 'pacote_view'
+
+    def __str__(self):
+        return f"{self.nome} - {self.preco_total}€"
+    
+
 class Destino(models.Model):
     destino_id = models.AutoField(primary_key=True)
     pais = models.TextField()

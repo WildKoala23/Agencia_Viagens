@@ -7,11 +7,15 @@
         {% for pacote in pacotes %}
         <div class="col-md-4">
             <div class="package-card">
-             <div class="package-image">
+            <div class="package-image">
     {% if pacote.imagem %}
-        <img src="{{ pacote.imagem.url }}" alt="{{ pacote.nome }}" class="img-fluid rounded shadow-sm" style="width: 100%; height: 220px; object-fit: cover;">
+        <img src="/media/{{ pacote.imagem }}" alt="{{ pacote.nome }}"
+             class="img-fluid rounded shadow-sm"
+             style="width: 100%; height: 220px; object-fit: cover;">
     {% else %}
-        <img src="{% static 'default.jpg' %}" alt="Sem imagem" class="img-fluid rounded shadow-sm" style="width: 100%; height: 220px; object-fit: cover;">
+        <img src="{% static 'default.jpg' %}" alt="Sem imagem"
+             class="img-fluid rounded shadow-sm"
+             style="width: 100%; height: 220px; object-fit: cover;">
     {% endif %}
 </div>
                 <div class="package-body">
