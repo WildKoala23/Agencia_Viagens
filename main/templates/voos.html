@@ -8,25 +8,44 @@
     <link rel="stylesheet" href="{% static 'voos.css' %}">
 </head>
 <body>
+    
     <div class="container">
         <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
         <br>
 
         <div class="card">
             <h1>Inserir Voo</h1>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}" style="color: brown;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="alert-error">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             <form method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="btn-save">Guardar Voo</button>
             </form>
         </div>
+
         <div class="card">
             <div class="voos-header">
                 <h2>Lista de Voos</h2>
 
                 <form method="get" class="search-form">
-                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input" >
-                    <button type="submit" class="btn-search"> Procurar</button>
+                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input">
+                    <button type="submit" class="btn-search">Procurar</button>
                 </form>
             </div>
 
@@ -36,8 +55,7 @@
                         <div class="voo-info">
                             <div class="voo-detalhes">
                                 <span class="voo-nome">
-                                     {{ voo.companhia }} → {{ voo.destino.nome }}
-
+                                    {{ voo.companhia }} → {{ voo.destino.nome }}
                                 </span>
                                 <span class="voo-extra">
                                     Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
@@ -62,14 +80,17 @@
             </ul>
         </div>
     </div>
+
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-    if (window.location.search.includes("q=")) {
-        // Só faz scroll se foi feita uma pesquisa
-        const listaVoos = document.querySelector(".voos-header");
-        if (listaVoos) {
-            listaVoos.scrollIntoView({ behavior: "smooth" });
-        }}});
-</script>
+        if (window.location.search.includes("q=")) {
+            // Só faz scroll se foi feita uma pesquisa
+            const listaVoos = document.querySelector(".voos-header");
+            if (listaVoos) {
+                listaVoos.scrollIntoView({ behavior: "smooth" });
+            }
+        }
+    });
+    </script>
 </body>
 </html>

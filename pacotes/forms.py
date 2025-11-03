@@ -24,9 +24,12 @@ class VooForm(forms.ModelForm):
             'data_saida': DateTimeInput(attrs={'type': 'datetime-local'}),
             'data_chegada': DateTimeInput(attrs={'type': 'datetime-local'}),
             'companhia': forms.TextInput(attrs={'style': 'resize:none;'}),
-        
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.required = False
 
     def save(self, commit=True):
         voo = super().save(commit=False)

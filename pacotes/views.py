@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from .forms import *
 from django.db.models import Q
+from django.db import connection, transaction, IntegrityError, ProgrammingError, DatabaseError
+from django.contrib import messages
+import re
+
 
 # Create your views here.
 
@@ -91,32 +95,52 @@ def feedback_estatisticas(request):
         'estatisticas_pacotes': estatisticas_pacotes
     })
 
-
 def voos(request, voo_id=None):
-    # Se for edição, carrega o voo
-    if voo_id:
-        voo = get_object_or_404(Voo, voo_id=voo_id)
-    else:
-        voo = None
+    """
+    Página de gestão de voos.
+    - Permite inserir e editar voos.
+    - Mostra mensagens de erro vindas do trigger PostgreSQL (RAISE EXCEPTION).
+    """
 
-    # Guardar voo (POST)
+    voo = get_object_or_404(Voo, voo_id=voo_id) if voo_id else None
+
     if request.method == "POST":
         form = VooForm(request.POST, instance=voo)
         if form.is_valid():
-            form.save()
-            return redirect('voos')
+            try:
+                with transaction.atomic():
+                    form.save()
+                messages.success(request, "✈️ Voo guardado com sucesso!")
+                return redirect('voos')
+
+            except (IntegrityError, ProgrammingError, DatabaseError) as e:
+                erro_texto = str(e)
+
+                # 🔹 Extrai apenas o texto antes do CONTEXT (mensagem do RAISE EXCEPTION)
+                if "CONTEXT" in erro_texto:
+                    erro_texto = erro_texto.split("CONTEXT")[0].strip()
+
+                # 🔹 Remove prefixos técnicos e limpa o texto
+                erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+                erro_texto = erro_texto.replace("Erro do banco de dados:", "").strip()
+
+                # 🔹 Mostra a mensagem limpa ao utilizador
+                messages.error(request, erro_texto or "Erro ao inserir voo. Verifique os dados.")
+        else:
+            messages.error(request, "❌ Erro ao validar o formulário. Verifique os dados.")
     else:
         form = VooForm(instance=voo)
 
-    # ---  PESQUISA ---
-    if q := request.GET.get("q"):
+    # --- PESQUISA ---
+    q = request.GET.get("q")
+    if q:
         voos = Voo.objects.filter(
             Q(destino__nome__icontains=q) |
             Q(companhia__icontains=q)
         )
     else:
         voos = Voo.objects.all()
-    # ---  FIM DA PESQUISA ---
+    # --- FIM PESQUISA ---
 
     return render(request, 'voos.html', {
         'form': form,
@@ -124,12 +148,16 @@ def voos(request, voo_id=None):
         'voo_editar': voo,
     })
 
-
 def eliminar_voo(request, voo_id):
+    """
+    Elimina um voo existente.
+    """
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
         voo.delete()
+        messages.success(request, "🗑️ Voo eliminado com sucesso.")
     return redirect('voos')
+
 
 def hotel(request):
     """
