@@ -27,13 +27,14 @@
                     <p class="mb-0">Data de Emissão: {{ fatura.data_emissao|date:"d/m/Y H:i" }}</p>
                 </div>
                 <div class="col-md-4 text-end">
-                    <h2 class="mb-0">{{ fatura.valor_total }}€</h2>
-                    {% if fatura.estado_pagamento == 'pago' %}
+                    {% if fatura.estado_pagamento == 'Pago' %}
                         <span class="badge bg-success fs-6">PAGO</span>
-                    {% elif fatura.estado_pagamento == 'pendente' %}
+                    {% elif fatura.estado_pagamento == 'Pendente' %}
                         <span class="badge bg-warning fs-6">PENDENTE</span>
+                    {% elif fatura.estado_pagamento == 'Falhado' %}
+                        <span class="badge bg-danger fs-6">FALHADO</span>
                     {% else %}
-                        <span class="badge bg-danger fs-6">{{ fatura.estado_pagamento|upper }}</span>
+                        <span class="badge bg-secondary fs-6">{{ fatura.estado_pagamento|upper }}</span>
                     {% endif %}
                 </div>
             </div>

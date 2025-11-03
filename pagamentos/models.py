@@ -55,7 +55,7 @@ class Factura(models.Model):
         on_delete=models.CASCADE,
         db_column='pagamento_id'
     )
-    data_emissao = models.TimeField()
+    data_emissao = models.DateTimeField()
     valor_total = models.DecimalField(max_digits=10, decimal_places=2) 
 
     class Meta:

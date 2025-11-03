@@ -38,7 +38,7 @@ RETURNS TABLE (
     fatura_id INT,
     compra_id INT,
     pagamento_id INT,
-    data_emissao TIME,
+    data_emissao TIMESTAMP,
     valor_total DECIMAL(10,2),
     user_id INT,
     nome_cliente TEXT,

@@ -80,7 +80,7 @@ def feedback_estatisticas(request):
             estatisticas_gerais['percentual_1_estrela'] = 0
         
         # Top pacotes avaliados
-        cursor.execute("SELECT * FROM get_top_pacotes_avaliados(10)")
+        cursor.execute("SELECT * FROM get_top_pacotes_avaliados(5)")
         columns = [col[0] for col in cursor.description]
         top_pacotes = [dict(zip(columns, row)) for row in cursor.fetchall()]
         
