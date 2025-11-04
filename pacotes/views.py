@@ -80,7 +80,7 @@ def feedback_estatisticas(request):
             estatisticas_gerais['percentual_1_estrela'] = 0
         
         # Top pacotes avaliados
-        cursor.execute("SELECT * FROM get_top_pacotes_avaliados(10)")
+        cursor.execute("SELECT * FROM get_top_pacotes_avaliados(5)")
         columns = [col[0] for col in cursor.description]
         top_pacotes = [dict(zip(columns, row)) for row in cursor.fetchall()]
         
@@ -110,21 +110,17 @@ def voos(request, voo_id=None):
             try:
                 with transaction.atomic():
                     form.save()
-                messages.success(request, "✈️ Voo guardado com sucesso!")
                 return redirect('voos')
 
             except (IntegrityError, ProgrammingError, DatabaseError) as e:
                 erro_texto = str(e)
 
-                # 🔹 Extrai apenas o texto antes do CONTEXT (mensagem do RAISE EXCEPTION)
                 if "CONTEXT" in erro_texto:
                     erro_texto = erro_texto.split("CONTEXT")[0].strip()
 
-                # 🔹 Remove prefixos técnicos e limpa o texto
                 erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
                 erro_texto = erro_texto.replace("Erro do banco de dados:", "").strip()
 
-                # 🔹 Mostra a mensagem limpa ao utilizador
                 messages.error(request, erro_texto or "Erro ao inserir voo. Verifique os dados.")
         else:
             messages.error(request, "❌ Erro ao validar o formulário. Verifique os dados.")
@@ -155,7 +151,6 @@ def eliminar_voo(request, voo_id):
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
         voo.delete()
-        messages.success(request, "🗑️ Voo eliminado com sucesso.")
     return redirect('voos')
 
 

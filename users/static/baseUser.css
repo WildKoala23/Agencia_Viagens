@@ -91,10 +91,12 @@ body {
 }
 
 /* Main Content */
+main,
 .main-content {
     margin-left: 250px; /* Prevents content from going behind sidebar */
     margin-top: 80px;   /* Space for top navbar */
     padding: 20px 30px;
+    min-height: calc(100vh - 80px);
 }
 .user-info {
     display: flex;

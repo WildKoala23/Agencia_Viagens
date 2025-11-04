@@ -62,12 +62,12 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if f.estado_pagamento == 'pago' %}
+                                    {% if f.estado_pagamento == 'Pago' %}
                                         <span class="badge bg-success">Pago</span>
-                                    {% elif f.estado_pagamento == 'pendente' %}
+                                    {% elif f.estado_pagamento == 'Pendente' %}
                                         <span class="badge bg-warning">Pendente</span>
-                                    {% elif f.estado_pagamento == 'cancelado' %}
-                                        <span class="badge bg-danger">Cancelado</span>
+                                    {% elif f.estado_pagamento == 'Falhado' %}
+                                        <span class="badge bg-danger">Falhado</span>
                                     {% else %}
                                         <span class="badge bg-secondary">N/A</span>
                                     {% endif %}

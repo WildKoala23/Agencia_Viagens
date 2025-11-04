@@ -1,28 +1,32 @@
 CREATE OR REPLACE FUNCTION verificar_insercao_voo()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- 1️⃣ Verifica se existe um destino selecionado
+
     IF NEW.destino_id IS NULL THEN
         RAISE EXCEPTION 'É obrigatório selecionar um destino.';
     END IF;
 
-    -- 2️⃣ Verifica se a companhia aérea foi preenchida
     IF NEW.companhia IS NULL OR LENGTH(TRIM(NEW.companhia)) = 0 THEN
         RAISE EXCEPTION 'O campo "companhia" não pode estar vazio.';
     END IF;
 
-    -- 3️⃣ Verifica se o número do voo foi preenchido
     IF NEW.numero_voo IS NULL THEN
         RAISE EXCEPTION 'O número do voo é obrigatório.';
     END IF;
 
-    -- 4️⃣ Verifica se a data de chegada é posterior à de saída
+    IF NEW.data_saida IS NULL THEN
+        RAISE EXCEPTION 'A data de saída é obrigatória.';
+    END IF;
+
+    IF NEW.data_chegada IS NULL THEN
+        RAISE EXCEPTION 'A data de chegada é obrigatória.';
+    END IF;
+
     IF NEW.data_chegada <= NEW.data_saida THEN
         RAISE EXCEPTION 'A data de chegada deve ser posterior à data de saída.';
     END IF;
 
-    -- 5️⃣ Verifica se o preço é positivo
-    IF NEW.preco <= 0 THEN
+    IF NEW.preco IS NULL OR NEW.preco <= 0 THEN
         RAISE EXCEPTION 'O preço deve ser um valor positivo.';
     END IF;
 
@@ -31,6 +35,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE TRIGGER trigger_verificar_voo
-BEFORE INSERT ON voo
+BEFORE INSERT OR UPDATE ON voo
 FOR EACH ROW
 EXECUTE FUNCTION verificar_insercao_voo();

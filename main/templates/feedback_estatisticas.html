@@ -21,7 +21,7 @@
         <div class="row mb-4">
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
-                    <div class="stat-icon" style="color: #667eea;">
+                    <div class="stat-icon" style="color: #17a2b8;">
                         <i class="fas fa-comments"></i>
                     </div>
                     <div class="stat-value">{{ estatisticas_gerais.total_feedbacks }}</div>
@@ -30,7 +30,7 @@
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
-                    <div class="stat-icon" style="color: #ffd700;">
+                    <div class="stat-icon" style="color: #ffc107;">
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="stat-value">{{ estatisticas_gerais.media_geral }}</div>
@@ -39,7 +39,7 @@
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
-                    <div class="stat-icon" style="color: #38ef7d;">
+                    <div class="stat-icon" style="color: #28a745;">
                         <i class="fas fa-thumbs-up"></i>
                     </div>
                     <div class="stat-value">{{ estatisticas_gerais.percentual_positivo }}%</div>
@@ -48,7 +48,7 @@
             </div>
             <div class="col-md-3 mb-3">
                 <div class="stat-card">
-                    <div class="stat-icon" style="color: #f093fb;">
+                    <div class="stat-icon" style="color: #6f42c1;">
                         <i class="fas fa-award"></i>
                     </div>
                     <div class="stat-value">{{ estatisticas_gerais.total_5_estrelas }}</div>
@@ -59,11 +59,11 @@
 
         <!-- Distribuição de Estrelas -->
         <h2 class="section-title"><i class="fas fa-chart-bar"></i> Distribuição de Avaliações</h2>
-        <div class="card mb-4" style="border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+        <div class="card mb-4 distribution-card">
             <div class="card-body p-4">
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star" style="color: #ffd700;"></i> 5 Estrelas</span>
+                        <span><i class="fas fa-star star-icon"></i> 5 Estrelas</span>
                         <span><strong>{{ estatisticas_gerais.total_5_estrelas }}</strong></span>
                     </div>
                     <div class="progress progress-custom">
@@ -72,7 +72,7 @@
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star" style="color: #ffd700;"></i> 4 Estrelas</span>
+                        <span><i class="fas fa-star star-icon"></i> 4 Estrelas</span>
                         <span><strong>{{ estatisticas_gerais.total_4_estrelas }}</strong></span>
                     </div>
                     <div class="progress progress-custom">
@@ -81,7 +81,7 @@
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star" style="color: #ffd700;"></i> 3 Estrelas</span>
+                        <span><i class="fas fa-star star-icon"></i> 3 Estrelas</span>
                         <span><strong>{{ estatisticas_gerais.total_3_estrelas }}</strong></span>
                     </div>
                     <div class="progress progress-custom">
@@ -90,7 +90,7 @@
                 </div>
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star" style="color: #ffd700;"></i> 2 Estrelas</span>
+                        <span><i class="fas fa-star star-icon"></i> 2 Estrelas</span>
                         <span><strong>{{ estatisticas_gerais.total_2_estrelas }}</strong></span>
                     </div>
                     <div class="progress progress-custom">
@@ -99,7 +99,7 @@
                 </div>
                 <div class="mb-0">
                     <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star" style="color: #ffd700;"></i> 1 Estrela</span>
+                        <span><i class="fas fa-star star-icon"></i> 1 Estrela</span>
                         <span><strong>{{ estatisticas_gerais.total_1_estrela }}</strong></span>
                     </div>
                     <div class="progress progress-custom">
@@ -110,26 +110,26 @@
         </div>
 
         <!-- Top Pacotes -->
-        <h2 class="section-title"><i class="fas fa-trophy"></i> Top 10 Pacotes Mais Bem Avaliados</h2>
+        <h2 class="section-title"><i class="fas fa-trophy"></i> Top 5 Pacotes Mais Bem Avaliados</h2>
         {% for pacote in top_pacotes %}
         <div class="pacote-card">
             <div class="row align-items-center">
                 <div class="col-md-1 text-center">
-                    <div style="font-size: 2rem; font-weight: 700; color: #667eea;">
+                    <div class="pacote-ranking">
                         #{{ forloop.counter }}
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <h4 class="mb-1">{{ pacote.nome_pacote }}</h4>
-                    <small class="text-muted">{{ pacote.total_feedbacks }} avaliações</small>
+                    <h4 class="mb-1 pacote-nome">{{ pacote.nome_pacote }}</h4>
+                    <small class="text-muted pacote-feedbacks">{{ pacote.total_feedbacks }} avaliações</small>
                 </div>
                 <div class="col-md-2 text-center">
-                    <span class="badge badge-rating" style="background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #2c3e50;">
+                    <span class="badge badge-rating">
                         <i class="fas fa-star"></i> {{ pacote.media_avaliacao }}
                     </span>
                 </div>
                 <div class="col-md-3 text-end">
-                    <h5 class="mb-0" style="color: #38ef7d;">{{ pacote.preco_total }}€</h5>
+                    <h5 class="mb-0 pacote-preco">{{ pacote.preco_total }}€</h5>
                 </div>
             </div>
         </div>
@@ -139,10 +139,10 @@
 
         <!-- Botões de ação -->
         <div class="mt-4">
-            <a href="{% url 'feedbacks' %}" class="btn btn-primary" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none; padding: 0.7rem 2rem; border-radius: 30px;">
+            <a href="{% url 'feedbacks' %}" class="btn btn-primary">
                 <i class="fas fa-arrow-left"></i> Voltar aos Feedbacks
             </a>
-            <a href="{% url 'home' %}" class="btn btn-secondary" style="background: linear-gradient(135deg, #868f96 0%, #596164 100%); border: none; padding: 0.7rem 2rem; border-radius: 30px;">
+            <a href="{% url 'home' %}" class="btn btn-secondary">
                 <i class="fas fa-home"></i> Voltar ao Início
             </a>
         </div>

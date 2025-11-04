@@ -51,3 +51,14 @@ def comprasUser(req):
         data = cursor.fetchall()
         print(data)
     return render(req, 'comprasUser.html', {"data": data})
+
+def feedbacksUser(request):
+    # Por enquanto vamos usar user_id = 1 (depois podes integrar com autenticação)
+    user_id = 1
+    
+    with connection.cursor() as cursor:
+        # Buscar compras do utilizador para poder avaliar
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
+        compras = cursor.fetchall()
+    
+    return render(request, 'feedbacksUser.html', {"compras": compras})
