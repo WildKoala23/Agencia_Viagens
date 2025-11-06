@@ -2,9 +2,10 @@
 
 /* Content Wrapper */
 .content-wrapper {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     width: 100%;
+    padding: 0 15px;
 }
 
 .section-title {
@@ -27,6 +28,7 @@
     margin-bottom: 30px;
     border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    max-width: 100%;
 }
 
 .form-group {
@@ -291,6 +293,19 @@ select.form-input:focus {
 @media (max-width: 480px) {
     .rating-stars .star {
         font-size: 20px;
+    }
+}
+
+/* Para ecrãs grandes (monitores widescreen) */
+@media (min-width: 1600px) {
+    .content-wrapper {
+        max-width: 1600px;
+    }
+}
+
+@media (min-width: 1920px) {
+    .content-wrapper {
+        max-width: 1800px;
     }
 }
 

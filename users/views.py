@@ -45,47 +45,7 @@ def user(req):
     # Por enquanto user_id = 1 (depois integrar autenticação)
     user_id = 1
     user = get_object_or_404(Utilizador, user_id=user_id)
-    
-    # Buscar dados para a dashboard
-    with connection.cursor() as cursor:
-        # Buscar compras/reservas do utilizador
-        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
-        compras = cursor.fetchall()
-        
-        # Debug: imprimir primeira compra para ver a estrutura
-        if compras:
-            print("DEBUG - Estrutura da compra:", compras[0])
-    
-    # Calcular estatísticas
-    total_reservas = len([c for c in compras if c[5] != 'Cancelado']) if compras else 0
-    total_viagens = len([c for c in compras if c[5] == 'Confirmado']) if compras else 0
-    total_feedbacks = 0  # Pode buscar da tabela de feedbacks
-    
-    # Calcular valor total (índice 6 é o preço)
-    valor_total = 0
-    if compras:
-        for c in compras:
-            if c[5] != 'Cancelado':
-                try:
-                    # c[6] deve ser o preço
-                    valor_total += float(c[6])
-                except (ValueError, TypeError):
-                    pass
-    
-    # Próximas viagens (não canceladas)
-    proximas_viagens = [c for c in compras if c[5] != 'Cancelado'][:3] if compras else []
-    
-    context = {
-        'user': user,
-        'total_reservas': total_reservas,
-        'total_viagens': total_viagens,
-        'total_feedbacks': total_feedbacks,
-        'valor_total': f"{valor_total:.2f}",
-        'proximas_viagens': proximas_viagens,
-        'atividades': []  # Pode adicionar atividades depois
-    }
-    
-    return render(req, 'dashboardUser.html', context)
+    return render(req, 'baseUser.html', {"user": user})
 
 def comprasUser(req):
     # Por enquanto user_id = 1 (depois integrar autenticação)
