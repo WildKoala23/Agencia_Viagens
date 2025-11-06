@@ -48,13 +48,13 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
-    return render(req, 'dashboardUser.html', {"user": user})
+    data = userData.find_one({"Id_User": 1})
+    # data = list(userData.find())
+    print(data)
+    return render(req, 'dashboardUser.html', {"data": data})
+   
 
 def comprasUser(req):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
     user_id = 1
     user = get_object_or_404(Utilizador, user_id=user_id)
     
@@ -75,3 +75,22 @@ def feedbacksUser(request):
         compras = cursor.fetchall()
     
     return render(request, 'feedbacksUser.html', {"compras": compras})
+
+
+def perfilUser(request):
+    # Por enquanto user_id = 1 (depois integrar autenticação)
+    user_id = 1
+
+    #Buscar dados do utilizador
+    user = get_object_or_404(Utilizador, user_id=user_id)
+
+    if request.method == "POST":
+        # Atualizar dados do perfil
+        user.nome = request.POST.get('nome', user.nome)
+        user.email = request.POST.get('email', user.email)
+        user.telefone = request.POST.get('telefone', user.telefone)
+        user.endereco = request.POST.get('endereco', user.endereco)
+        user.save()
+        return redirect('perfilUser')
+
+    return render(request, 'perfilUser.html', {"user": user})
