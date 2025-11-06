@@ -27,7 +27,7 @@
             <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-box-seam"></i>Pacotes</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'feedbacksUser' %}"><i class="bi bi-chat-left-text"></i>Feedback</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'comprasUser' %}"><i class="bi bi-cart-check"></i>Compras</a></li>
-            <li class="nav-item"><a class="nav-link" href="#"><i class="bi bi-person-circle"></i>Perfil</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
         </ul>
     </nav>
 
@@ -37,8 +37,8 @@
             <h1>{% block page_title %}Dashboard{% endblock %}</h1>
         </div>
         <div class="user-info">
-            <p>João Silva</p>
-            <div class="circle-initials">JS</div>
+            <p>{{ user.nome }}</p>
+            <div class="circle-initials">{{ user.nome|slice:":1"|upper }}</div>
         </div>
     </nav>
 

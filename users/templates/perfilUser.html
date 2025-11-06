@@ -1,0 +1,59 @@
+{% extends 'baseUser.html' %}
+{% load static %}
+
+{% block title %}Perfil - Atlas Gateway{% endblock %}
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'perfilUser.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Informações do Perfil -->
+<div class="section-title">Informações Pessoais</div>
+<div class="form-section">
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label">Nome Completo</label>
+            <input type="text" class="form-input" name="nome" value="{{ user.nome }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" name="email" value="{{ user.email }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Telefone</label>
+            <input type="tel" class="form-input" name="telefone" value="{{ user.telefone }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Endereço</label>
+            <input type="text" class="form-input" name="endereco" value="{{ user.endereco }}" required>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn-primary">Guardar Alterações</button>
+            <button type="reset" class="btn-secondary">Cancelar</button>
+        </div>
+    </form>
+</div>
+
+<!-- Informações da Conta -->
+<div class="section-title">Detalhes da Conta</div>
+<div class="info-list">
+    <div class="info-item">
+        <div class="info-label">ID de Utilizador</div>
+        <div class="info-value">#{{ user.user_id }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Membro desde</div>
+        <div class="info-value">Novembro 2025</div>
+    </div>
+</div>
+
+{% endblock %}

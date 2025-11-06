@@ -1,5 +1,12 @@
 /* Feedbacks User - Estilo Figma adaptado */
 
+/* Content Wrapper */
+.content-wrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
 .section-title {
     font-size: 18px;
     font-weight: 700;
@@ -37,6 +44,7 @@
 .form-input,
 select.form-input {
     width: 100%;
+    max-width: 100%;
     padding: 10px 14px;
     border: 2px solid #DDD;
     border-radius: 6px;
@@ -44,6 +52,7 @@ select.form-input {
     background: white;
     transition: all 0.3s ease;
     color: #333;
+    box-sizing: border-box;
 }
 
 .form-input:focus,
@@ -55,6 +64,7 @@ select.form-input:focus {
 
 .form-textarea {
     width: 100%;
+    max-width: 100%;
     padding: 10px 14px;
     border: 2px solid #DDD;
     border-radius: 6px;
@@ -65,6 +75,7 @@ select.form-input:focus {
     transition: all 0.3s ease;
     color: #333;
     font-family: inherit;
+    box-sizing: border-box;
 }
 
 .form-textarea:focus {
@@ -247,6 +258,10 @@ select.form-input:focus {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .content-wrapper {
+        padding: 0 10px;
+    }
+
     .section-title {
         font-size: 16px;
     }
@@ -255,12 +270,27 @@ select.form-input:focus {
         padding: 15px;
     }
     
+    .rating-stars {
+        gap: 8px;
+    }
+
     .rating-stars .star {
-        font-size: 20px;
+        font-size: 24px;
     }
     
     .feedback-item {
         padding: 12px;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .rating-stars .star {
+        font-size: 20px;
     }
 }
 

@@ -1,0 +1,104 @@
+{% extends 'baseUser.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Atlas Gateway{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'dashboardUser.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    
+    <!-- Cards de Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_reservas }}</div>
+                <div class="stat-label">Reservas Ativas</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon green">
+                <i class="bi bi-airplane"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ total_viagens }}</div>
+                <div class="stat-label">Viagens Realizadas</div>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="bi bi-currency-euro"></i>
+            </div>
+            <div class="stat-info">
+                <div class="stat-value">{{ valor_total }}€</div>
+                <div class="stat-label">Total Gasto</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Próximas Viagens -->
+    <div class="section-title">Próximas Viagens</div>
+    <div class="reservas-section">
+        {% if proximas_viagens %}
+            {% for viagem in proximas_viagens %}
+            <div class="reserva-card">
+                <div class="reserva-header">
+                    <div class="reserva-destino">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        {{ viagem.2 }} - {{ viagem.1 }}
+                    </div>
+                    <div class="reserva-status {{ viagem.5|lower }}">{{ viagem.5 }}</div>
+                </div>
+                <div class="reserva-body">
+                    <div class="reserva-info">
+                        <div class="info-item">
+                            <i class="bi bi-calendar3"></i>
+                            <span>{{ viagem.3|date:"d/m/Y" }} - {{ viagem.4|date:"d/m/Y" }}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="bi bi-tag-fill"></i>
+                            <span>Reserva #{{ viagem.0 }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert-info-box">
+                <i class="bi bi-info-circle"></i> Não tem viagens agendadas no momento. Explore os nossos pacotes!
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Atividade Recente -->
+    <div class="section-title">Atividade Recente</div>
+    <div class="activity-section">
+        {% if atividades %}
+            {% for atividade in atividades %}
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="bi bi-{{ atividade.icon }}"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">{{ atividade.titulo }}</div>
+                    <div class="activity-date">{{ atividade.data|date:"d/m/Y H:i" }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert-info-box">
+                <i class="bi bi-info-circle"></i> Nenhuma atividade recente.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
