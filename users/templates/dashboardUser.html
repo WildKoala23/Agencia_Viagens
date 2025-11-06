@@ -1,0 +1,20 @@
+{% extends "baseUser.html" %}
+{% load static %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{% static 'dashboardUser.css' %}">
+{% endblock %}
+
+{% block title %}User Page{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+
+  {% include 'components/cardsUser.html' %}
+
+</div>
+
+{% endblock %}

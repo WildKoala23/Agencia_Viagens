@@ -1,8 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
+from pymongo import MongoClient
 from django.core import serializers
 from .forms import *
 from .models import *
+
+client = MongoClient("mongodb://localhost:27017/")
+db = client["bdii_25215"]
+userData = db["dadosUser"]
+
 
 # Create your views here.
 def inserir_clientes(request):
@@ -43,7 +49,7 @@ def eliminar_cliente(request, cliente_id):
 
 def user(req):
 
-    return render(req, 'baseUser.html')
+    return render(req, 'dashboardUser.html')
 
 def comprasUser(req):
     with connection.cursor() as cursor:
@@ -62,3 +68,10 @@ def feedbacksUser(request):
         compras = cursor.fetchall()
     
     return render(request, 'feedbacksUser.html', {"compras": compras})
+
+
+def dashboardUser(req):
+    data = userData.find_one({"Id_User": 1})
+    # data = list(userData.find())
+    print(data)
+    return render(req, 'dashboardUser.html', {"data": data})
