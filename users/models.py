@@ -22,7 +22,7 @@ class Utilizador(models.Model):
     email = models.TextField()
     endereco = models.TextField()
     telefone = models.IntegerField()
-    password = models.TextField()
+    password = models.TextField(default='password123')  # Password temporário para utilizadores existentes
     
     class Meta:
         db_table = 'utilizador'
