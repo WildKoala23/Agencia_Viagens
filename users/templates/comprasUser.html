@@ -9,6 +9,29 @@
 {% block page_title %}Minhas Reservas{% endblock %}
 
 {% block content %}
+
+<div class="container">
+  <div class="d-flex align-items-center mb-4 gap-2">
+    <input 
+      type="text" 
+      class="form-control" 
+      id="basic-url" 
+      placeholder="Pesquisar por Destino"
+      aria-describedby="basic-addon3"
+    >
+
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
+      <i class="bi bi-search"></i>
+      Search
+    </button>
+
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
+      <i class="bi bi-download"></i>
+      Export
+    </button>
+  </div>
+</div>
+
 <div class="table-container">
   <table class="table">
     <thead>
@@ -33,6 +56,17 @@
           <td>{{i.4}}</td>
           <td>{{i.5}}</td>
           <td>{{i.6}}</td>
+          <td>
+            <div class="container d-flex gap-2">
+              <button type="button" class="btn btn-outline-primary d-flex btn-sm align-items-center gap-2">
+                Ver
+              </button>
+          
+              <button type="button" class="btn btn-outline-primary d-flex btn-sm align-items-center gap-2">
+                Cancelar
+              </button>
+            </div>
+          </td>
         {% endfor %}
       </tr>
     </tbody>
