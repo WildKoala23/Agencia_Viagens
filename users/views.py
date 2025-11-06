@@ -6,7 +6,7 @@ from .forms import *
 from .models import *
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdii_25215"]
+db = client["bd2_22598"]
 userData = db["dadosUser"]
 
 def login(request):

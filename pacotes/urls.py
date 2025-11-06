@@ -17,5 +17,7 @@ urlpatterns = [
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
     path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
-
+    
+    #pacotes
+      path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
 ]
