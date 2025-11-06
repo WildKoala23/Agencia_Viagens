@@ -6,7 +6,7 @@ from .forms import *
 from .models import *
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdii_25215"]
+db = client["bdII_25170"]
 userData = db["dadosUser"]
 
 
@@ -74,4 +74,22 @@ def feedbacksUser(request):
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
         compras = cursor.fetchall()
     
-    return render(request, 'feedbacksUser.html', {"compras": compras})
+    return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
+
+def perfilUser(request):
+    # Por enquanto user_id = 1 (depois integrar autenticação)
+    user_id = 1
+    
+    # Buscar dados do utilizador
+    user = get_object_or_404(Utilizador, user_id=user_id)
+    
+    if request.method == "POST":
+        # Atualizar dados do perfil
+        user.nome = request.POST.get('nome', user.nome)
+        user.email = request.POST.get('email', user.email)
+        user.telefone = request.POST.get('telefone', user.telefone)
+        user.endereco = request.POST.get('endereco', user.endereco)
+        user.save()
+        return redirect('perfilUser')
+    
+    return render(request, 'perfilUser.html', {"user": user})
