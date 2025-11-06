@@ -9,6 +9,20 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 userData = db["dadosUser"]
 
+def login(request):
+    print("VIEW HIT:", request.method)
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            print("VALID FORM:", form.cleaned_data)
+        else:
+            print("ERRORS:", form.errors)
+    else:
+        form = LoginForm()
+
+    return render(request, 'login.html', {'form': form})
+
+
 
 # Create your views here.
 def inserir_clientes(request):
