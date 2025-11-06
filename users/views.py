@@ -9,6 +9,20 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["bdII_25170"]
 userData = db["dadosUser"]
 
+def login(request):
+    print("VIEW HIT:", request.method)
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            print("VALID FORM:", form.cleaned_data)
+        else:
+            print("ERRORS:", form.errors)
+    else:
+        form = LoginForm()
+
+    return render(request, 'login.html', {'form': form})
+
+
 
 # Create your views here.
 def inserir_clientes(request):
@@ -48,13 +62,13 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
-    return render(req, 'dashboardUser.html', {"user": user})
+    data = userData.find_one({"Id_User": 1})
+    # data = list(userData.find())
+    print(data)
+    return render(req, 'dashboardUser.html', {"data": data})
+   
 
 def comprasUser(req):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
     user_id = 1
     user = get_object_or_404(Utilizador, user_id=user_id)
     

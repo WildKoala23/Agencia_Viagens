@@ -22,6 +22,7 @@ class Utilizador(models.Model):
     email = models.TextField()
     endereco = models.TextField()
     telefone = models.IntegerField()
+    password = models.TextField()
     
     class Meta:
         db_table = 'utilizador'
