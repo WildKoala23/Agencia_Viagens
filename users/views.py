@@ -48,19 +48,26 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-
-    return render(req, 'dashboardUser.html')
+    # Por enquanto user_id = 1 (depois integrar autenticação)
+    user_id = 1
+    user = get_object_or_404(Utilizador, user_id=user_id)
+    return render(req, 'dashboardUser.html', {"user": user})
 
 def comprasUser(req):
+    # Por enquanto user_id = 1 (depois integrar autenticação)
+    user_id = 1
+    user = get_object_or_404(Utilizador, user_id=user_id)
+    
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(1)")
         data = cursor.fetchall()
         print(data)
-    return render(req, 'comprasUser.html', {"data": data})
+    return render(req, 'comprasUser.html', {"data": data, "user": user})
 
 def feedbacksUser(request):
     # Por enquanto vamos usar user_id = 1 (depois podes integrar com autenticação)
     user_id = 1
+    user = get_object_or_404(Utilizador, user_id=user_id)
     
     with connection.cursor() as cursor:
         # Buscar compras do utilizador para poder avaliar
@@ -68,10 +75,3 @@ def feedbacksUser(request):
         compras = cursor.fetchall()
     
     return render(request, 'feedbacksUser.html', {"compras": compras})
-
-
-def dashboardUser(req):
-    data = userData.find_one({"Id_User": 1})
-    # data = list(userData.find())
-    print(data)
-    return render(req, 'dashboardUser.html', {"data": data})

@@ -10,9 +10,10 @@
 {% endblock %}
 
 {% block content %}
-<!-- Formulário de Novo Feedback -->
-<div class="section-title">Deixar um Novo Feedback</div>
-<div class="form-section">
+<div class="content-wrapper">
+    <!-- Formulário de Novo Feedback -->
+    <div class="section-title">Deixar um Novo Feedback</div>
+    <div class="form-section">
     <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
             
@@ -95,4 +96,5 @@
             </div>
         {% endif %}
     </div>
+</div>
 {% endblock %}
