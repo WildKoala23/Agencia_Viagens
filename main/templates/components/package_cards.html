@@ -23,7 +23,9 @@
                     <div class="package-location">{{ pacote.descricao_item|truncatewords:10 }}</div>
                     <div class="package-duration">{{ pacote.data_inicio }} → {{ pacote.data_fim }}</div>
                     <div class="package-price">€{{ pacote.preco_total }}</div>
-                    <a href="#" class="btn-details">Ver Detalhes</a>
+                   <a href="{% url 'pacote_detalhes' pacote.pacote_id %}" class="btn-details">Ver Detalhes</a>
+
+
                 </div>
             </div>
         </div>

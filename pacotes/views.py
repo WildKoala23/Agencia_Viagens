@@ -5,7 +5,12 @@ from django.db.models import Q
 from django.db import connection, transaction, IntegrityError, ProgrammingError, DatabaseError
 from django.contrib import messages
 import re
+from pymongo import MongoClient
 
+
+client = MongoClient("mongodb://localhost:27017/")
+db = client["bdii_25215"]
+banners = db["banners"]
 
 # Create your views here.
 
@@ -222,3 +227,26 @@ def pacotes(request):
         'form': form,
         'pacotes': pacotes
     })
+
+def pacote_detalhes(request, pacote_id):
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    
+    # Busca o banner correspondente ao pacote no MongoDB
+    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
+    
+    # Se não encontrar, usa uma imagem padrão
+    imagem_url = banner["imagem_url"] if banner else "/media/default.jpg"
+    
+    return render(request, 'pacote_detalhes.html', {
+        "pacote": pacote,
+        "imagem_url": imagem_url
+    })
+
+
+def pagina_pacotes(request):
+    client = MongoClient("mongodb://localhost:27017/")
+    db = client["bd2_22598"]
+    collection = db["banners"] 
+
+    banner = collection.find_one({"ativo": True})
+    return render(request, "pacotes.html", {"banner": banner})
