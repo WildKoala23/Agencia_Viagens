@@ -71,41 +71,32 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-    data = userData.find_one({"Id_User": 1})
+    data = userData.find_one({"Id_User": req.user.user_id})
     # data = list(userData.find())
     print(data)
     return render(req, 'dashboardUser.html', {"data": data})
    
 
 def comprasUser(req):
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=req.user.user_id)
     
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM comprasUtilizador(1)")
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [req.user.user_id])
         data = cursor.fetchall()
-        print(data)
     return render(req, 'comprasUser.html', {"data": data, "user": user})
 
 def feedbacksUser(request):
-    # Por enquanto vamos usar user_id = 1 (depois podes integrar com autenticação)
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
     
     with connection.cursor() as cursor:
-        # Buscar compras do utilizador para poder avaliar
-        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
     
     return render(request, 'feedbacksUser.html', {"compras": compras})
 
 
 def perfilUser(request):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
-    user_id = 1
-
-    #Buscar dados do utilizador
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
     if request.method == "POST":
         # Atualizar dados do perfil
