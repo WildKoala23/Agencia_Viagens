@@ -19,11 +19,13 @@ def loginUser(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
 
+            print(email, password)
+
             user = authenticate(request, email=email, password=password)
 
+            print(user)
             if user is not None:
                 login(request, user)
-                print(request.user)
                 return redirect('main:home')
             else:
                 form.add_error(None, "Invalid email or password")  # adds non-field error

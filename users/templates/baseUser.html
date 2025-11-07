@@ -36,11 +36,18 @@
         <div class="navbar-title">
             <h1>{% block page_title %}Dashboard{% endblock %}</h1>
         </div>
-        <div class="user-info">
+        <div class="user-info d-flex align-items-center gap-2">
             <p>{{ user.nome }}</p>
-            <div class="circle-initials">{{ user.nome|slice:":1"|upper }}</div>
+            <div class="circle-initials">
+                {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
+            </div>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
+            </form>
         </div>
     </nav>
+    
 
     <main>
         {% block content %}{% endblock %}
