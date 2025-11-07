@@ -20,29 +20,41 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <a class="navbar-brand" href="{% url 'main:home' %}">Agência de Viagens</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" 
-                aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" 
+                    aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
         <div class="navbar-nav">
-    <a class="nav-item nav-link active" href="{% url 'main:home' %}">Home</a>
-    <a class="nav-item nav-link" href="">Pacotes</a>
+            <a class="nav-item nav-link active" href="{% url 'main:home' %}">Home</a>
+            <a class="nav-item nav-link" href="">Pacotes</a>
 
-    {% if 'dashboard' in request.path %}
-        <a class="nav-item nav-link" href="{% url 'inserir_clientes' %}">Clientes</a>
-        <a class="nav-item nav-link" href="{% url 'destinos' %}">Destinos</a>
-        <a class="nav-item nav-link" href="{% url 'faturas' %}">Faturas</a>
-        <a class="nav-item nav-link" href="{% url 'pacotes' %}">Inserir Pacotes</a>
-        <a class="nav-item nav-link" href="{% url 'feedbacks' %}">Feedbacks</a>
-        <a class="nav-item nav-link" href="{% url 'pagamentos' %}">Pagamentos</a>
-        <a class="nav-item nav-link" href="{% url 'voos' %}">Voos</a>
-        <a class="nav-item nav-link" href="{% url 'hoteis' %}">Hotéis</a>
-    {% endif %}
-</div>
-
-        <a class="navbar-text text-decoration-none text-dark ms-auto" href="{% url 'main:dashboard' %}">
-            <i class="bi bi-gear-fill" style="font-size: 1.5rem;"></i>
-        </a>
+            {% if 'dashboard' in request.path %}
+                <a class="nav-item nav-link" href="{% url 'users:inserir_clientes' %}">Clientes</a>
+                <a class="nav-item nav-link" href="{% url 'destinos' %}">Destinos</a>
+                <a class="nav-item nav-link" href="{% url 'faturas' %}">Faturas</a>
+                <a class="nav-item nav-link" href="{% url 'pacotes' %}">Inserir Pacotes</a>
+                <a class="nav-item nav-link" href="{% url 'feedbacks' %}">Feedbacks</a>
+                <a class="nav-item nav-link" href="{% url 'pagamentos' %}">Pagamentos</a>
+                <a class="nav-item nav-link" href="{% url 'voos' %}">Voos</a>
+                <a class="nav-item nav-link" href="{% url 'hoteis' %}">Hotéis</a>
+            {% endif %}
+        </div>
+        <!--Check if the user is an admin-->
+        {% if request.user.is_authenticated and request.user.is_staff %}
+            <a class="navbar-text text-decoration-none text-dark ms-auto" href="{% url 'main:dashboard' %}" style="margin-right: 40px;">
+                <i class="bi bi-gear-fill" style="font-size: 1.5rem;"></i>
+            </a>
+        <!--Check if the user is logged but not an admin-->
+        {% elif request.user.is_authenticated and not request.user.is_staff %}
+            <a class="navbar-text text-decoration-none text-dark ms-auto" href="{% url 'users:user' %}" style="margin-right: 40px;">
+                <i class="bi bi-person-circle" style="font-size: 1.5rem;"></i>
+            </a>
+        {% else %}
+        <div class="d-flex ms-auto gap-2" style="margin-right: 40px;">
+            <a href="{% url 'users:login' %}" class="btn btn-outline-primary">Log In</a>
+            <a href="#" class="btn btn-outline-primary ">Sign Up</a>
+        </div>
+        {% endif %}
     </nav>
 
     <div>

@@ -25,7 +25,7 @@ class Utilizador(AbstractUser):
         db_table = 'utilizador'
     
     def __str__(self):
-        return self.email
+        return str(self.user_id)
     
     # Override save method to hash password
     def save(self, *args, **kwargs):
