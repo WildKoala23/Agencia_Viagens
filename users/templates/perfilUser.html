@@ -19,7 +19,7 @@
         
         <div class="form-group">
             <label class="form-label">Nome Completo</label>
-            <input type="text" class="form-input" name="nome" value="{{ user.nome }}" required>
+            <input type="text" class="form-input" name="first_name" value="{{ user.first_name }} {{ user.last_name }}" required>
         </div>
 
         <div class="form-group">
@@ -29,12 +29,7 @@
 
         <div class="form-group">
             <label class="form-label">Telefone</label>
-            <input type="tel" class="form-input" name="telefone" value="{{ user.telefone }}" required>
-        </div>
-
-        <div class="form-group">
-            <label class="form-label">Endereço</label>
-            <input type="text" class="form-input" name="endereco" value="{{ user.endereco }}" required>
+            <input type="tel" class="form-input" name="telefone" value="{{ user.telefone|default:'' }}">
         </div>
 
         <div style="display: flex; gap: 10px;">

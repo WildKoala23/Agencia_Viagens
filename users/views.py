@@ -24,7 +24,7 @@ def loginUser(request):
             if user is not None:
                 login(request, user)
                 print(request.user)
-                return redirect('main:home')
+                return redirect('main:home')  # Redireciona para homepage
             else:
                 form.add_error(None, "Invalid email or password")  # adds non-field error
     else:
@@ -99,10 +99,13 @@ def perfilUser(request):
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        user.nome = request.POST.get('nome', user.nome)
+        full_name = request.POST.get('first_name', '')
+        name_parts = full_name.strip().split(' ', 1)
+        user.first_name = name_parts[0] if name_parts else ''
+        user.last_name = name_parts[1] if len(name_parts) > 1 else ''
         user.email = request.POST.get('email', user.email)
-        user.telefone = request.POST.get('telefone', user.telefone)
-        user.endereco = request.POST.get('endereco', user.endereco)
+        telefone = request.POST.get('telefone', '')
+        user.telefone = int(telefone) if telefone else None
         user.save()
         return redirect('perfilUser')
     

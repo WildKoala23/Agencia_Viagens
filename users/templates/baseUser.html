@@ -37,8 +37,8 @@
             <h1>{% block page_title %}Dashboard{% endblock %}</h1>
         </div>
         <div class="user-info">
-            <p>{{ user.nome }}</p>
-            <div class="circle-initials">{{ user.nome|slice:":1"|upper }}</div>
+            <p>{{ user.email }}</p>
+            <div class="circle-initials">{{ user.email|slice:":1"|upper }}</div>
         </div>
     </nav>
 
