@@ -30,7 +30,7 @@
         <span class="cliente-email">{{ cliente.email }}</span>
 
         {% if cliente.user_id %}
-        <form action="{% url 'eliminar_cliente' cliente.user_id %}" method="post" style="display:inline;">
+        <form action="{% url 'users:eliminar_cliente' cliente.user_id %}" method="post" style="display:inline;">
             {% csrf_token %}
             <button type="submit" class="delete-btn">Eliminar</button>
         </form>
