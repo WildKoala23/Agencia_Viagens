@@ -38,22 +38,13 @@ def inserir_clientes(request):
     if request.method == "POST":
         form = ClienteForm(request.POST)
         if form.is_valid():
-            tipo_user_id = form.cleaned_data['tipo_user'].tipo_user_id
-            nome = form.cleaned_data['nome']
-            email = form.cleaned_data['email']
-            endereco = form.cleaned_data['endereco']
-            telefone = form.cleaned_data['telefone']
-
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "CALL sp_inserir_utilizador(%s, %s, %s, %s, %s);",
-                        [tipo_user_id, nome, email, endereco, telefone]
-                    )
-                return redirect('inserir_clientes')
-            except Exception as e:
-                mensagem_principal = str(e).splitlines()[0]
-                form.add_error(None, mensagem_principal)
+            # Criar novo utilizador com os campos atualizados
+            user = form.save(commit=False)
+            # Garantir que o password é definido corretamente
+            if 'password' in form.cleaned_data:
+                user.set_password(form.cleaned_data['password'])
+            user.save()
+            return redirect('inserir_clientes')
     else:
         form = ClienteForm()
 
