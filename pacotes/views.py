@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdii_25215"]
 banners = db["banners"]
 
 # Create your views here.

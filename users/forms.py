@@ -6,7 +6,7 @@ class ClienteForm(forms.ModelForm):
         model = Utilizador
         fields = '__all__'
    
-class LoginForm(forms.ModelForm):
+class LoginForm(forms.Form):
     email = forms.CharField(label='User email', max_length=150)
     password = forms.CharField(label='Password', max_length=50, widget=forms.PasswordInput)
 

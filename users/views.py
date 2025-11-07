@@ -2,25 +2,34 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from pymongo import MongoClient
 from django.core import serializers
+from django.contrib.auth import authenticate, login
 from .forms import *
-from .models import *
+from django.contrib.auth import get_user_model
+
+Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 userData = db["dadosUser"]
 
-def login(request):
-    print("VIEW HIT:", request.method)
-    if request.method == "POST":
+def loginUser(request):
+    if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            print("VALID FORM:", form.cleaned_data)
-        else:
-            print("ERRORS:", form.errors)
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+
+            user = authenticate(request, email=email, password=password)
+
+            if user is not None:
+                login(request, user)
+                print(request.user)
+                return redirect('main:home')
+            else:
+                form.add_error(None, "Invalid email or password")  # adds non-field error
     else:
         form = LoginForm()
-
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'registration/login.html')
 
 
 
@@ -62,41 +71,32 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-    data = userData.find_one({"Id_User": 1})
+    data = userData.find_one({"Id_User": req.user.user_id})
     # data = list(userData.find())
     print(data)
     return render(req, 'dashboardUser.html', {"data": data})
    
 
 def comprasUser(req):
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=req.user.user_id)
     
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM comprasUtilizador(1)")
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [req.user.user_id])
         data = cursor.fetchall()
-        print(data)
     return render(req, 'comprasUser.html', {"data": data, "user": user})
 
 def feedbacksUser(request):
-    # Por enquanto vamos usar user_id = 1 (depois podes integrar com autenticação)
-    user_id = 1
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
     
     with connection.cursor() as cursor:
-        # Buscar compras do utilizador para poder avaliar
-        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
     
     return render(request, 'feedbacksUser.html', {"compras": compras})
 
 
 def perfilUser(request):
-    # Por enquanto user_id = 1 (depois integrar autenticação)
-    user_id = 1
-
-    #Buscar dados do utilizador
-    user = get_object_or_404(Utilizador, user_id=user_id)
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
     if request.method == "POST":
         # Atualizar dados do perfil
