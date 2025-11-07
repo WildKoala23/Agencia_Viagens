@@ -2,25 +2,34 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from pymongo import MongoClient
 from django.core import serializers
+from django.contrib.auth import authenticate, login
 from .forms import *
-from .models import *
+from django.contrib.auth import get_user_model
+
+Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 userData = db["dadosUser"]
 
-def login(request):
-    print("VIEW HIT:", request.method)
-    if request.method == "POST":
+def loginUser(request):
+    if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            print("VALID FORM:", form.cleaned_data)
-        else:
-            print("ERRORS:", form.errors)
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+
+            user = authenticate(request, email=email, password=password)
+
+            print(user)
+            if user is not None:
+                login(request, user)
+                return redirect('main:home')
+            else:
+                form.add_error(None, "Invalid email or password")  # adds non-field error
     else:
         form = LoginForm()
-
-    return render(request, 'login.html', {'form': form})
+    return render(request, 'registration/login.html')
 
 
 
