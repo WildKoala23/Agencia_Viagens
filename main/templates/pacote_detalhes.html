@@ -1,19 +1,113 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
+<link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
 
-<div style="position: relative; text-align: center;">
+<div class="container my-5 pacote-detalhes">
+
+  <!-- Cabeçalho do pacote -->
+  <div class="pacote-header">
+    <div class="pacote-info">
+      <h2>{{ pacote.nome }}</h2>
+      <p class="pacote-datas"><strong>Datas:</strong> {{ pacote.data_inicio }} → {{ pacote.data_fim }}</p>
+    </div>
+    <div class="pacote-preco">
+      <p class="preco-label">desde</p>
+      <p class="preco-valor">€{{ pacote.preco_total }}</p>
+      <p class="preco-por">por pessoa</p>
+    </div>
+  </div>
+
+  <!-- Imagem abaixo do cabeçalho -->
+  <div style="position: relative; text-align: center; margin-top: 20px;">
     <img src="{{ imagem_url }}" alt="{{ pacote.nome }}" class="img-fluid rounded-3"
          style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+  </div>
+
+  <hr class="mt-5">
+
+  <!-- Itinerário -->
+  <div class="itinerario">
+    <h3>Itinerário</h3>
+    {% for dia in dias %}
+      <div class="dia-card">
+        <div class="dia-header">
+          <span class="dia-numero">{{ dia.titulo }}</span>
+          <button class="toggle-btn" data-index="{{ forloop.counter }}">▼</button>
+        </div>
+        <div class="dia-conteudo" id="dia-{{ forloop.counter }}">
+          <p>{{ dia.texto|linebreaksbr }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Exclui e Notas e Condições -->
+  <div class="pacote-informacoes mt-5">
+    <div class="info-card">
+      <button class="info-header" data-target="exclui">
+        <span>Exclui</span>
+        <span class="seta">+</span>
+      </button>
+      <div id="exclui" class="info-conteudo">
+        <p>✔️ Passagens aéreas e taxas de aeroporto</p>
+        <p>✔️ Transporte em autocarro de turismo</p>
+        <p>✔️ Alojamento em hotéis de 4 estrelas</p>
+        <p>✔️ Guia acompanhante durante todo o circuito</p>
+        <p>❌ Despesas pessoais, gorjetas e refeições não indicadas</p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <button class="info-header" data-target="notas">
+        <span>Notas e Condições</span>
+        <span class="seta">+</span>
+      </button>
+      <div id="notas" class="info-conteudo">
+        <p><strong>NOTAS</strong></p>
+        <ul>
+          <li>No caso de grupos com número reduzido de participantes, o circuito será feito em minibus, com acompanhamento de um guia/motorista.</li>
+          <li>Durante o período de feiras ou outros eventos especiais, o alojamento poderá ser noutros hotéis e/ou cidades diferentes dos indicados no itinerário.</li>
+          <li>Se necessário, poderão ocorrer alterações na ordem dos percursos e visitas descritas no itinerário.</li>
+          <li>Portadores de necessidades especiais deverão viajar acompanhados de pessoa que preste a assistência necessária.</li>
+          <li>Os quartos triplos são duplos com cama extra, podendo esta ser um sofá-cama.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Fazer Reserva -->
+  <div class="text-center my-5">
+    <a href="" class="btn-reserva">
+      Fazer Reserva
+    </a>
+  </div>
+
 </div>
 
-<div class="container my-5">
-    <h2>{{ pacote.nome }}</h2>
-    <p><strong>Descrição:</strong> {{ pacote.descricao_item }}</p>
-    <p><strong>Datas:</strong> {{ pacote.data_inicio }} → {{ pacote.data_fim }}</p>
-    <p><strong>Preço:</strong> €{{ pacote.preco_total }}</p>
-    <p><strong>Estado:</strong> {{ pacote.estado }}</p>
+<!-- Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Toggle dias do itinerário
+  document.querySelectorAll('.toggle-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const idx = btn.dataset.index; 
+      const content = document.getElementById(`dia-${idx}`);
+      if (content) content.classList.toggle('active');
+      btn.classList.toggle('open');
+    });
+  });
 
-    
-</div>
+  // Toggle Exclui / Notas
+  document.querySelectorAll('.info-header').forEach(function(header) {
+    header.addEventListener('click', function() {
+      const targetId = header.getAttribute('data-target');
+      const content = document.getElementById(targetId);
+      header.classList.toggle('open');
+      content.classList.toggle('active');
+    });
+  });
+});
+</script>
 
 {% endblock %}

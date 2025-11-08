@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdii_25215"]
+db = client["bd2_22598"]
 banners = db["banners"]
 
 # Create your views here.
@@ -243,10 +243,37 @@ def pacote_detalhes(request, pacote_id):
     })
 
 
-def pagina_pacotes(request):
+
+
+def pacote_detalhes(request, pacote_id):
+    pacote = get_object_or_404(Pacote, pk=pacote_id)
+
+    # Conecta ao MongoDB
     client = MongoClient("mongodb://localhost:27017/")
     db = client["bd2_22598"]
-    collection = db["banners"] 
+    collection = db["banners"]
 
-    banner = collection.find_one({"ativo": True})
-    return render(request, "pacotes.html", {"banner": banner})
+    # Tenta ir buscar o banner correspondente ao pacote
+    banner = collection.find_one({"pacote_id": pacote_id, "ativo": True})
+
+    # Se encontrar, usa a imagem do MongoDB; senão, usa a imagem padrão do modelo
+    imagem_url = banner["imagem_url"] if banner else f"/media/{pacote.imagem}"
+
+    # Divide a descrição por dias (captura qualquer variação "º DIA" ou "° DIA")
+    texto = pacote.descricao_item
+    partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*", texto, flags=re.IGNORECASE)
+    # Remove pedaços vazios
+    partes = [p.strip() for p in partes if p.strip()]
+
+    dias = []
+    for i, parte in enumerate(partes, start=1):
+        dias.append({
+            "titulo": f"{i}º DIA",
+            "texto": parte
+        })
+
+    return render(request, "pacote_detalhes.html", {
+        "pacote": pacote,
+        "dias": dias,
+        "imagem_url": imagem_url
+    })
