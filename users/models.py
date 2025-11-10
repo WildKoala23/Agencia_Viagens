@@ -27,10 +27,9 @@ class Utilizador(AbstractUser):
     def __str__(self):
         return str(self.user_id)
     
-    # Override save method to hash password
     def save(self, *args, **kwargs):
-        # Only hash password if it is not already hashed
-        if self.pk is None or not self.password.startswith('pbkdf2_'):
+    # Only hash if the password does not start with a Django hash prefix
+        if not self.password.startswith('pbkdf2_'):
             self.set_password(self.password)
         super().save(*args, **kwargs)
        

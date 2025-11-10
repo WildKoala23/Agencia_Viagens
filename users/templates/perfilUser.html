@@ -18,8 +18,13 @@
         {% csrf_token %}
         
         <div class="form-group">
-            <label class="form-label">Nome Completo</label>
-            <input type="text" class="form-input" name="first_name" value="{{ user.first_name }} {{ user.last_name }}" required>
+            <label class="form-label">Primeiro Nome</label>
+            <input type="text" class="form-input" name="first_name" value="{{ user.first_name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Último Nome</label>
+            <input type="text" class="form-input" name="last_name" value="{{ user.last_name }}" required>
         </div>
 
         <div class="form-group">
@@ -48,7 +53,7 @@
     </div>
     <div class="info-item">
         <div class="info-label">Membro desde</div>
-        <div class="info-value">Novembro 2025</div>
+        <div class="info-value">{{user.date_joined}}</div>
     </div>
 </div>
 

@@ -19,8 +19,11 @@ def loginUser(request):
             email = form.cleaned_data['email']
             password = form.cleaned_data['password']
 
+            print(email, password)
+
             user = authenticate(request, email=email, password=password)
 
+            print(user)
             if user is not None:
                 login(request, user)
                 print(request.user)
@@ -90,14 +93,12 @@ def perfilUser(request):
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        full_name = request.POST.get('first_name', '')
-        name_parts = full_name.strip().split(' ', 1)
-        user.first_name = name_parts[0] if name_parts else ''
-        user.last_name = name_parts[1] if len(name_parts) > 1 else ''
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
         telefone = request.POST.get('telefone', '')
         user.telefone = int(telefone) if telefone else None
         user.save()
-        return redirect('perfilUser')
+        return redirect('users:perfilUser')
     
     return render(request, 'perfilUser.html', {"user": user})
