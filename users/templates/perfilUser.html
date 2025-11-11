@@ -1,60 +1,77 @@
-{% extends 'baseUser.html' %}
-{% load static %}
-
-{% block title %}Perfil - Atlas Gateway{% endblock %}
-{% block page_title %}Meu Perfil{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{% static 'perfilUser.css' %}">
-{% endblock %}
-
-{% block content %}
+{% extends 'baseUser.html' %} {% load static %} {% block title %}Perfil - Atlas
+Gateway{% endblock %} {% block page_title %}Meu Perfil{% endblock %} {% block
+styles %}
+<link rel="stylesheet" href="{% static 'perfilUser.css' %}" />
+{% endblock %} {% block content %}
 <div class="content-wrapper">
-
-<!-- Informações do Perfil -->
-<div class="section-title">Informações Pessoais</div>
-<div class="form-section">
+  <!-- Informações do Perfil -->
+  <div class="section-title">Informações Pessoais</div>
+  <div class="form-section">
     <form method="POST">
-        {% csrf_token %}
-        
-        <div class="form-group">
-            <label class="form-label">Primeiro Nome</label>
-            <input type="text" class="form-input" name="first_name" value="{{ user.first_name }}" required>
-        </div>
+      {% csrf_token %}
 
-        <div class="form-group">
-            <label class="form-label">Último Nome</label>
-            <input type="text" class="form-input" name="last_name" value="{{ user.last_name }}" required>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Primeiro Nome</label>
+        <input
+          type="text"
+          class="form-input"
+          name="first_name"
+          value="{{ user.first_name }}"
+          required
+        />
+      </div>
 
-        <div class="form-group">
-            <label class="form-label">Email</label>
-            <input type="email" class="form-input" name="email" value="{{ user.email }}" required>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Último Nome</label>
+        <input
+          type="text"
+          class="form-input"
+          name="last_name"
+          value="{{ user.last_name }}"
+          required
+        />
+      </div>
 
-        <div class="form-group">
-            <label class="form-label">Telefone</label>
-            <input type="tel" class="form-input" name="telefone" value="{{ user.telefone|default:'' }}">
-        </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-input"
+          name="email"
+          value="{{ user.email }}"
+          required
+        />
+      </div>
 
-        <div style="display: flex; gap: 10px;">
-            <button type="submit" class="btn-primary">Guardar Alterações</button>
-            <button type="reset" class="btn-secondary">Cancelar</button>
-        </div>
+      <div class="form-group">
+        <label class="form-label">Telefone</label>
+        <input
+          type="tel"
+          class="form-input"
+          name="telefone"
+          value="{{ user.telefone|default:'' }}"
+        />
+      </div>
+
+      <div style="display: flex; gap: 10px">
+        <button type="submit" class="btn-primary">Guardar Alterações</button>
+        <button type="reset" class="btn-secondary">Cancelar</button>
+      </div>
     </form>
-</div>
+  </div>
 
-<!-- Informações da Conta -->
-<div class="section-title">Detalhes da Conta</div>
-<div class="info-list">
+  <!-- Informações da Conta -->
+  <div class="section-title">Detalhes da Conta</div>
+  <div class="info-list">
     <div class="info-item">
-        <div class="info-label">ID de Utilizador</div>
-        <div class="info-value">#{{ user.user_id }}</div>
+      <div class="info-label">ID de Utilizador</div>
+      <div class="info-value">#{{ user.user_id }}</div>
     </div>
     <div class="info-item">
-        <div class="info-label">Membro desde</div>
-        <div class="info-value">{{user.date_joined}}</div>
+      <div class="info-label">Membro desde</div>
+      <div class="info-value">{{user.date_joined}}</div>
     </div>
-</div>
+  </div>
 
-{% endblock %}
+  {% endblock %}
+</div>

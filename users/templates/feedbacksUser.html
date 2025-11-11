@@ -1,100 +1,109 @@
-{% extends 'baseUser.html' %}
-{% load static %}
-
-{% block title %}Feedbacks - Atlas Gateway{% endblock %}
-{% block page_title %}Feedbacks{% endblock %}
-
-{% block styles %}
-<link rel="stylesheet" href="{% static 'feedbacksUser.css' %}">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-{% endblock %}
-
-{% block content %}
+{% extends 'baseUser.html' %} {% load static %} {% block title %}Feedbacks -
+Atlas Gateway{% endblock %} {% block page_title %}Feedbacks{% endblock %} {%
+block styles %}
+<link rel="stylesheet" href="{% static 'feedbacksUser.css' %}" />
+<link
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+  rel="stylesheet"
+/>
+{% endblock %} {% block content %}
 <div class="content-wrapper">
-    <!-- Formulário de Novo Feedback -->
-    <div class="section-title">Deixar um Novo Feedback</div>
-    <div class="form-section">
+  <!-- Formulário de Novo Feedback -->
+  <div class="section-title">Deixar um Novo Feedback</div>
+  <div class="form-section">
     <form method="POST" action="" enctype="multipart/form-data">
-        {% csrf_token %}
-            
-            <div class="form-group">
-                <label class="form-label">Selecionar Pacote</label>
-                <select class="form-input" name="reserva_id" required>
-                    <option value="">Escolha um pacote...</option>
-                    {% for compra in compras %}
-                    <option value="{{ compra.0 }}">{{ compra.1 }} ({{ compra.2|date:"d/m/Y" }})</option>
-                    {% endfor %}
-                </select>
-            </div>
+      {% csrf_token %}
 
-            <div class="form-group">
-                <label class="form-label">Classificação</label>
-                <div class="rating-stars">
-                    <input type="radio" id="star5" name="avaliacao" value="5" required>
-                    <label for="star5" class="star">★</label>
-                    
-                    <input type="radio" id="star4" name="avaliacao" value="4">
-                    <label for="star4" class="star">★</label>
-                    
-                    <input type="radio" id="star3" name="avaliacao" value="3">
-                    <label for="star3" class="star">★</label>
-                    
-                    <input type="radio" id="star2" name="avaliacao" value="2">
-                    <label for="star2" class="star">★</label>
-                    
-                    <input type="radio" id="star1" name="avaliacao" value="1">
-                    <label for="star1" class="star">★</label>
-                </div>
-            </div>
+      <div class="form-group">
+        <label class="form-label">Selecionar Pacote</label>
+        <select class="form-input" name="reserva_id" required>
+          <option value="">Escolha um pacote...</option>
+          {% for compra in compras %}
+          <option value="{{ compra.0 }}">
+            {{ compra.1 }} ({{ compra.2|date:"d/m/Y" }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
 
-            <div class="form-group">
-                <label class="form-label">Título do Feedback</label>
-                <input type="text" class="form-input" name="titulo" placeholder="Ex: Experiência fantástica em Barcelona" required>
-            </div>
+      <div class="form-group">
+        <label class="form-label">Classificação</label>
+        <div class="rating-stars">
+          <input type="radio" id="star5" name="avaliacao" value="5" required />
+          <label for="star5" class="star">★</label>
 
-            <div class="form-group">
-                <label class="form-label">Comentário</label>
-                <textarea class="form-textarea" name="comentario" placeholder="Partilhe a sua experiência com outros viajantes..." required></textarea>
-            </div>
+          <input type="radio" id="star4" name="avaliacao" value="4" />
+          <label for="star4" class="star">★</label>
 
-            <div style="display: flex; gap: 10px;">
-                <button type="submit" class="btn-primary">Enviar Feedback</button>
-                <button type="reset" class="btn-secondary">Cancelar</button>
-            </div>
-        </form>
+          <input type="radio" id="star3" name="avaliacao" value="3" />
+          <label for="star3" class="star">★</label>
+
+          <input type="radio" id="star2" name="avaliacao" value="2" />
+          <label for="star2" class="star">★</label>
+
+          <input type="radio" id="star1" name="avaliacao" value="1" />
+          <label for="star1" class="star">★</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Título do Feedback</label>
+        <input
+          type="text"
+          class="form-input"
+          name="titulo"
+          placeholder="Ex: Experiência fantástica em Barcelona"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Comentário</label>
+        <textarea
+          class="form-textarea"
+          name="comentario"
+          placeholder="Partilhe a sua experiência com outros viajantes..."
+          required
+        ></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px">
+        <button type="submit" class="btn-primary">Enviar Feedback</button>
+        <button type="reset" class="btn-secondary">Cancelar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Lista de Feedbacks Anteriores -->
+  <div class="section-title">Meus Feedbacks Anteriores</div>
+  <div class="feedbacks-list">
+    {% if feedbacks %} {% for feedback in feedbacks %}
+    <div class="feedback-item">
+      <div class="feedback-header">
+        <div>
+          <div class="feedback-title">{{ feedback.titulo }}</div>
+          <div class="feedback-date">
+            {{ feedback.data_feedback|date:"d \d\e F \d\e Y" }}
+          </div>
+        </div>
+      </div>
+      <div class="feedback-package">{{ feedback.pacote_nome }}</div>
+      <div class="feedback-rating">
+        {% for i in "12345" %} {% if forloop.counter <= feedback.avaliacao %}★{%
+        else %}☆{% endif %} {% endfor %} ({{ feedback.avaliacao }}.0)
+      </div>
+      <div class="feedback-text">{{ feedback.comentario }}</div>
+      <div class="feedback-actions">
+        <button class="btn-small">Editar</button>
+        <button class="btn-small delete">Eliminar</button>
+      </div>
     </div>
-
-    <!-- Lista de Feedbacks Anteriores -->
-    <div class="section-title">Meus Feedbacks Anteriores</div>
-    <div class="feedbacks-list">
-        {% if feedbacks %}
-            {% for feedback in feedbacks %}
-            <div class="feedback-item">
-                <div class="feedback-header">
-                    <div>
-                        <div class="feedback-title">{{ feedback.titulo }}</div>
-                        <div class="feedback-date">{{ feedback.data_feedback|date:"d \d\e F \d\e Y" }}</div>
-                    </div>
-                </div>
-                <div class="feedback-package">{{ feedback.pacote_nome }}</div>
-                <div class="feedback-rating">
-                    {% for i in "12345" %}
-                        {% if forloop.counter <= feedback.avaliacao %}★{% else %}☆{% endif %}
-                    {% endfor %}
-                    ({{ feedback.avaliacao }}.0)
-                </div>
-                <div class="feedback-text">{{ feedback.comentario }}</div>
-                <div class="feedback-actions">
-                    <button class="btn-small">Editar</button>
-                    <button class="btn-small delete">Eliminar</button>
-                </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="alert-info-box">
-                <i class="fas fa-info-circle"></i> Ainda não deixou nenhum feedback. Avalie os pacotes que adquiriu!
-            </div>
-        {% endif %}
+    {% endfor %} {% else %}
+    <div class="alert-info-box">
+      <i class="fas fa-info-circle"></i> Ainda não deixou nenhum feedback.
+      Avalie os pacotes que adquiriu!
     </div>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
