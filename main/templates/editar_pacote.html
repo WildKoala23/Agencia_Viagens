@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Pacote</title>
+    <link rel="stylesheet" href="{% static 'voos.css' %}">
+</head>
+<body>
+<div class="container">
+    <a href="{% url 'pacotes' %}" class="back-link">← Voltar</a>
+    <div class="card">
+        <h1>Editar Pacote</h1>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="form-group">
+                {{ form.nome.label_tag }}<br>
+                {{ form.nome }}
+            </div>
+
+            <div class="form-group">
+                {{ form.descricao_item.label_tag }}<br>
+                {{ form.descricao_item }}
+            </div>
+
+            <div class="form-group">
+                {{ form.data_inicio.label_tag }}<br>
+                {{ form.data_inicio }}
+            </div>
+
+            <div class="form-group">
+                {{ form.data_fim.label_tag }}<br>
+                {{ form.data_fim }}
+            </div>
+
+            <div class="form-group">
+                {{ form.preco_total.label_tag }}<br>
+                {{ form.preco_total }}
+            </div>
+
+            <div class="form-group">
+                {{ form.estado.label_tag }}<br>
+                {{ form.estado }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_imagem">Imagem do Pacote:</label><br>
+
+                {% if form.instance.imagem %}
+                    <p>
+                        <strong>Imagem atual:</strong>
+                        <a href="{{ form.instance.imagem.url }}" target="_blank">
+                            {{ form.instance.imagem.name }}
+                        </a>
+                    </p>
+                    <img src="{{ form.instance.imagem.url }}" alt="{{ form.instance.nome }}" width="200" style="border-radius: 8px; margin-bottom:10px;">
+                {% endif %}
+
+                {{ form.imagem }}
+            </div>
+
+            <div class="form-group">
+                {{ form.destinos.label_tag }}<br>
+                {{ form.destinos }}
+            </div>
+
+            <button type="submit" class="btn-save">Guardar Alterações</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

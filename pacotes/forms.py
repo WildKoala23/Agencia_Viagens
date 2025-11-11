@@ -43,18 +43,22 @@ class VooForm(forms.ModelForm):
 class HotelForm(forms.ModelForm):
     class Meta:
         model = Hotel
-        fields = '__all__'
+        fields = '__all__'  
         labels = {
             'nome': 'Nome do Hotel',
             'endereco': 'Endereço',
         }
 
 class PacoteForm(forms.ModelForm):
-    fatura_linha_id = forms.IntegerField(label='ID da Linha de Fatura', required=False)
-    
+    imagem = forms.ImageField(
+    required=False,
+    label="Imagem do Pacote",
+    widget=forms.FileInput(attrs={'class': 'form-control'}),
+)
+
     class Meta:
         model = Pacote
-        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado']
+        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado', 'imagem', 'destinos']
         labels = {
             'nome': 'Nome do Pacote',
             'descricao_item': 'Descrição',
@@ -62,20 +66,38 @@ class PacoteForm(forms.ModelForm):
             'data_fim': 'Data de Fim (AAAA-MM-DD)',
             'preco_total': 'Preço Total (€)',
             'estado': 'Estado',
+            'imagem': 'Imagem do Pacote',
+            'destinos': 'Destinos',
         }
-    
+        widgets = {
+            'data_inicio': forms.DateInput(attrs={'type': 'date'}),
+            'data_fim': forms.DateInput(attrs={'type': 'date'}),
+            'destinos': forms.SelectMultiple(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['destinos'].required = True  
+        self.fields['destinos'].help_text = "Selecione pelo menos um destino."
+
+
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        if self.cleaned_data.get('fatura_linha_id'):
-            from .models import FacturaLinha
-            try:
-                instance.fatura_linha_id = self.cleaned_data['fatura_linha_id']
-            except:
-                pass
-        if commit:
-            instance.save()
-        return instance
-    
+     instance = super().save(commit=False)
+
+     if self.cleaned_data.get('fatura_linha_id'):
+        from .models import FacturaLinha
+        try:
+            instance.fatura_linha_id = self.cleaned_data['fatura_linha_id']
+        except:
+            pass
+
+     if commit:
+        instance.save()
+        self.save_m2m()
+
+     return instance
+
+
 class FeedbackForm(forms.ModelForm):
     class Meta:
         model = Feedback

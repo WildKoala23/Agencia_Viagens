@@ -8,14 +8,15 @@ class Pacote(models.Model):
     data_fim = models.DateField()
     preco_total = models.DecimalField(max_digits=10, decimal_places=2)
     estado = models.TextField()
-    imagem = models.ImageField(upload_to='', blank=True, null=True)
+    imagem = models.ImageField(upload_to='pacotes/', blank=True, null=True)
+    destinos = models.ManyToManyField('Destino', through='PacoteDestino', related_name='pacotes')
 
-     
     class Meta:
         db_table = 'pacote'
-    
+
     def __str__(self):
         return f"{self.nome} - {self.preco_total}€"
+
     
 class PacoteView(models.Model):
     pacote_id = models.AutoField(primary_key=True)
@@ -99,10 +100,11 @@ class PacoteDestino(models.Model):
     
     class Meta:
         db_table = 'pacote_destino'
-        unique_together = (('pacote_id', 'destino_id'),)  # Composite primary key
+        unique_together = (('pacote_id', 'destino_id'),)
        
     def __str__(self):
-        return f"Pacote {self.pacote.pacote_id} -> Destino {self.destino.nome}"
+        return f"Pacote {self.pacote_id.pacote_id} -> Destino {self.destino_id.nome}"
+
     
 
 class PacoteHotel(models.Model):

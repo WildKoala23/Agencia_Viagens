@@ -20,4 +20,6 @@ urlpatterns = [
     
     #pacotes
       path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
+      path('pacotes/<int:pacote_id>/editar/', views.editar_pacote, name='editar_pacote'),
+    path('pacotes/<int:pacote_id>/eliminar/', views.eliminar_pacote, name='eliminar_pacote'),
 ]
