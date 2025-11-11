@@ -90,7 +90,8 @@ class PacoteDestino(models.Model):
     destino_id = models.ForeignKey(
         Destino, 
         on_delete=models.CASCADE,
-        db_column='destino_id'
+        db_column='destino_id',
+        primary_key=True
     )
     pacote_id = models.ForeignKey(
         Pacote, 
@@ -101,6 +102,7 @@ class PacoteDestino(models.Model):
     class Meta:
         db_table = 'pacote_destino'
         unique_together = (('pacote_id', 'destino_id'),)
+        managed = False
        
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Destino {self.destino_id.nome}"
@@ -111,7 +113,8 @@ class PacoteHotel(models.Model):
     hotel_id = models.ForeignKey(
         Hotel,
         on_delete=models.CASCADE,
-        db_column='hotel_id'
+        db_column='hotel_id',
+        primary_key=True
     )
     pacote_id = models.ForeignKey(
         Pacote,
@@ -122,6 +125,7 @@ class PacoteHotel(models.Model):
     class Meta:
         db_table = 'pacote_hotel'
         unique_together = (('pacote_id', 'hotel_id'),)  # Composite primary key
+        managed = False
     
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Hotel {self.hotel_id.nome}"
@@ -130,7 +134,8 @@ class PacoteVoo(models.Model):
     voo_id = models.ForeignKey(
         Voo,
         on_delete=models.CASCADE,
-        db_column='voo_id'
+        db_column='voo_id',
+        primary_key=True
     )
     pacote_id = models.ForeignKey(
         Pacote,
@@ -142,6 +147,7 @@ class PacoteVoo(models.Model):
         
         db_table = 'pacote_voo'
         unique_together = (('pacote_id', 'voo_id'),)  # Composite primary key
+        managed = False
     
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Voo {self.voo_id.numero_voo}"
