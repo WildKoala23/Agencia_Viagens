@@ -209,25 +209,48 @@ def eliminar_hotel(request, hotel_id):
 
 
 def pacotes(request):
+    query = request.GET.get('q', '')  # Pega o texto da pesquisa (do input)
+
+    pacotes = Pacote.objects.all().order_by('pacote_id')
+
+    # Se o utilizador escreveu algo, filtra por nome OU destino relacionado
+    if query:
+        pacotes = pacotes.filter(
+            Q(nome__icontains=query) | 
+            Q(destinos__nome__icontains=query)
+        ).distinct()
+
     if request.method == "POST":
-        form = PacoteForm(request.POST)
+        form = PacoteForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('pacotes')
     else:
         form = PacoteForm()
 
-    # Buscar pacotes sem select_related para evitar problemas de cursor
-    pacotes = list(Pacote.objects.all().values(
-        'pacote_id', 'nome', 'descricao_item', 
-        'data_inicio', 'data_fim', 'preco_total', 'estado'
-    ))
-    
     return render(request, 'pacotes.html', {
         'form': form,
-        'pacotes': pacotes
+        'pacotes': pacotes,
+        'query': query,
     })
 
+def editar_pacote(request, pacote_id):
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+
+    if request.method == "POST":
+        form = PacoteForm(request.POST, request.FILES, instance=pacote)
+        if form.is_valid():
+            pacote = form.save(commit=False)
+            pacote.save()
+            form.save_m2m()  # atualiza as relações destino <-> pacote
+            return redirect('pacotes')
+    else:
+        form = PacoteForm(instance=pacote)
+
+    return render(request, 'editar_pacote.html', {
+        'form': form,
+        'pacote': pacote
+    })
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     
@@ -248,6 +271,12 @@ def pacote_detalhes(request, pacote_id):
     })
 
 
+def eliminar_pacote(request, pacote_id):
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    if request.method == 'POST':
+        pacote.delete()
+        return redirect('pacotes')
+    return redirect('pacotes')
 
 
 def pacote_detalhes(request, pacote_id):
@@ -264,10 +293,9 @@ def pacote_detalhes(request, pacote_id):
     # Se encontrar, usa a imagem do MongoDB; senão, usa a imagem padrão do modelo
     imagem_url = banner["imagem_url"] if banner else f"/media/{pacote.imagem}"
 
-    # Divide a descrição por dias (captura qualquer variação "º DIA" ou "° DIA")
-    texto = pacote.descricao_item
+    # Divide a descrição em blocos por dia
+    texto = pacote.descricao_item or ""
     partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*", texto, flags=re.IGNORECASE)
-    # Remove pedaços vazios
     partes = [p.strip() for p in partes if p.strip()]
 
     dias = []
@@ -277,8 +305,9 @@ def pacote_detalhes(request, pacote_id):
             "texto": parte
         })
 
-    return render(request, "pacote_detalhes.html", {
+    # O return deve estar fora do ciclo
+    return render(request, 'pacote_detalhes.html', {
         "pacote": pacote,
-        "dias": dias,
-        "imagem_url": imagem_url
+        "imagem_url": imagem_url,
+        "dias": dias
     })

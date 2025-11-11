@@ -1,21 +1,101 @@
-<h1>Inserir Pacote</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Pacotes</title>
+    <link rel="stylesheet" href="{% static 'voos.css' %}">
+</head>
+<body>
 
-<h2>Lista de Pacotes</h2>
-<ul>
-  {% for pacote in pacotes %}
-    <li>
-      {{ pacote.descricao }} - {{ pacote.preco }} € <br>
-      Destino: {{ pacote.destino }} <br>
-      Voo: {{ pacote.voo }} <br>
-      Hotel: {{ pacote.hotel }}
-    </li>
-  {% empty %}
-    <li>Nenhum pacote.</li>
-  {% endfor %}
-</ul>
-    <a href="{% url 'main:home' %}">Voltar ao Início</a>
+<div class="container">
+    <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
+    <br>
+
+    <div class="card">
+        <h1>Inserir Pacote</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="color: brown;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="alert-error">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn-save">Guardar Pacote</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="voos-header">
+            <h2>Lista de Pacotes</h2>
+
+            <form method="get" class="search-form">
+                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input">
+                <button type="submit" class="btn-search">Procurar</button>
+            </form>
+        </div>
+
+        <ul>
+            {% for pacote in pacotes %}
+                <li>
+                    <div class="voo-info">
+                        <div class="voo-detalhes">
+                            <span class="voo-nome">
+                                {{ pacote.nome }} → 
+                                {% if pacote.destinos.all %}
+                                    {{ pacote.destinos.all.0.nome }}
+                                {% else %}
+                                    (Sem destino)
+                                {% endif %}
+                            </span>
+                            <span class="voo-extra">
+                                {{ pacote.data_inicio }} → {{ pacote.data_fim }} | {{ pacote.preco_total }}€
+                            </span>
+                        </div>
+
+                        <div class="voo-acoes">
+                            <a href="{% url 'editar_pacote' pacote.pacote_id %}" class="edit-btn">Editar</a>
+
+                            <form action="{% url 'eliminar_pacote' pacote.pacote_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete-btn">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <div class="empty-state">
+                    Nenhum pacote registado ainda.
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        const listaPacotes = document.querySelector(".voos-header");
+        if (listaPacotes) {
+            listaPacotes.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+});
+</script>
+
+</body>
+</html>
