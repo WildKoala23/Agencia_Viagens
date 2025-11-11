@@ -4,40 +4,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Projecto BD2{% endblock %}</title>
+    <title>Atlas Gateways - Login</title>
 
     <!-- Bootstrap e ícones -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{% static 'login.css' %}">
-
-    {% block styles %}{% endblock %}
 </head>
 <body>
-    <div class="container">
-        <div class="title">
-            <h1>
-                Atlas 
-            </h1>
-            <h1>
-                Gateways
-            </h1>
-            <p>
-                Bem vindo
-            </p>
+    <div class="main-wrapper">
+        <!-- Círculo Animado -->
+        <div class="animated-circle"></div>
+
+        <!-- Container Principal -->
+        <div class="forms-container">
+            <!-- Painel de Login -->
+            <div class="signin-signup">
+                <!-- Formulário de Login -->
+                <form action="{% url 'users:login' %}" method="POST" class="sign-in-form">
+                    {% csrf_token %}
+                    <h2 class="form-title">Entrar</h2>
+                    <div class="input-field">
+                        <i class="bi bi-envelope-fill"></i>
+                        <input type="email" placeholder="Email" name="email" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" placeholder="Password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Entrar</button>
+                </form>
+
+                <!-- Formulário de Registo -->
+                <form action="#" method="POST" class="sign-up-form">
+                    {% csrf_token %}
+                    <h2 class="form-title">Registar</h2>
+                    <div class="input-field">
+                        <i class="bi bi-person-fill"></i>
+                        <input type="text" placeholder="Nome" name="nome" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="bi bi-envelope-fill"></i>
+                        <input type="email" placeholder="Email" name="email" required>
+                    </div>
+                    <div class="input-field">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" placeholder="Password" name="password" required>
+                    </div>
+                    <button type="submit" class="btn-submit">Registar</button>
+                </form>
+            </div>
         </div>
-        <form action = "{% url 'login' %}"  method="POST" class="mb-4">
-            {% csrf_token %}
-            <div class="form-group">
-              <input type="email" class="form-control" aria-describedby="emailHelp" placeholder="Enter email" name="email">
-              <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+
+        <!-- Painéis de Conteúdo -->
+        <div class="panels-container">
+            <!-- Painel Esquerdo -->
+            <div class="panel left-panel">
+                <div class="content">
+                    <h1>Atlas Gateways</h1>
+                    <h3>Novo por aqui?</h3>
+                    <p>Descubra destinos incríveis ao redor do mundo. Crie a sua conta e comece a sua aventura!</p>
+                    <button class="btn-transparent" id="sign-up-btn">Registar</button>
+                </div>
+                <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500" alt="Viagem" class="image">
             </div>
-            <div class="form-group">
-              <input type="password" class="form-control" placeholder="Password" name="password">
+
+            <!-- Painel Direito -->
+            <div class="panel right-panel">
+                <div class="content">
+                    <h1>Atlas Gateways</h1>
+                    <h3>Já tem conta?</h3>
+                    <p>Entre agora e continue a explorar os melhores destinos e ofertas exclusivas!</p>
+                    <button class="btn-transparent" id="sign-in-btn">Entrar</button>
+                </div>
+                <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500" alt="Viagem" class="image">
             </div>
-            <button type="submit" class="btn btn-primary" value="OK">Submit</button>
-        </form>
-          <p class="recover">Não consegue entrar <a href="#">Crie/Recupere a sua conta</a></p>
+        </div>
     </div>
+
+    <script>
+        const signUpButton = document.getElementById('sign-up-btn');
+        const signInButton = document.getElementById('sign-in-btn');
+        const mainWrapper = document.querySelector('.main-wrapper');
+
+        signUpButton.addEventListener('click', () => {
+            mainWrapper.classList.add('register-active');
+        });
+
+        signInButton.addEventListener('click', () => {
+            mainWrapper.classList.remove('register-active');
+        });
+    </script>
 </body>
 </html>

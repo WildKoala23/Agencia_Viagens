@@ -294,8 +294,13 @@ def pacote_detalhes(request, pacote_id):
     # Busca o banner correspondente ao pacote no MongoDB
     banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
     
-    # Se não encontrar, usa uma imagem padrão
-    imagem_url = banner["imagem_url"] if banner else "/media/default.jpg"
+    # Prioridade: MongoDB banner > imagem do pacote no PostgreSQL > imagem padrão
+    if banner and "imagem_url" in banner:
+        imagem_url = banner["imagem_url"]
+    elif pacote.imagem:
+        imagem_url = f"/media/{pacote.imagem}"
+    else:
+        imagem_url = None
     
     return render(request, 'pacote_detalhes.html', {
         "pacote": pacote,
