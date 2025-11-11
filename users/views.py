@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdII_25170"]
+db = client["bdii_25971"]
 userData = db["dadosUser"]
 
 def loginUser(request):
@@ -26,15 +26,17 @@ def loginUser(request):
             print(user)
             if user is not None:
                 login(request, user)
-                print(request.user)
-                return redirect('main:home')  # Redireciona para homepage
+                
+                # Redirecionamento condicional
+                if user.is_staff:
+                    return redirect('main:dashboard')  # staff
+                else:
+                    return redirect('users:user')  # usuário comum
             else:
-                form.add_error(None, "Invalid email or password")  # adds non-field error
+                form.add_error(None, "Email ou senha inválidos")
     else:
         form = LoginForm()
     return render(request, 'registration/login.html')
-
-
 
 # Create your views here.
 def inserir_clientes(request):

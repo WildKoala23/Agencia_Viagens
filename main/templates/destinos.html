@@ -1,45 +1,95 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Destinos</title>
-    <link rel="stylesheet" href="{% static 'clientes.css' %}">
-</head>
-<body>
-    <div class="container">
-        <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
 
-        <div class="card">
-            <h1>Inserir Destino</h1>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Guardar Destino</button>
+{% block title %}Gestão de Destinos{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Gestão de Destinos{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+
+    <div class="card_utils">
+        <h1>Inserir Destino</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert_utils alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="alert_utils alert-error">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" class="form_utils">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn_save_utils">Guardar Destino</button>
+        </form>
+    </div>
+
+    <div class="card_utils">
+        <div class="voos_header_utils">
+            <h2>Lista de Destinos</h2>
+
+            <form method="get" class="search_form_utils">
+                <input type="text" name="q" placeholder="Pesquisar por país..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                <button type="submit" class="btn_search_utils">Procurar</button>
             </form>
         </div>
 
-        <div class="card">
-            <h2>Lista de Destinos</h2>
-           <ul>
-    {% for destino in destinos %}
-        <li>
-            <div class="cliente-info">
-                <span class="cliente-nome">{{ destino.pais }}</span>
-            <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="delete-btn">Eliminar</button>
-                </form>
-            </div>
-        </li>
-    {% empty %}
-        <div class="empty-state">
-            Nenhum destino registado ainda.
-        </div>
-    {% endfor %}
-</ul>
-        </div>
+        <ul class="lista_utils">
+            {% for destino in destinos %}
+                <li>
+                    <div class="voo_info_utils">
+                        <div class="voo_detalhes_utils">
+                            <span class="voo_nome_utils">
+                                {{ destino.pais }}
+                            </span>
+                            <span class="voo_extra_utils">
+                                {{ destino.nome }}
+                            </span>
+                        </div>
+
+                        <div class="voo_acoes_utils">
+                            <a href="{% url 'editar_destino' destino.destino_id %}" class="edit_btn_utils">Editar</a>
+
+                            <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete_btn_utils">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <div class="empty_state_utils">
+                    Nenhum destino registado ainda.
+                </div>
+            {% endfor %}
+        </ul>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        const listaDestinos = document.querySelector(".voos_header_utils");
+        if (listaDestinos) {
+            listaDestinos.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,60 +1,59 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Pacotes</title>
-    <link rel="stylesheet" href="{% static 'voos.css' %}">
-</head>
-<body>
 
-<div class="container">
-    <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
-    <br>
+{% block title %}Gestão de Pacotes{% endblock %}
 
-    <div class="card">
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Gestão de Pacotes{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+
+    <div class="card_utils">
         <h1>Inserir Pacote</h1>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}" style="color: brown;">
+                <div class="alert_utils alert-{{ message.tags }}">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
 
         {% if form.non_field_errors %}
-            <div class="alert-error">
+            <div class="alert_utils alert-error">
                 {% for error in form.non_field_errors %}
                     <p>{{ error }}</p>
                 {% endfor %}
             </div>
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" class="form_utils">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" class="btn-save">Guardar Pacote</button>
+            <button type="submit" class="btn_save_utils">Guardar Pacote</button>
         </form>
     </div>
 
-    <div class="card">
-        <div class="voos-header">
+    <div class="card_utils">
+        <div class="voos_header_utils">
             <h2>Lista de Pacotes</h2>
 
-            <form method="get" class="search-form">
-                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input">
-                <button type="submit" class="btn-search">Procurar</button>
+            <form method="get" class="search_form_utils">
+                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                <button type="submit" class="btn_search_utils">Procurar</button>
             </form>
         </div>
 
-        <ul>
+        <ul class="lista_utils">
             {% for pacote in pacotes %}
                 <li>
-                    <div class="voo-info">
-                        <div class="voo-detalhes">
-                            <span class="voo-nome">
+                    <div class="voo_info_utils">
+                        <div class="voo_detalhes_utils">
+                            <span class="voo_nome_utils">
                                 {{ pacote.nome }} → 
                                 {% if pacote.destinos.all %}
                                     {{ pacote.destinos.all.0.nome }}
@@ -62,40 +61,40 @@
                                     (Sem destino)
                                 {% endif %}
                             </span>
-                            <span class="voo-extra">
+                            <span class="voo_extra_utils">
                                 {{ pacote.data_inicio }} → {{ pacote.data_fim }} | {{ pacote.preco_total }}€
                             </span>
                         </div>
 
-                        <div class="voo-acoes">
-                            <a href="{% url 'editar_pacote' pacote.pacote_id %}" class="edit-btn">Editar</a>
+                        <div class="voo_acoes_utils">
+                            <a href="{% url 'editar_pacote' pacote.pacote_id %}" class="edit_btn_utils">Editar</a>
 
                             <form action="{% url 'eliminar_pacote' pacote.pacote_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
-                                <button type="submit" class="delete-btn">Eliminar</button>
+                                <button type="submit" class="delete_btn_utils">Eliminar</button>
                             </form>
                         </div>
                     </div>
                 </li>
             {% empty %}
-                <div class="empty-state">
+                <div class="empty_state_utils">
                     Nenhum pacote registado ainda.
                 </div>
             {% endfor %}
         </ul>
     </div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     if (window.location.search.includes("q=")) {
-        const listaPacotes = document.querySelector(".voos-header");
+        const listaPacotes = document.querySelector(".voos_header_utils");
         if (listaPacotes) {
             listaPacotes.scrollIntoView({ behavior: "smooth" });
         }
     }
 });
 </script>
-
-</body>
-</html>
+{% endblock %}

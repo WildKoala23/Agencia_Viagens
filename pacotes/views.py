@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdii_25971"]
 banners = db["banners"]
 
 # Create your views here.
@@ -23,6 +23,24 @@ def destinos(request):
     else:
         form = DestinoForm()
 
+    destinos = Destino.objects.all()
+    return render(request, 'destinos.html', {
+        'form': form,
+        'destinos': destinos
+    })
+
+def editar_destino(request, destino_id):
+    destino = get_object_or_404(Destino, destino_id=destino_id)
+    
+    if request.method == 'POST':
+        form = DestinoForm(request.POST, instance=destino)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Destino atualizado com sucesso!')
+            return redirect('destinos')
+    else:
+        form = DestinoForm(instance=destino)
+    
     destinos = Destino.objects.all()
     return render(request, 'destinos.html', {
         'form': form,
@@ -227,7 +245,7 @@ def pacotes(request):
 
             # 🔹 Agora sincroniza com o MongoDB
             client = MongoClient("mongodb://localhost:27017/")
-            db = client["bd2_22598"]
+            db = client["bdii_25971"]
             collection = db["banners"]
 
             collection.update_one(
@@ -267,7 +285,7 @@ def editar_pacote(request, pacote_id):
 
             # 🔹 Atualizar imagem no MongoDB
             client = MongoClient("mongodb://localhost:27017/")
-            db = client["bd2_22598"]
+            db = client["bdii_25971"]
             collection = db["banners"]
 
             collection.update_one(
@@ -321,7 +339,7 @@ def pacote_detalhes(request, pacote_id):
 
     # Conecta ao MongoDB
     client = MongoClient("mongodb://localhost:27017/")
-    db = client["bd2_22598"]
+    db = client["bdii_25971"]
     collection = db["banners"]
 
     # Tenta ir buscar o banner correspondente ao pacote
