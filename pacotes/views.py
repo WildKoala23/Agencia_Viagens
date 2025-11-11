@@ -213,17 +213,37 @@ def pacotes(request):
 
     pacotes = Pacote.objects.all().order_by('pacote_id')
 
-    # Se o utilizador escreveu algo, filtra por nome OU destino relacionado
+    # 🔍 Filtro de pesquisa por nome ou destino
     if query:
         pacotes = pacotes.filter(
-            Q(nome__icontains=query) | 
+            Q(nome__icontains=query) |
             Q(destinos__nome__icontains=query)
         ).distinct()
 
     if request.method == "POST":
         form = PacoteForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            pacote = form.save()  # salva no PostgreSQL primeiro
+
+            # 🔹 Agora sincroniza com o MongoDB
+            client = MongoClient("mongodb://localhost:27017/")
+            db = client["bd2_22598"]
+            collection = db["banners"]
+
+            collection.update_one(
+                {"pacote_id": pacote.pacote_id},  # identifica o pacote pelo ID
+                {"$set": {
+                    "nome": pacote.nome,
+                    "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
+                    "preco_total": float(pacote.preco_total),
+                    "data_inicio": str(pacote.data_inicio),
+                    "data_fim": str(pacote.data_fim),
+                    "ativo": True
+                }},
+                upsert=True  # cria ou atualiza
+            )
+
+            client.close()
             return redirect('pacotes')
     else:
         form = PacoteForm()
@@ -234,6 +254,7 @@ def pacotes(request):
         'query': query,
     })
 
+
 def editar_pacote(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
 
@@ -243,6 +264,21 @@ def editar_pacote(request, pacote_id):
             pacote = form.save(commit=False)
             pacote.save()
             form.save_m2m()  # atualiza as relações destino <-> pacote
+
+            # 🔹 Atualizar imagem no MongoDB
+            client = MongoClient("mongodb://localhost:27017/")
+            db = client["bd2_22598"]
+            collection = db["banners"]
+
+            collection.update_one(
+                {"pacote_id": pacote.pacote_id},  # procura o banner do pacote
+                {"$set": {
+                    "imagem_url": f"/media/{pacote.imagem}",  # nova imagem
+                    "ativo": True  # opcional, mantém ativo
+                }},
+                upsert=True  # cria se não existir
+            )
+
             return redirect('pacotes')
     else:
         form = PacoteForm(instance=pacote)
@@ -251,6 +287,7 @@ def editar_pacote(request, pacote_id):
         'form': form,
         'pacote': pacote
     })
+
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     
