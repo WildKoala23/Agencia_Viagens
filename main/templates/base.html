@@ -26,7 +26,7 @@
             </button>
         <div class="navbar-nav">
             <a class="nav-item nav-link active" href="{% url 'main:home' %}">Home</a>
-            <a class="nav-item nav-link" href="">Pacotes</a>
+            <a class="nav-item nav-link" href="{% url 'main:pacotes_por_pais' %}">Pacotes</a>
 
             {% if 'dashboard' in request.path %}
                 <a class="nav-item nav-link" href="{% url 'users:inserir_clientes' %}">Clientes</a>

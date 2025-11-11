@@ -1,0 +1,180 @@
+.pacote-detalhes {
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+}
+
+.itinerario h3 {
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #004080;
+}
+
+.dia-card {
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.dia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #e6f0ff;
+    padding: 12px 18px;
+    font-weight: 600;
+    color: #004080;
+}
+
+.dia-numero {
+    font-size: 16px;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: #004080;
+    transition: transform 0.3s ease;
+}
+
+.toggle-btn:hover {
+    transform: scale(1.2);
+}
+
+.dia-conteudo {
+    padding: 15px 20px;
+    display: none;
+    line-height: 1.5;
+}
+
+.dia-conteudo.active {
+    display: block;
+    animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.pacote-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #e6f0ff;
+    padding: 25px 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+}
+
+.pacote-info h2 {
+    color: #004080;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.pacote-info p {
+    margin: 4px 0;
+    font-size: 1rem;
+}
+
+.pacote-preco {
+    text-align: right;
+    color: #004080;
+}
+
+.pacote-preco .preco-label {
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.pacote-preco .preco-valor {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pacote-preco .preco-por {
+    font-size: 0.85rem;
+    color: #004080;
+}
+/* ----- Exclui e Notas ----- */
+.pacote-informacoes {
+  margin-top: 40px;
+}
+
+.info-card {
+  border-top: 1px solid #ccc;
+  margin-bottom: 10px;
+}
+
+.info-header {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #004080;
+  padding: 12px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.info-header:hover {
+  color: #002b5c;
+}
+
+.info-conteudo {
+  display: none;
+  padding: 10px 0 20px 10px;
+  line-height: 1.6;
+  color: #333;
+}
+
+.info-conteudo.active {
+  display: block;
+  animation: fadeIn 0.4s ease;
+}
+
+.seta {
+  transition: transform 0.3s ease;
+}
+
+.info-header.open .seta {
+  transform: rotate(180deg);
+}
+
+.info-conteudo ul {
+  margin-top: 5px;
+  padding-left: 20px;
+}
+/* ---- Botão Fazer Reserva ---- */
+.btn-reserva {
+  display: inline-block;
+  background-color: #004080;
+  color: white;
+  padding: 14px 40px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 64, 128, 0.3);
+}
+
+.btn-reserva:hover {
+  background-color: #002b5c;
+  box-shadow: 0 6px 14px rgba(0, 64, 128, 0.4);
+  transform: translateY(-2px);
+}
+
