@@ -9,7 +9,7 @@
 </head>
 <body>
     <div class="container">
-        <a href="{% url 'home' %}" class="back-link">← Voltar ao Início</a>
+        <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
         <br>
         <div class="card">
             <h1>Inserir Cliente</h1>
@@ -26,11 +26,11 @@
                 {% for cliente in clientes %}
 <li>
     <div class="cliente-info">
-        <span class="cliente-nome">{{ cliente.nome }}</span>
+        <span class="cliente-nome">{{ cliente.first_name }} {{ cliente.last_name }}</span>
         <span class="cliente-email">{{ cliente.email }}</span>
 
         {% if cliente.user_id %}
-        <form action="{% url 'eliminar_cliente' cliente.user_id %}" method="post" style="display:inline;">
+        <form action="{% url 'users:eliminar_cliente' cliente.user_id %}" method="post" style="display:inline;">
             {% csrf_token %}
             <button type="submit" class="delete-btn">Eliminar</button>
         </form>

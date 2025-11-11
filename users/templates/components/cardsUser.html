@@ -1,0 +1,35 @@
+<div class="row g-3 mb-5">
+    <div class="col-md-3">
+        <div class="stats-card reserva">
+            <div class="stats-icon"><i class="fas fa-plane"></i></div>
+            <div class="stats-label">Próxima Reserva</div>
+            <div class="stats-value">{{ data.Proxima|date:"d/m"  }}</div>
+            <div class="stats-subtitle">{{data.Destino}}</div>
+
+
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card total">
+            <div class="stats-icon"><i class="fas fa-list"></i></div>
+            <div class="stats-label">TOTAL DE RESERVAS</div>
+            <div class="stats-value">{{ data.Total_Reservas }}</div>
+            <div class="stats-subtitle">Últimos 12 meses</div>
+            
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card creditos">
+            <div class="stats-icon"><i class="fas fa-wallet"></i></div>
+            <div class="stats-label">Saldo de Créditos</div>
+            <div class="stats-value">€{{ data.Saldo }}</div>
+            <div class="stats-subtitle">Disponível</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-card atividades">
+            <div class="stats-icon"><i class="fas fa-clock"></i></div>
+            <div class="stats-label">Últimas Ativades</div>
+        </div>
+    </div>
+</div>

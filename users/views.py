@@ -1,30 +1,53 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
+from pymongo import MongoClient
 from django.core import serializers
+from django.contrib.auth import authenticate, login
 from .forms import *
-from .models import *
+from django.contrib.auth import get_user_model
+
+Utilizador = get_user_model()
+
+client = MongoClient("mongodb://localhost:27017/")
+db = client["bdII_25170"]
+userData = db["dadosUser"]
+
+def loginUser(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+
+            print(email, password)
+
+            user = authenticate(request, email=email, password=password)
+
+            print(user)
+            if user is not None:
+                login(request, user)
+                print(request.user)
+                return redirect('main:home')  # Redireciona para homepage
+            else:
+                form.add_error(None, "Invalid email or password")  # adds non-field error
+    else:
+        form = LoginForm()
+    return render(request, 'registration/login.html')
+
+
 
 # Create your views here.
 def inserir_clientes(request):
     if request.method == "POST":
         form = ClienteForm(request.POST)
         if form.is_valid():
-            tipo_user_id = form.cleaned_data['tipo_user'].tipo_user_id
-            nome = form.cleaned_data['nome']
-            email = form.cleaned_data['email']
-            endereco = form.cleaned_data['endereco']
-            telefone = form.cleaned_data['telefone']
-
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "CALL sp_inserir_utilizador(%s, %s, %s, %s, %s);",
-                        [tipo_user_id, nome, email, endereco, telefone]
-                    )
-                return redirect('inserir_clientes')
-            except Exception as e:
-                mensagem_principal = str(e).splitlines()[0]
-                form.add_error(None, mensagem_principal)
+            # Criar novo utilizador com os campos atualizados
+            user = form.save(commit=False)
+            # Garantir que o password é definido corretamente
+            if 'password' in form.cleaned_data:
+                user.set_password(form.cleaned_data['password'])
+            user.save()
+            return redirect('inserir_clientes')
     else:
         form = ClienteForm()
 
@@ -42,23 +65,40 @@ def eliminar_cliente(request, cliente_id):
     return redirect('inserir_clientes')
 
 def user(req):
-
-    return render(req, 'baseUser.html')
+    data = userData.find_one({"Id_User": req.user.user_id})
+    # data = list(userData.find())
+    print(data)
+    return render(req, 'dashboardUser.html', {"data": data})
+   
 
 def comprasUser(req):
+    user = get_object_or_404(Utilizador, user_id=req.user.user_id)
+    
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM comprasUtilizador(1)")
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [req.user.user_id])
         data = cursor.fetchall()
-        print(data)
-    return render(req, 'comprasUser.html', {"data": data})
+    return render(req, 'comprasUser.html', {"data": data, "user": user})
 
 def feedbacksUser(request):
-    # Por enquanto vamos usar user_id = 1 (depois podes integrar com autenticação)
-    user_id = 1
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
     
     with connection.cursor() as cursor:
-        # Buscar compras do utilizador para poder avaliar
-        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [user_id])
+        cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
     
-    return render(request, 'feedbacksUser.html', {"compras": compras})
+    return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
+
+def perfilUser(request):
+    user = get_object_or_404(Utilizador, user_id=request.user.user_id)
+
+    if request.method == "POST":
+        # Atualizar dados do perfil
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        telefone = request.POST.get('telefone', '')
+        user.telefone = int(telefone) if telefone else None
+        user.save()
+        return redirect('users:perfilUser')
+    
+    return render(request, 'perfilUser.html', {"user": user})
