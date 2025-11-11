@@ -1,96 +1,95 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Voos</title>
-    <link rel="stylesheet" href="{% static 'voos.css' %}">
-</head>
-<body>
-    
-    <div class="container">
-        <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
-        <br>
 
-        <div class="card">
-            <h1>Inserir Voo</h1>
+{% block title %}Gestão de Voos{% endblock %}
 
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}" style="color: brown;">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
 
-            {% if form.non_field_errors %}
-                <div class="alert-error">
-                    {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
-                    {% endfor %}
+{% block page_title %}Gestão de Voos{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+
+    <div class="card_utils">
+        <h1>Inserir Voo</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert_utils alert-{{ message.tags }}">
+                    {{ message }}
                 </div>
-            {% endif %}
+            {% endfor %}
+        {% endif %}
 
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit" class="btn-save">Guardar Voo</button>
+        {% if form.non_field_errors %}
+            <div class="alert_utils alert-error">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <form method="post" class="form_utils">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn_save_utils">Guardar Voo</button>
+        </form>
+    </div>
+
+    <div class="card_utils">
+        <div class="voos_header_utils">
+            <h2>Lista de Voos</h2>
+
+            <form method="get" class="search_form_utils">
+                <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                <button type="submit" class="btn_search_utils">Procurar</button>
             </form>
         </div>
 
-        <div class="card">
-            <div class="voos-header">
-                <h2>Lista de Voos</h2>
-
-                <form method="get" class="search-form">
-                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search-input">
-                    <button type="submit" class="btn-search">Procurar</button>
-                </form>
-            </div>
-
-            <ul>
-                {% for voo in voos %}
-                    <li>
-                        <div class="voo-info">
-                            <div class="voo-detalhes">
-                                <span class="voo-nome">
-                                    {{ voo.companhia }} → {{ voo.destino.nome }}
-                                </span>
-                                <span class="voo-extra">
-                                    Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
-                                </span>
-                            </div>
-
-                            <div class="voo-acoes">
-                                <a href="{% url 'editar_voo' voo.voo_id %}" class="edit-btn">Editar</a>
-
-                                <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
-                                    {% csrf_token %}
-                                    <button type="submit" class="delete-btn">Eliminar</button>
-                                </form>
-                            </div>
+        <ul class="lista_utils">
+            {% for voo in voos %}
+                <li>
+                    <div class="voo_info_utils">
+                        <div class="voo_detalhes_utils">
+                            <span class="voo_nome_utils">
+                                {{ voo.companhia }} → {{ voo.destino.nome }}
+                            </span>
+                            <span class="voo_extra_utils">
+                                Saída: {{ voo.data_saida }} | Chegada: {{ voo.data_chegada }}
+                            </span>
                         </div>
-                    </li>
-                {% empty %}
-                    <div class="empty-state">
-                        Nenhum voo registado ainda.
-                    </div>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
 
-    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        if (window.location.search.includes("q=")) {
-            // Só faz scroll se foi feita uma pesquisa
-            const listaVoos = document.querySelector(".voos-header");
-            if (listaVoos) {
-                listaVoos.scrollIntoView({ behavior: "smooth" });
-            }
+                        <div class="voo_acoes_utils">
+                            <a href="{% url 'editar_voo' voo.voo_id %}" class="edit_btn_utils">Editar</a>
+
+                            <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="delete_btn_utils">Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <div class="empty_state_utils">
+                    Nenhum voo registado ainda.
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        const listaVoos = document.querySelector(".voos_header_utils");
+        if (listaVoos) {
+            listaVoos.scrollIntoView({ behavior: "smooth" });
         }
-    });
-    </script>
-</body>
-</html>
+    }
+});
+</script>
+{% endblock %}
