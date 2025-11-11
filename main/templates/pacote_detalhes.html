@@ -20,8 +20,16 @@
 
   <!-- Imagem abaixo do cabeçalho -->
   <div style="position: relative; text-align: center; margin-top: 20px;">
-    <img src="{{ imagem_url }}" alt="{{ pacote.nome }}" class="img-fluid rounded-3"
-         style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% if imagem_url %}
+        <img src="{{ imagem_url }}" alt="{{ pacote.nome }}" class="img-fluid rounded-3"
+             style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% elif pacote.imagem %}
+        <img src="/media/{{ pacote.imagem }}" alt="{{ pacote.nome }}" class="img-fluid rounded-3"
+             style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% else %}
+        <img src="{% static 'default.jpg' %}" alt="{{ pacote.nome }}" class="img-fluid rounded-3"
+             style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% endif %}
   </div>
 
   <hr class="mt-5">

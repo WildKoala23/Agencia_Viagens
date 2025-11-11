@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdII_25170"]
 userData = db["dadosUser"]
 
 def loginUser(request):
@@ -26,7 +26,8 @@ def loginUser(request):
             print(user)
             if user is not None:
                 login(request, user)
-                return redirect('main:home')
+                print(request.user)
+                return redirect('main:home')  # Redireciona para homepage
             else:
                 form.add_error(None, "Invalid email or password")  # adds non-field error
     else:
@@ -40,22 +41,13 @@ def inserir_clientes(request):
     if request.method == "POST":
         form = ClienteForm(request.POST)
         if form.is_valid():
-            tipo_user_id = form.cleaned_data['tipo_user'].tipo_user_id
-            nome = form.cleaned_data['nome']
-            email = form.cleaned_data['email']
-            endereco = form.cleaned_data['endereco']
-            telefone = form.cleaned_data['telefone']
-
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        "CALL sp_inserir_utilizador(%s, %s, %s, %s, %s);",
-                        [tipo_user_id, nome, email, endereco, telefone]
-                    )
-                return redirect('inserir_clientes')
-            except Exception as e:
-                mensagem_principal = str(e).splitlines()[0]
-                form.add_error(None, mensagem_principal)
+            # Criar novo utilizador com os campos atualizados
+            user = form.save(commit=False)
+            # Garantir que o password é definido corretamente
+            if 'password' in form.cleaned_data:
+                user.set_password(form.cleaned_data['password'])
+            user.save()
+            return redirect('inserir_clientes')
     else:
         form = ClienteForm()
 
@@ -94,19 +86,19 @@ def feedbacksUser(request):
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
     
-    return render(request, 'feedbacksUser.html', {"compras": compras})
-
+    return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
 
 def perfilUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        user.nome = request.POST.get('nome', user.nome)
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
-        user.telefone = request.POST.get('telefone', user.telefone)
-        user.endereco = request.POST.get('endereco', user.endereco)
+        telefone = request.POST.get('telefone', '')
+        user.telefone = int(telefone) if telefone else None
         user.save()
-        return redirect('perfilUser')
-
+        return redirect('users:perfilUser')
+    
     return render(request, 'perfilUser.html', {"user": user})

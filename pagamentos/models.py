@@ -25,7 +25,7 @@ class Compra(models.Model):
         db_table = 'compra'
     
     def __str__(self):
-        return f"Compra {self.compra_id} - {self.user.nome} - {self.valor_total}€"
+        return f"Compra {self.compra_id} - {self.user.email} - {self.valor_total}€"
     
 class Pagamento(models.Model):
     pagamento_id = models.AutoField(primary_key=True)

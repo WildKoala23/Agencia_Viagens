@@ -14,12 +14,12 @@ class TipoUser(models.Model):
     
 class Utilizador(AbstractUser):
     user_id = models.AutoField(primary_key=True)
-
+    username = models.CharField(max_length=150, blank=True, null=True)  # Tornar username opcional
     email = models.EmailField(max_length=100, unique=True)
-    telefone = models.IntegerField(null=True)
+    telefone = models.IntegerField(null=True, blank=True)
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    REQUIRED_FIELDS = []  # Remover username dos campos obrigatórios
     
     class Meta:
         db_table = 'utilizador'
