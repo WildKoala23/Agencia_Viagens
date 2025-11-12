@@ -24,7 +24,15 @@ def destinos(request):
     else:
         form = DestinoForm()
 
-    destinos = Destino.objects.all()
+    #pesquisa
+    q = request.GET.get("q", "").strip()
+    if q:
+        destinos = Destino.objects.filter(
+            Q(pais__icontains=q) | Q(nome__icontains=q)
+        )
+    else:
+        destinos = Destino.objects.all()
+
     return render(request, 'destinos.html', {
         'form': form,
         'destinos': destinos
@@ -179,21 +187,29 @@ def eliminar_voo(request, voo_id):
 
 
 def hotel(request):
-    """
-    Mostra todos os hotéis (a partir da view SQL vw_hoteis)
-    e permite adicionar novos hotéis via formulário.
-    """
+
     if request.method == "POST":
         form = HotelForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, "Hotel adicionado com sucesso!")
             return redirect('hoteis')
     else:
         form = HotelForm()
 
-    # Buscar dados diretamente da VIEW SQL
+    # Filtro de pesquisa
+    q = request.GET.get('q', '').strip()
+    query = "SELECT * FROM vw_hoteis"
+    params = []
+
+    if q:
+        query += " WHERE nome_hotel ILIKE %s"
+        params.append(f"%{q}%")
+
+    query += " ORDER BY nome_hotel;"
+
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM vw_hoteis ORDER BY nome_hotel;")  # <-- alterado aqui
+        cursor.execute(query, params)
         columns = [col[0] for col in cursor.description]
         hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
@@ -202,22 +218,33 @@ def hotel(request):
         'hoteis': hoteis
     })
 
+
 def editar_hotel(request, hotel_id):
-    """Editar um hotel existente"""
+    """
+    Editar um hotel existente.
+    """
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
 
     if request.method == "POST":
         form = HotelForm(request.POST, instance=hotel)
         if form.is_valid():
             form.save()
+            messages.success(request, "Hotel atualizado com sucesso!")
             return redirect('hoteis')
     else:
         form = HotelForm(instance=hotel)
 
-    return render(request, 'editar_hotel.html', {
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM vw_hoteis ORDER BY nome_hotel;")
+        columns = [col[0] for col in cursor.description]
+        hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    return render(request, 'hoteis.html', {
         'form': form,
-        'hotel': hotel
+        'hoteis': hoteis,
+        'hotel_editar': hotel
     })
+
 
 def eliminar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
@@ -228,12 +255,7 @@ def eliminar_hotel(request, hotel_id):
 
 
 def pacotes(request, pacote_id=None):
-    """
-    Página única para gerir pacotes:
-    - Mostra lista
-    - Permite criar ou editar
-    - Sincroniza imagens com MongoDB
-    """
+
     from pymongo import MongoClient
 
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id) if pacote_id else None
@@ -262,11 +284,18 @@ def pacotes(request, pacote_id=None):
             )
             client.close()
 
+            if pacote_id:
+                messages.success(request, "Pacote atualizado com sucesso!")
+            else:
+                messages.success(request, "Pacote criado com sucesso!")
+
             return redirect('pacotes')
+
     else:
         form = PacoteForm(instance=pacote)
 
-    query = request.GET.get('q', '')
+    # 🔍 Pesquisa
+    query = request.GET.get('q', '').strip()
     pacotes = Pacote.objects.all().order_by('pacote_id')
     if query:
         pacotes = pacotes.filter(
@@ -276,10 +305,9 @@ def pacotes(request, pacote_id=None):
     return render(request, 'pacotes.html', {
         'form': form,
         'pacotes': pacotes,
-        'pacote_editar': pacote,  # 👈 para sabermos se estamos a editar
+        'pacote_editar': pacote,  
         'query': query,
     })
-
 
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)

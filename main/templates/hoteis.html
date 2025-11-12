@@ -1,114 +1,88 @@
-{% extends "base.html" %}
-{% load static %}
+    {% extends "base.html" %}
+    {% load static %}
 
-{% block title %}Gestão de Hotéis{% endblock %}
+    {% block title %}Gestão de Hotéis{% endblock %}
 
-{% block styles %}
-<link rel="stylesheet" href="{% static 'utils.css' %}">
-{% endblock %}
+    {% block styles %}
+    <link rel="stylesheet" href="{% static 'utils.css' %}">
+    {% endblock %}
 
-{% block page_title %}Gestão de Hotéis{% endblock %}
+    {% block page_title %}Gestão de Hotéis{% endblock %}
 
-{% block content %}
-<div class="container_utils">
+    {% block content %}
+    <div class="container_utils">
 
-    <div class="card_utils">
-        <h1>Inserir Hotel</h1>
+        <div class="card_utils">
+        <h1>{% if hotel_editar %}Editar Hotel{% else %}Inserir Hotel{% endif %}</h1>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert_utils alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
+                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
-        {% endif %}
-
-        {% if form.non_field_errors %}
-            <div class="alert_utils alert-error">
-                {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
         {% endif %}
 
         <form method="post" class="form_utils">
             {% csrf_token %}
-            {% for field in form %}
-                {% if field.name != 'preco_diario' %}
-                    <div class="form-group">
-                        {{ field.label_tag }}
-                        {{ field }}
-                        {% if field.errors %}
-                            <small class="text-danger">{{ field.errors }}</small>
-                        {% endif %}
-                    </div>
-                {% endif %}
-            {% endfor %}
-            <div class="form-group">
-                <label for="id_preco_diario">Preço diário (€):</label>
-                <input type="number" name="preco_diario" id="id_preco_diario"
-                       step="any" min="0" placeholder="0.00"
-                       value="{{ form.preco_diario.value|default_if_none:'' }}">
-            </div>
-            
-            <br>
+            {{ form.as_p }}
 
-            <button type="submit" class="btn_save_utils">Guardar Hotel</button>
+            <button type="submit" class="btn_save_utils">
+                {% if hotel_editar %}Guardar Alterações{% else %}Guardar Hotel{% endif %}
+            </button>
         </form>
     </div>
 
-    <div class="card_utils">
-        <div class="voos_header_utils">
-            <h2>Lista de Hotéis</h2>
+        <div class="card_utils">
+            <div class="voos_header_utils">
+                <h2>Lista de Hotéis</h2>
 
-            <form method="get" class="search_form_utils">
-                <input type="text" name="q" placeholder="Pesquisar por nome..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
-                <button type="submit" class="btn_search_utils">Procurar</button>
-            </form>
-        </div>
+                <form method="get" class="search_form_utils">
+                    <input type="text" name="q" placeholder="Pesquisar por nome..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                    <button type="submit" class="btn_search_utils">Procurar</button>
+                </form>
+            </div>
 
         <ul class="lista_utils">
-            {% for hotel in hoteis %}
-                <li>
-                    <div class="voo_info_utils">
-                        <div class="voo_detalhes_utils">
-                            <span class="voo_nome_utils">
-                                {{ hotel.nome }}
-                            </span>
-                            <span class="voo_extra_utils">
-                                {{ hotel.descricao_item }} | Preço diário: {{ hotel.preco_diario }} €
-                            </span>
-                        </div>
-
-                        <div class="voo_acoes_utils">
-                            <a href="{% url 'editar_hotel' hotel.hotel_id %}" class="edit_btn_utils">Editar</a>
-
-                            <form action="{% url 'eliminar_hotel' hotel.hotel_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="delete_btn_utils" onclick="return confirm('Tem certeza que deseja eliminar este hotel?')">Eliminar</button>
-                            </form>
-                        </div>
+        {% for hotel in hoteis %}
+            <li>
+                <div class="voo_info_utils">
+                    <div class="voo_detalhes_utils">
+                        <span class="voo_nome_utils">
+                            {{ hotel.nome_hotel }}
+                        </span>
+                        <span class="voo_extra_utils">
+                            {{ hotel.descricao_item }} | Preço diário: {{ hotel.preco_diario }} €
+                        </span>
                     </div>
-                </li>
-            {% empty %}
-                <div class="empty_state_utils">
-                    Nenhum hotel registado ainda.
-                </div>
-            {% endfor %}
-        </ul>
-    </div>
-</div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    if (window.location.search.includes("q=")) {
-        const listaHoteis = document.querySelector(".voos_header_utils");
-        if (listaHoteis) {
-            listaHoteis.scrollIntoView({ behavior: "smooth" });
+                    <div class="voo_acoes_utils">
+                        <a href="{% url 'editar_hotel' hotel.hotel_id %}" class="edit_btn_utils">Editar</a>
+                        <form action="{% url 'eliminar_hotel' hotel.hotel_id %}" method="post" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="delete_btn_utils"
+                                onclick="return confirm('Tem certeza que deseja eliminar este hotel?')">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </li>
+        {% empty %}
+            <div class="empty_state_utils">
+                Nenhum hotel registado ainda.
+            </div>
+        {% endfor %}
+    </ul>
+        </div>
+    </div>
+    {% endblock %}
+
+    {% block scripts %}
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        if (window.location.search.includes("q=")) {
+            const listaHoteis = document.querySelector(".voos_header_utils");
+            if (listaHoteis) {
+                listaHoteis.scrollIntoView({ behavior: "smooth" });
+            }
         }
-    }
-});
-</script>
-{% endblock %}
+    });
+    </script>
+    {% endblock %}
