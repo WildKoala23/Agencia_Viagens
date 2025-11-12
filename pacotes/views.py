@@ -9,7 +9,7 @@ from pymongo import MongoClient
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdii_25971"]
+db = client["bd2_22598"]
 banners = db["banners"]
 
 # Create your views here.
@@ -226,30 +226,29 @@ def eliminar_hotel(request, hotel_id):
     return redirect('hoteis')
 
 
-def pacotes(request):
-    query = request.GET.get('q', '')  # Pega o texto da pesquisa (do input)
+def pacotes(request, pacote_id=None):
+    """
+    Página única para gerir pacotes:
+    - Mostra lista
+    - Permite criar ou editar
+    - Sincroniza imagens com MongoDB
+    """
+    from pymongo import MongoClient
 
-    pacotes = Pacote.objects.all().order_by('pacote_id')
-
-    # 🔍 Filtro de pesquisa por nome ou destino
-    if query:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=query) |
-            Q(destinos__nome__icontains=query)
-        ).distinct()
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id) if pacote_id else None
 
     if request.method == "POST":
-        form = PacoteForm(request.POST, request.FILES)
+        form = PacoteForm(request.POST, request.FILES, instance=pacote)
         if form.is_valid():
-            pacote = form.save()  # salva no PostgreSQL primeiro
+            pacote = form.save()
 
-            # 🔹 Agora sincroniza com o MongoDB
+            # 🔹 Atualizar / criar no MongoDB
             client = MongoClient("mongodb://localhost:27017/")
-            db = client["bdii_25971"]
+            db = client["bd2_22598"]
             collection = db["banners"]
 
             collection.update_one(
-                {"pacote_id": pacote.pacote_id},  # identifica o pacote pelo ID
+                {"pacote_id": pacote.pacote_id},
                 {"$set": {
                     "nome": pacote.nome,
                     "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
@@ -258,53 +257,28 @@ def pacotes(request):
                     "data_fim": str(pacote.data_fim),
                     "ativo": True
                 }},
-                upsert=True  # cria ou atualiza
+                upsert=True
             )
-
             client.close()
-            return redirect('pacotes')
-    else:
-        form = PacoteForm()
-
-    return render(request, 'pacotes.html', {
-        'form': form,
-        'pacotes': pacotes,
-        'query': query,
-    })
-
-
-def editar_pacote(request, pacote_id):
-    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
-
-    if request.method == "POST":
-        form = PacoteForm(request.POST, request.FILES, instance=pacote)
-        if form.is_valid():
-            pacote = form.save(commit=False)
-            pacote.save()
-            form.save_m2m()  # atualiza as relações destino <-> pacote
-
-            # 🔹 Atualizar imagem no MongoDB
-            client = MongoClient("mongodb://localhost:27017/")
-            db = client["bdii_25971"]
-            collection = db["banners"]
-
-            collection.update_one(
-                {"pacote_id": pacote.pacote_id},  # procura o banner do pacote
-                {"$set": {
-                    "imagem_url": f"/media/{pacote.imagem}",  # nova imagem
-                    "ativo": True  # opcional, mantém ativo
-                }},
-                upsert=True  # cria se não existir
-            )
 
             return redirect('pacotes')
     else:
         form = PacoteForm(instance=pacote)
 
-    return render(request, 'editar_pacote.html', {
+    query = request.GET.get('q', '')
+    pacotes = Pacote.objects.all().order_by('pacote_id')
+    if query:
+        pacotes = pacotes.filter(
+            Q(nome__icontains=query) | Q(destinos__nome__icontains=query)
+        ).distinct()
+
+    return render(request, 'pacotes.html', {
         'form': form,
-        'pacote': pacote
+        'pacotes': pacotes,
+        'pacote_editar': pacote,  # 👈 para sabermos se estamos a editar
+        'query': query,
     })
+
 
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
@@ -339,7 +313,7 @@ def pacote_detalhes(request, pacote_id):
 
     # Conecta ao MongoDB
     client = MongoClient("mongodb://localhost:27017/")
-    db = client["bdii_25971"]
+    db = client["bd2_22598"]
     collection = db["banners"]
 
     # Tenta ir buscar o banner correspondente ao pacote

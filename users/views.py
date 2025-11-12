@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bdii_25971"]
+db = client["bd2_22598"]
 userData = db["dadosUser"]
 
 def loginUser(request):
