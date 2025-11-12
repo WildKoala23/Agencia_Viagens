@@ -32,4 +32,4 @@ Thumbs.db
 agenciaviagens/settings.py
 
 # Ignorar novos ficheiros na pasta media e subpastas
-/media/*
+/media
