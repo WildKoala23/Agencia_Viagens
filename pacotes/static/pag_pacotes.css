@@ -63,3 +63,61 @@
         padding: 6px 14px;
     }
 }
+/* ===== FILTROS LATERAIS ===== */
+.filtros-pacotes-container {
+    max-width: 1400px;
+}
+
+.filtros-laterais {
+    background: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    padding: 25px;
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+}
+
+.filtros-box h5 {
+    font-weight: 700;
+    color: #17a2b8;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.slider-container {
+    position: relative;
+}
+
+.slider-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+/* Tornar filtros bonitos e suaves */
+.filtros-laterais select,
+.filtros-laterais input[type="range"] {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease;
+}
+
+.filtros-laterais select:focus,
+.filtros-laterais input[type="range"]:focus {
+    border-color: #17a2b8;
+    box-shadow: 0 0 0 0.1rem rgba(23,162,184,0.25);
+}
+
+/* Responsivo */
+@media (max-width: 992px) {
+    .filtros-laterais {
+        position: relative;
+        top: 0;
+        margin-bottom: 30px;
+    }
+}

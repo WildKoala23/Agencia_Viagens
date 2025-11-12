@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from .forms import *
-from django.db.models import Q
+from django.db.models import Q, Max
 from django.db import connection, transaction, IntegrityError, ProgrammingError, DatabaseError
 from django.contrib import messages
 import re
 from pymongo import MongoClient
+from pacotes.models import Pacote, Destino, PacoteDestino
 
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -339,4 +340,55 @@ def pacote_detalhes(request, pacote_id):
         "pacote": pacote,
         "imagem_url": imagem_url,
         "dias": dias
+    })
+
+
+def pacotes_por_pais(request):
+    destinos = Destino.objects.all()
+    pacotes = Pacote.objects.all()
+
+    # Filtros GET
+    pais_query = request.GET.get("pais")  # 🆕 campo de pesquisa por país
+    preco = request.GET.get("preco")
+    mes = request.GET.get("mes")
+
+    # 🔹 Filtro por país (usando relação com destinos)
+    if pais_query:
+        pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
+
+    # 🔹 Filtro por preço
+    if preco:
+        try:
+            pacotes = pacotes.filter(preco_total__lte=float(preco))
+        except ValueError:
+            pass
+
+    # 🔹 Filtro por mês
+    if mes:
+        pacotes = pacotes.filter(data_inicio__month=mes)
+
+    # 🔹 Agrupar pacotes por país
+    pacotes_por_pais = {}
+    pacotes = pacotes.prefetch_related("destinos").distinct()
+
+    for pacote in pacotes:
+        for destino in pacote.destinos.all():
+            pais = destino.pais
+            if pais not in pacotes_por_pais:
+                pacotes_por_pais[pais] = []
+            pacotes_por_pais[pais].append(pacote)
+
+    preco_maximo = Pacote.objects.aggregate(Max("preco_total"))["preco_total__max"] or 10000
+
+    meses = [
+        ("01", "Janeiro"), ("02", "Fevereiro"), ("03", "Março"), ("04", "Abril"),
+        ("05", "Maio"), ("06", "Junho"), ("07", "Julho"), ("08", "Agosto"),
+        ("09", "Setembro"), ("10", "Outubro"), ("11", "Novembro"), ("12", "Dezembro"),
+    ]
+
+    return render(request, "pacotes_por_pais.html", {
+        "pacotes_por_pais": pacotes_por_pais,
+        "preco_maximo": preco_maximo,
+        "meses": meses,
+        "pais_query": pais_query or "",
     })

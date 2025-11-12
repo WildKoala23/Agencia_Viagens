@@ -54,25 +54,3 @@ def dashboard(request):
     }
     return render(request, 'dashboard.html', context)
 
-def pacotes_por_pais(request):
-
-    # Buscar todos os pacotes com destino anexado
-    destinos_rel = PacoteDestino.objects.select_related(
-        "pacote_id",      # Pacote
-        "destino_id"      # Destino
-    ).order_by("destino_id__pais")
-
-    pacotes_por_pais = {}
-
-    for rel in destinos_rel:
-        pais = rel.destino_id.pais
-        pacote = rel.pacote_id
-
-        if pais not in pacotes_por_pais:
-            pacotes_por_pais[pais] = []
-        
-        pacotes_por_pais[pais].append(pacote)
-
-    return render(request, "pacotes_por_pais.html", {
-        "pacotes_por_pais": pacotes_por_pais
-    })

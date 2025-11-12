@@ -10,38 +10,110 @@
 {% block content %}
 
 <!-- Banner -->
-<div class="banner_ferias" 
-     style="position: relative; text-align: center; color: white; margin-bottom: 40px;">
-    <img src="{{ MEDIA_URL }}pacotes/mapamundo.webp" 
-         alt="As melhores férias começam aqui" 
+<div class="banner_ferias" style="position: relative; text-align: center; color: white; margin-bottom: 40px;">
+    <img src="{{ MEDIA_URL }}pacotes/mapamundo.webp" alt="As melhores férias começam aqui"
          style="width: 100%; height: 570px; object-fit: cover; border-radius: 12px;">
-   <h1 style="
-    position: absolute; top: 50%; left: 50%; 
-    transform: translate(-50%, -50%);
-    font-size: 3rem; font-weight: bold;
-    text-shadow: 5px 5px 12px rgba(0,0,0,0.9);
-">
-    As melhores férias começam aqui
-</h1>
+    <h1 style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+               font-size: 3rem; font-weight: bold; text-shadow: 5px 5px 12px rgba(0,0,0,0.9);">
+        As melhores férias começam aqui
+    </h1>
 </div>
 
-<!-- Pacotes -->
-<div class="container section-pacotes">
-    <h2 class="text-center">Pacotes por País</h2>
-
-    {% if pacotes_por_pais %}
-        {% for pais, pacotes in pacotes_por_pais.items %}
-            
-            <h3>{{ pais }}</h3>
-
-            <div class="row g-4">
-                {% include "components/cards_only.html" with pacotes=pacotes %}
+<div class="container-fluid mt-4 filtros-pacotes-container">
+    <div class="row">
+        <!-- 🔹 FILTROS -->
+        <div class="col-lg-3 filtros-laterais">
+            <div class="filtros-box">
+                <h5>Filtrar Resultados</h5>
+                <form method="get" action="{% url 'pacotes_por_pais' %}">
+                    
+                    <!-- Pesquisa por país -->
+            <div class="mb-3">
+            <label for="pais" class="form-label">País</label>
+            <input type="text" name="pais" id="pais" 
+                    class="form-control w-100" 
+                    placeholder="Ex: Brasil, África, França"
+                    value="{{ request.GET.pais|default:'' }}">
             </div>
 
-        {% endfor %}
-    {% else %}
-        <p class="text-center text-muted">Nenhum pacote encontrado.</p>
-    {% endif %}
+                    <!-- Preço máximo -->
+                    <label for="preco" class="form-label">Preço máximo (€)</label>
+                    <div class="slider-container mb-3">
+                        <input type="range" name="preco" id="preco"
+                               class="form-range"
+                               min="0"
+                               max="{{ preco_maximo|floatformat:0|default:10000 }}"
+                               step="1"
+                               value="{{ request.GET.preco|default:preco_maximo|floatformat:0 }}"
+                               oninput="document.getElementById('valorPreco').textContent = this.value + '€'">
+                        <div id="valorPreco" class="slider-value">
+                            {{ request.GET.preco|default:preco_maximo|floatformat:0 }}€
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>0€</span>
+                            <span>{{ preco_maximo|floatformat:0 }}€</span>
+                        </div>
+                    </div>
+
+                    <!-- Mês -->
+                    <label for="mes" class="form-label">Mês</label>
+                    <select name="mes" id="mes" class="form-select mb-4">
+                        <option value="">Todos os meses</option>
+                        {% for valor, nome in meses %}
+                            <option value="{{ valor }}" {% if request.GET.mes == valor %}selected{% endif %}>
+                                {{ nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- Botão -->
+                    <button type="submit" class="btn btn-info w-100 text-white">Aplicar Filtros</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 🔹 RESULTADOS -->
+        <div class="col-lg-9">
+            <div class="container section-pacotes">
+                <h2 class="text-center mb-4">Pacotes por País</h2>
+
+                {% if pacotes_por_pais %}
+                    {% for pais, pacotes in pacotes_por_pais.items %}
+                        <div class="mb-5">
+                            <h3 class="mb-3">{{ pais }}</h3>
+                            <div class="row g-4">
+                                {% include "components/cards_only.html" with pacotes=pacotes %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted">Nenhum pacote encontrado.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
+<!-- script para mudar andar com a bola do preço de um lado para o outro e poder ver o preço -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const slider = document.getElementById("preco");
+    const valor = document.getElementById("valorPreco");
+
+    if (slider && valor) {
+        const atualizarValor = () => {
+            const val = parseInt(slider.value);
+            valor.textContent = val.toLocaleString("pt-PT") + "€";
+
+            // mover o valor junto com a bolinha (opcional e dinâmico)
+            const percent = (val - slider.min) / (slider.max - slider.min);
+            const deslocamento = percent * (slider.offsetWidth - 16);
+            valor.style.left = deslocamento + "px";
+        };
+
+        slider.addEventListener("input", atualizarValor);
+        atualizarValor(); // mostrar ao carregar
+    }
+});
+</script>
 
 {% endblock %}

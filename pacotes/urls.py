@@ -24,5 +24,6 @@ urlpatterns = [
     path('pacotes/<int:pacote_id>/', views.pacotes, name='editar_pacote'),
     path('pacotes/eliminar/<int:pacote_id>/', views.eliminar_pacote, name='eliminar_pacote'),
     path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
+    path("pacotes/todos/", views.pacotes_por_pais, name="pacotes_por_pais"),
 
 ]
