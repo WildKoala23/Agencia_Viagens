@@ -30,3 +30,6 @@ Thumbs.db
 
 # Ignorar settings local (contém configs da BD, etc.)
 agenciaviagens/settings.py
+
+# Ignorar novos ficheiros na pasta media e subpastas
+/media/*
