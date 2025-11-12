@@ -1,0 +1,65 @@
+.section-pacotes {
+    margin: 60px auto;
+    max-width: 1200px;
+}
+
+.section-pacotes h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #495057; 
+    text-transform: uppercase;
+    position: relative;
+    margin-bottom: 60px;
+}
+
+.section-pacotes h2::after {
+    content: "";
+    display: block;
+    width: 80px;
+    height: 3px;
+    background-color: #17a2b8; 
+    margin: 12px auto 0 auto;
+    border-radius: 2px;
+}
+
+/* ===== Título de cada país ===== */
+.section-pacotes h3 {
+    position: relative;
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 30px;
+    padding-left: 14px; 
+}
+
+.section-pacotes h3::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 4px;         
+    height: 100%;
+    background-color: #17a2b8; 
+    border-radius: 2px;
+}
+
+.section-pacotes .row {
+    margin-bottom: 60px;
+}
+
+.section-pacotes .text-muted {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+@media (max-width: 768px) {
+    .section-pacotes h2 {
+        font-size: 1.5rem;
+    }
+    .section-pacotes h3 {
+        font-size: 1.2rem;
+        padding: 6px 14px;
+    }
+}

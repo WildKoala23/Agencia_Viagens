@@ -4,11 +4,12 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'cards.css' %}">
+<link rel="stylesheet" href="{% static 'pag_pacotes.css' %}">
 {% endblock %}
 
 {% block content %}
 
-<!-- Banner estático -->
+<!-- Banner -->
 <div class="banner_ferias" 
      style="position: relative; text-align: center; color: white; margin-bottom: 40px;">
     <img src="{{ MEDIA_URL }}pacotes/mapamundo.webp" 
@@ -24,13 +25,14 @@
 </h1>
 </div>
 
-<div class="container my-5">
-    <h2 class="text-center mb-5">Pacotes por País</h2>
+<!-- Pacotes -->
+<div class="container section-pacotes">
+    <h2 class="text-center">Pacotes por País</h2>
 
     {% if pacotes_por_pais %}
         {% for pais, pacotes in pacotes_por_pais.items %}
             
-            <h3 class="mt-5 mb-4">{{ pais }}</h3>
+            <h3>{{ pais }}</h3>
 
             <div class="row g-4">
                 {% include "components/cards_only.html" with pacotes=pacotes %}
@@ -40,10 +42,6 @@
     {% else %}
         <p class="text-center text-muted">Nenhum pacote encontrado.</p>
     {% endif %}
-
-    <div class="text-center mt-4">
-        <a href="{% url 'main:home' %}" class="btn btn-primary">Voltar</a>
-    </div>
 </div>
 
 {% endblock %}
