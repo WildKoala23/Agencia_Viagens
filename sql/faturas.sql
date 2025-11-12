@@ -16,7 +16,10 @@ SELECT
     f.data_emissao,
     f.valor_total,
     c.user_id,
-    u.first_name || ', ' || u.last_name AS nome_cliente,
+    COALESCE(
+        NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), 
+        CONCAT('Cliente #', c.user_id)
+    ) AS nome_cliente,
     u.email as email_cliente,
     pg.metodo as tipo_pagamento,
     pg.estado as estado_pagamento,
@@ -42,7 +45,7 @@ RETURNS TABLE (
     valor_total DECIMAL(10,2),
     user_id INT,
     nome_cliente TEXT,
-    email TEXT,
+    email VARCHAR(100),
     tipo_pagamento TEXT,
     estado_pagamento TEXT
 ) AS $$
@@ -55,7 +58,10 @@ BEGIN
         f.data_emissao,
         f.valor_total,
         c.user_id,
-        u.first_name || ', ' || u.last_name AS nome_cliente,
+        COALESCE(
+            NULLIF(TRIM(CONCAT(u.first_name, ' ', u.last_name)), ''), 
+            CONCAT('Cliente #', c.user_id)
+        ) AS nome_cliente,
         u.email,
         pg.metodo as tipo_pagamento,
         pg.estado as estado_pagamento
