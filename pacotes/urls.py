@@ -19,8 +19,10 @@ urlpatterns = [
     path('feedbacks/', views.feedbacks, name='feedbacks'),
     path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
     
-    #pacotes
-      path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
-      path('pacotes/<int:pacote_id>/editar/', views.editar_pacote, name='editar_pacote'),
-    path('pacotes/<int:pacote_id>/eliminar/', views.eliminar_pacote, name='eliminar_pacote'),
+     # PACOTES
+    path('pacotes/', views.pacotes, name='pacotes'),
+    path('pacotes/<int:pacote_id>/', views.pacotes, name='editar_pacote'),
+    path('pacotes/eliminar/<int:pacote_id>/', views.eliminar_pacote, name='eliminar_pacote'),
+    path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
+
 ]

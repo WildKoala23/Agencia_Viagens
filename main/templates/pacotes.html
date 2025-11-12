@@ -7,19 +7,19 @@
 <link rel="stylesheet" href="{% static 'utils.css' %}">
 {% endblock %}
 
-{% block page_title %}Gestão de Pacotes{% endblock %}
+{% block page_title %}
+{% if pacote_editar %}Editar Pacote{% else %}Gestão de Pacotes{% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container_utils">
 
     <div class="card_utils">
-        <h1>Inserir Pacote</h1>
+        <h1>{% if pacote_editar %}Editar Pacote{% else %}Inserir Pacote{% endif %}</h1>
 
         {% if messages %}
             {% for message in messages %}
-                <div class="alert_utils alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
+                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
 
@@ -33,8 +33,26 @@
 
         <form method="post" enctype="multipart/form-data" class="form_utils">
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn_save_utils">Guardar Pacote</button>
+            
+            {{ form.nome.label_tag }} {{ form.nome }}<br>
+            {{ form.descricao_item.label_tag }} {{ form.descricao_item }}<br>
+            {{ form.data_inicio.label_tag }} {{ form.data_inicio }}<br>
+            {{ form.data_fim.label_tag }} {{ form.data_fim }}<br>
+            {{ form.preco_total.label_tag }} {{ form.preco_total }}<br>
+            {{ form.estado.label_tag }} {{ form.estado }}<br>
+            {{ form.destinos.label_tag }} {{ form.destinos }}<br>
+
+            <label for="id_imagem">Imagem do Pacote:</label><br>
+            {% if pacote_editar and pacote_editar.imagem %}
+                <p><strong>Imagem atual:</strong></p>
+                <img src="{{ pacote_editar.imagem.url }}" alt="{{ pacote_editar.nome }}" width="200"
+                     style="border-radius:8px; margin-bottom:10px;">
+            {% endif %}
+            {{ form.imagem }}<br>
+
+            <button type="submit" class="btn_save_utils">
+                {% if pacote_editar %}Guardar Alterações{% else %}Guardar Pacote{% endif %}
+            </button>
         </form>
     </div>
 
@@ -43,7 +61,8 @@
             <h2>Lista de Pacotes</h2>
 
             <form method="get" class="search_form_utils">
-                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." 
+                       value="{{ request.GET.q|default:'' }}" class="search_input_utils">
                 <button type="submit" class="btn_search_utils">Procurar</button>
             </form>
         </div>
@@ -68,7 +87,6 @@
 
                         <div class="voo_acoes_utils">
                             <a href="{% url 'editar_pacote' pacote.pacote_id %}" class="edit_btn_utils">Editar</a>
-
                             <form action="{% url 'eliminar_pacote' pacote.pacote_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="delete_btn_utils">Eliminar</button>
@@ -77,9 +95,7 @@
                     </div>
                 </li>
             {% empty %}
-                <div class="empty_state_utils">
-                    Nenhum pacote registado ainda.
-                </div>
+                <div class="empty_state_utils">Nenhum pacote registado ainda.</div>
             {% endfor %}
         </ul>
     </div>
@@ -91,9 +107,7 @@
 document.addEventListener("DOMContentLoaded", function() {
     if (window.location.search.includes("q=")) {
         const listaPacotes = document.querySelector(".voos_header_utils");
-        if (listaPacotes) {
-            listaPacotes.scrollIntoView({ behavior: "smooth" });
-        }
+        if (listaPacotes) listaPacotes.scrollIntoView({ behavior: "smooth" });
     }
 });
 </script>
