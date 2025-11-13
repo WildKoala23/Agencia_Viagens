@@ -375,33 +375,42 @@ def pacotes_por_pais(request):
     destinos = Destino.objects.all()
     pacotes = Pacote.objects.all()
 
-    # Filtros GET
-    pais_query = request.GET.get("pais")  # 🆕 campo de pesquisa por país
+    q = request.GET.get("q", "").strip()        # pesquisa geral (Home)
+    pais_query = request.GET.get("pais", "").strip()  # pesquisa específica na sidebar
     preco = request.GET.get("preco")
     mes = request.GET.get("mes")
 
-    # 🔹 Filtro por país (usando relação com destinos)
+    # Filtro (vindo da Home ou sidebar)
+    if q:
+        pacotes = pacotes.filter(
+            Q(nome__icontains=q) |
+            Q(descricao_item__icontains=q) |
+            Q(destinos__pais__icontains=q) |
+            Q(destinos__nome__icontains=q)
+        )
+
+    # Filtro por país (campo específico do formulário lateral)
     if pais_query:
         pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
 
-    # 🔹 Filtro por preço
+    # Filtro por preço máximo
     if preco:
         try:
             pacotes = pacotes.filter(preco_total__lte=float(preco))
         except ValueError:
             pass
 
-    # 🔹 Filtro por mês
+    # Filtro por mês
     if mes:
         pacotes = pacotes.filter(data_inicio__month=mes)
 
-    # 🔹 Agrupar pacotes por país
+    # Agrupar pacotes por país
     pacotes_por_pais = {}
     pacotes = pacotes.prefetch_related("destinos").distinct()
 
     for pacote in pacotes:
         for destino in pacote.destinos.all():
-            pais = destino.pais
+            pais = destino.pais or "Sem país"
             if pais not in pacotes_por_pais:
                 pacotes_por_pais[pais] = []
             pacotes_por_pais[pais].append(pacote)
@@ -418,5 +427,6 @@ def pacotes_por_pais(request):
         "pacotes_por_pais": pacotes_por_pais,
         "preco_maximo": preco_maximo,
         "meses": meses,
-        "pais_query": pais_query or "",
+        "q": q,
+        "pais_query": pais_query,
     })
