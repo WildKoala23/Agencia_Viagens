@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feedbacks - {{ pacote.nome }}{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+<link rel="stylesheet" href="{% static 'feedback_utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Feedbacks do Pacote{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+
+    <!-- Cabeçalho -->
+    <div class="card_utils">
+        <div class="voos_header_utils">
+            <h1>{{ pacote.nome }}</h1>
+            <a href="{% url 'feedback_estatisticas' %}" class="btn_search_utils">← Voltar às Estatísticas</a>
+        </div>
+        <p style="color: #6c757d; margin-top: 10px;">
+            📍 {{ pacote.destinos.all.0.nome }}, {{ pacote.destinos.all.0.pais }} | 
+            💰 {{ pacote.preco_total }}€ | 
+            📅 {{ pacote.data_inicio }} até {{ pacote.data_fim }}
+        </p>
+    </div>
+
+    <!-- Feedbacks -->
+    <div class="card_utils">
+        <h2>Feedbacks ({{ feedbacks|length }})</h2>
+        
+        {% if feedbacks %}
+            <ul class="lista_utils" style="margin-top: 20px;">
+                {% for fb in feedbacks %}
+                <li style="margin-bottom: 20px; border-left: 4px solid #17a2b8; padding-left: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem; color: #2c3e50; margin-bottom: 5px;">
+                                Avaliação: 
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= fb.avaliacao %}
+                                        <span style="color: #ffc107;">★</span>
+                                    {% else %}
+                                        <span style="color: #ddd;">☆</span>
+                                    {% endif %}
+                                {% endfor %}
+                                <span style="color: #17a2b8; margin-left: 10px;">{{ fb.avaliacao }}/5</span>
+                            </div>
+                            <div style="color: #6c757d; font-size: 0.9rem;">
+                                📅 {{ fb.data_feedback|date:"d/m/Y" }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if fb.comentario %}
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px; font-style: italic; color: #495057;">
+                            "{{ fb.comentario }}"
+                        </div>
+                    {% else %}
+                        <div style="color: #999; font-style: italic; margin-top: 10px;">
+                            Sem comentário adicional.
+                        </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty_state_utils">
+                🌟 Este pacote ainda não tem feedbacks.
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

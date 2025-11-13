@@ -127,6 +127,25 @@ def feedbacks(request):
     })
 
 
+def feedbacks_por_pacote(request, pacote_id):
+    """
+    Página dedicada para ver todos os feedbacks de um pacote específico
+    """
+    # Buscar informações do pacote
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    
+    # Buscar feedbacks do pacote
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM view_feedbacks_completos WHERE pacote_id = %s", [pacote_id])
+        columns = [col[0] for col in cursor.description]
+        feedbacks = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    
+    return render(request, 'feedbacks_por_pacote.html', {
+        'pacote': pacote,
+        'feedbacks': feedbacks
+    })
+
+
 def feedback_estatisticas(request):
     """
     Mostra estatísticas gerais de feedbacks e avaliações de pacotes
@@ -164,10 +183,20 @@ def feedback_estatisticas(request):
         columns = [col[0] for col in cursor.description]
         estatisticas_pacotes = [dict(zip(columns, row)) for row in cursor.fetchall()]
     
+    # Preparar lista de distribuição para o template
+    distribuicao = [
+        (5, estatisticas_gerais.get('total_5_estrelas', 0), estatisticas_gerais.get('percentual_5_estrelas', 0)),
+        (4, estatisticas_gerais.get('total_4_estrelas', 0), estatisticas_gerais.get('percentual_4_estrelas', 0)),
+        (3, estatisticas_gerais.get('total_3_estrelas', 0), estatisticas_gerais.get('percentual_3_estrelas', 0)),
+        (2, estatisticas_gerais.get('total_2_estrelas', 0), estatisticas_gerais.get('percentual_2_estrelas', 0)),
+        (1, estatisticas_gerais.get('total_1_estrela', 0), estatisticas_gerais.get('percentual_1_estrela', 0)),
+    ]
+    
     return render(request, 'feedback_estatisticas.html', {
         'estatisticas_gerais': estatisticas_gerais,
         'top_pacotes': top_pacotes,
-        'estatisticas_pacotes': estatisticas_pacotes
+        'estatisticas_pacotes': estatisticas_pacotes,
+        'distribuicao': distribuicao
     })
 
 def voos(request, voo_id=None):

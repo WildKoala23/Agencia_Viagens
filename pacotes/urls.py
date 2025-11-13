@@ -22,6 +22,7 @@ urlpatterns = [
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
     path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
+    path('feedbacks/pacote/<int:pacote_id>/', views.feedbacks_por_pacote, name='feedbacks_por_pacote'),
     
      # PACOTES
     path('pacotes/', views.pacotes, name='pacotes'),

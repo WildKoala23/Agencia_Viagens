@@ -5,7 +5,6 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'utils.css' %}">
-<link rel="stylesheet" href="{% static 'feedback_utils.css' %}">
 {% endblock %}
 
 {% block page_title %}Estatísticas de Feedbacks{% endblock %}
@@ -13,303 +12,83 @@
 {% block content %}
 <div class="container_utils">
 
+    <!-- Cabeçalho -->
     <div class="card_utils">
         <div class="voos_header_utils">
-            <h1>📊 Estatísticas de Feedbacks</h1>
-            <a href="{% url 'feedbacks' %}" class="btn_search_utils">← Voltar aos Feedbacks</a>
+            <h1>Estatísticas de Feedbacks</h1>
+            <a href="{% url 'feedbacks' %}" class="btn_search_utils">← Voltar</a>
         </div>
-        <p style="color: #6c757d; margin-top: 10px;">Análise completa das avaliações dos nossos pacotes</p>
     </div>
 
+    <!-- Visão Geral -->
     <div class="card_utils">
         <h2>Visão Geral</h2>
-        
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total de Feedbacks</div>
-                <div class="stat-value">{{ estatisticas_gerais.total_feedbacks }}</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">{{ estatisticas_gerais.total_feedbacks }}</div>
+                <div style="color: #6c757d; margin-top: 8px;">Total Feedbacks</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Média Geral</div>
-                <div class="stat-value">{{ estatisticas_gerais.media_geral }}</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: bold; color: #17a2b8;">{{ estatisticas_gerais.media_geral }}</div>
+                <div style="color: #6c757d; margin-top: 8px;">Média Geral</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Avaliações Positivas</div>
-                <div class="stat-value">{{ estatisticas_gerais.percentual_positivo }}%</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: bold; color: #28a745;">{{ estatisticas_gerais.percentual_positivo }}%</div>
+                <div style="color: #6c757d; margin-top: 8px;">Positivas (4-5★)</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">5 Estrelas</div>
-                <div class="stat-value">{{ estatisticas_gerais.total_5_estrelas }}</div>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center;">
+                <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">{{ estatisticas_gerais.total_5_estrelas }}</div>
+                <div style="color: #6c757d; margin-top: 8px;">5 Estrelas</div>
             </div>
         </div>
     </div>
 
+    <!-- Distribuição de Avaliações -->
     <div class="card_utils">
         <h2>Distribuição de Avaliações</h2>
-        
-        <div class="progress-bar-container">
-            <div class="progress-label">
-                <span>⭐⭐⭐⭐⭐ 5 Estrelas</span>
-                <span><strong>{{ estatisticas_gerais.total_5_estrelas }}</strong></span>
-            </div>
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ estatisticas_gerais.percentual_5_estrelas }}%;">
-                    {{ estatisticas_gerais.percentual_5_estrelas }}%
+        <div style="margin-top: 20px;">
+            {% for rating, total, percentual in distribuicao %}
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span>{{ rating }} ⭐</span>
+                    <span><strong>{{ total }}</strong> ({{ percentual }}%)</span>
+                </div>
+                <div style="background: #e9ecef; height: 25px; border-radius: 5px; overflow: hidden;">
+                    <div style="background: #17a2b8; 
+                                height: 100%; width: {{ percentual }}%; transition: width 0.5s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.85rem;">
+                        {% if percentual > 5 %}{{ percentual }}%{% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="progress-bar-container">
-            <div class="progress-label">
-                <span>⭐⭐⭐⭐ 4 Estrelas</span>
-                <span><strong>{{ estatisticas_gerais.total_4_estrelas }}</strong></span>
-            </div>
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ estatisticas_gerais.percentual_4_estrelas }}%; background: linear-gradient(90deg, #17a2b8 0%, #138496 100%);">
-                    {{ estatisticas_gerais.percentual_4_estrelas }}%
-                </div>
-            </div>
-        </div>
-
-        <div class="progress-bar-container">
-            <div class="progress-label">
-                <span>⭐⭐⭐ 3 Estrelas</span>
-                <span><strong>{{ estatisticas_gerais.total_3_estrelas }}</strong></span>
-            </div>
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ estatisticas_gerais.percentual_3_estrelas }}%; background: linear-gradient(90deg, #6c757d 0%, #5a6268 100%);">
-                    {{ estatisticas_gerais.percentual_3_estrelas }}%
-                </div>
-            </div>
-        </div>
-
-        <div class="progress-bar-container">
-            <div class="progress-label">
-                <span>⭐⭐ 2 Estrelas</span>
-                <span><strong>{{ estatisticas_gerais.total_2_estrelas }}</strong></span>
-            </div>
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ estatisticas_gerais.percentual_2_estrelas }}%; background: linear-gradient(90deg, #fd7e14 0%, #e8590c 100%);">
-                    {{ estatisticas_gerais.percentual_2_estrelas }}%
-                </div>
-            </div>
-        </div>
-
-        <div class="progress-bar-container">
-            <div class="progress-label">
-                <span>⭐ 1 Estrela</span>
-                <span><strong>{{ estatisticas_gerais.total_1_estrela }}</strong></span>
-            </div>
-            <div class="progress">
-                <div class="progress-fill" style="width: {{ estatisticas_gerais.percentual_1_estrela }}%; background: linear-gradient(90deg, #dc3545 0%, #bd2130 100%);">
-                    {{ estatisticas_gerais.percentual_1_estrela }}%
-                </div>
-            </div>
+            {% endfor %}
         </div>
     </div>
 
+    <!-- Estatísticas por Pacote -->
     <div class="card_utils">
         <h2>Estatísticas por Pacote</h2>
-        
-        <div style="overflow-x: auto;">
-            <table class="pacote-stats-table">
-                <thead>
-                    <tr>
-                        <th>Pacote</th>
-                        <th>Destino</th>
-                        <th style="text-align: center;">Total Feedbacks</th>
-                        <th style="text-align: center;">Média</th>
-                        <th>Melhor Avaliação</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for stat in estatisticas_pacotes %}
-                    <tr>
-                        <td><strong>{{ stat.nome_pacote }}</strong></td>
-                        <td>{{ stat.destino_nome }}</td>
-                        <td style="text-align: center;">{{ stat.total_feedbacks }}</td>
-                        <td style="text-align: center;">
-                            <span class="rating-stars">
-                                {% if stat.media_avaliacao %}
-                                    {{ stat.media_avaliacao }} ⭐
-                                {% else %}
-                                    N/A
-                                {% endif %}
-                            </span>
-                        </td>
-                        <td>
-                            {% if stat.melhor_comentario %}
-                                "{{ stat.melhor_comentario|truncatewords:15 }}"
-                            {% else %}
-                                <span style="color: #6c757d;">Sem comentários</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 30px;">
-                            <div class="empty_state_utils">
-                                Nenhuma estatística disponível.
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+        <ul class="lista_utils" style="margin-top: 20px;">
+            {% for stat in estatisticas_pacotes %}
+            <li>
+                <div class="voo_info_utils">
+                    <div class="voo_detalhes_utils">
+                        <span class="voo_nome_utils">
+                            {{ stat.nome_pacote }}
+                        </span>
+                        <span class="voo_extra_utils">
+                            {{ stat.destino_nome }} | {{ stat.total_feedbacks }} feedbacks | Média: {{ stat.media_avaliacao }} ⭐
+                        </span>
+                    </div>
+                    <div class="voo_acoes_utils">
+                        <a href="{% url 'feedbacks_por_pacote' stat.pacote_id %}" class="edit_btn_utils">Ver Feedbacks</a>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <div class="empty_state_utils">Nenhuma estatística disponível.</div>
+            {% endfor %}
+        </ul>
     </div>
 
 </div>
 {% endblock %}
-    <div class="stats-container">
-        <div class="stats-header">
-            <h1><i class="fas fa-chart-line"></i> Estatísticas de Feedbacks</h1>
-            <p class="lead">Análise completa das avaliações dos nossos pacotes</p>
-        </div>
-
-        <!-- Estatísticas Gerais -->
-        <h2 class="section-title"><i class="fas fa-chart-pie"></i> Visão Geral</h2>
-        <div class="row mb-4">
-            <div class="col-md-3 mb-3">
-                <div class="stat-card">
-                    <div class="stat-icon" style="color: #17a2b8;">
-                        <i class="fas fa-comments"></i>
-                    </div>
-                    <div class="stat-value">{{ estatisticas_gerais.total_feedbacks }}</div>
-                    <div class="stat-label">Total de Feedbacks</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stat-card">
-                    <div class="stat-icon" style="color: #ffc107;">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="stat-value">{{ estatisticas_gerais.media_geral }}</div>
-                    <div class="stat-label">Média Geral</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stat-card">
-                    <div class="stat-icon" style="color: #28a745;">
-                        <i class="fas fa-thumbs-up"></i>
-                    </div>
-                    <div class="stat-value">{{ estatisticas_gerais.percentual_positivo }}%</div>
-                    <div class="stat-label">Avaliações Positivas</div>
-                </div>
-            </div>
-            <div class="col-md-3 mb-3">
-                <div class="stat-card">
-                    <div class="stat-icon" style="color: #6f42c1;">
-                        <i class="fas fa-award"></i>
-                    </div>
-                    <div class="stat-value">{{ estatisticas_gerais.total_5_estrelas }}</div>
-                    <div class="stat-label">5 Estrelas</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Distribuição de Estrelas -->
-        <h2 class="section-title"><i class="fas fa-chart-bar"></i> Distribuição de Avaliações</h2>
-        <div class="card mb-4 distribution-card">
-            <div class="card-body p-4">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star star-icon"></i> 5 Estrelas</span>
-                        <span><strong>{{ estatisticas_gerais.total_5_estrelas }}</strong></span>
-                    </div>
-                    <div class="progress progress-custom">
-                        <div class="progress-bar progress-bar-5stars" role="progressbar" data-width="{{ estatisticas_gerais.percentual_5_estrelas }}"></div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star star-icon"></i> 4 Estrelas</span>
-                        <span><strong>{{ estatisticas_gerais.total_4_estrelas }}</strong></span>
-                    </div>
-                    <div class="progress progress-custom">
-                        <div class="progress-bar progress-bar-4stars" role="progressbar" data-width="{{ estatisticas_gerais.percentual_4_estrelas }}"></div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star star-icon"></i> 3 Estrelas</span>
-                        <span><strong>{{ estatisticas_gerais.total_3_estrelas }}</strong></span>
-                    </div>
-                    <div class="progress progress-custom">
-                        <div class="progress-bar progress-bar-3stars" role="progressbar" data-width="{{ estatisticas_gerais.percentual_3_estrelas }}"></div>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star star-icon"></i> 2 Estrelas</span>
-                        <span><strong>{{ estatisticas_gerais.total_2_estrelas }}</strong></span>
-                    </div>
-                    <div class="progress progress-custom">
-                        <div class="progress-bar progress-bar-2stars" role="progressbar" data-width="{{ estatisticas_gerais.percentual_2_estrelas }}"></div>
-                    </div>
-                </div>
-                <div class="mb-0">
-                    <div class="d-flex justify-content-between mb-2">
-                        <span><i class="fas fa-star star-icon"></i> 1 Estrela</span>
-                        <span><strong>{{ estatisticas_gerais.total_1_estrela }}</strong></span>
-                    </div>
-                    <div class="progress progress-custom">
-                        <div class="progress-bar progress-bar-1star" role="progressbar" data-width="{{ estatisticas_gerais.percentual_1_estrela }}"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Pacotes -->
-        <h2 class="section-title"><i class="fas fa-trophy"></i> Top 5 Pacotes Mais Bem Avaliados</h2>
-        {% for pacote in top_pacotes %}
-        <div class="pacote-card">
-            <div class="row align-items-center">
-                <div class="col-md-1 text-center">
-                    <div class="pacote-ranking">
-                        #{{ forloop.counter }}
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h4 class="mb-1 pacote-nome">{{ pacote.nome_pacote }}</h4>
-                    <small class="text-muted pacote-feedbacks">{{ pacote.total_feedbacks }} avaliações</small>
-                </div>
-                <div class="col-md-2 text-center">
-                    <span class="badge badge-rating">
-                        <i class="fas fa-star"></i> {{ pacote.media_avaliacao }}
-                    </span>
-                </div>
-                <div class="col-md-3 text-end">
-                    <h5 class="mb-0 pacote-preco">{{ pacote.preco_total }}€</h5>
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="alert alert-info">Ainda não há pacotes avaliados.</div>
-        {% endfor %}
-
-        <!-- Botões de ação -->
-        <div class="mt-4">
-            <a href="{% url 'feedbacks' %}" class="btn btn-primary">
-                <i class="fas fa-arrow-left"></i> Voltar aos Feedbacks
-            </a>
-            <a href="{% url 'main:home' %}" class="btn btn-secondary">
-                <i class="fas fa-home"></i> Voltar ao Início
-            </a>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Aplicar larguras das barras de progresso dinamicamente
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.progress-bar').forEach(function(bar) {
-                const width = bar.getAttribute('data-width');
-                if (width) {
-                    bar.style.width = width + '%';
-                }
-            });
-        });
-    </script>
-</body>
-</html>
