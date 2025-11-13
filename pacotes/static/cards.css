@@ -106,7 +106,7 @@
 }
 /* Botão específico para a página de reserva de hotel */
 .btn-select-hotel {
-    background: #17a2b8; /* mesma cor do botão principal */
+    background: #17a2b8; 
     color: white;
     border: none;
     padding: 10px 24px;
@@ -118,11 +118,11 @@
     text-align: center;
     text-decoration: none;
     display: inline-block;
-    margin-top: 8px; /* pequeno espaço entre os botões */
+    margin-top: 8px; 
 }
 
 .btn-select-hotel:hover {
-    background: #138496; /* mesmo hover */
+    background: #138496; 
     color: white;
     text-decoration: none;
 }
