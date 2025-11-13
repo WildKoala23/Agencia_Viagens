@@ -1,49 +1,103 @@
+{% extends "base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestão de Clientes</title>
-    <link rel="stylesheet" href="{% static 'clientes.css' %}">
-</head>
-<body>
-    <div class="container">
-        <a href="{% url 'main:home' %}" class="back-link">← Voltar ao Início</a>
-        <br>
-        <div class="card">
-            <h1>Inserir Cliente</h1>
-            <form method="post">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <button type="submit">Guardar Cliente</button>
-            </form>
-        </div>
 
-        <div class="card">
-            <h2>Lista de Clientes</h2>
-            <ul>
-                {% for cliente in clientes %}
-<li>
-    <div class="cliente-info">
-        <span class="cliente-nome">{{ cliente.first_name }} {{ cliente.last_name }}</span>
-        <span class="cliente-email">{{ cliente.email }}</span>
+{% block title %}Gestão de Clientes{% endblock %}
 
-        {% if cliente.user_id %}
-        <form action="{% url 'users:eliminar_cliente' cliente.user_id %}" method="post" style="display:inline;">
-            {% csrf_token %}
-            <button type="submit" class="delete-btn">Eliminar</button>
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Gestão de Clientes{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+
+    <div class="card_utils">
+        <h2>Lista de Clientes</h2>
+
+        <form method="get" class="search_form_utils" style="margin-bottom: 1rem;">
+            <input type="text" name="q" placeholder="Pesquisar por nome ou email..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+            <button type="submit" class="btn_search_utils">Procurar</button>
         </form>
-        {% endif %}
+
+        <ul class="lista_utils">
+            {% for cliente in clientes %}
+                {% if not request.user.is_authenticated or cliente.user_id != request.user.user_id %}
+                <li>
+                    <div class="voo_info_utils">
+                        <div class="voo_detalhes_utils">
+                            <span class="voo_nome_utils">{{ cliente.first_name }} {{ cliente.last_name }}</span>
+                            <span class="voo_extra_utils">{{ cliente.email }}</span>
+                        </div>
+
+                        <div class="voo_acoes_utils">
+                            {# Edit link: assumes a view `users:editar_cliente` exists (can implement if needed) #}
+                            <a href="{% url 'users:editar_cliente' cliente.user_id %}" class="edit_btn_utils">Editar</a>
+
+                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ cliente.user_id }}" data-name="{{ cliente.first_name }} {{ cliente.last_name }}">Eliminar</button>
+                        </div>
+                    </div>
+                </li>
+                {% endif %}
+            {% empty %}
+                <div class="empty_state_utils">Nenhum cliente registado ainda.</div>
+            {% endfor %}
+        </ul>
     </div>
-</li>
-{% empty %}
-<div class="empty-state">
-    Nenhum cliente registado ainda.
+
 </div>
-{% endfor %}
-            </ul>
+        <!-- Confirmation Modal -->
+        <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Eliminação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="confirmDeleteText">Tem a certeza que deseja eliminar este cliente?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <form id="confirmDeleteForm" method="post" action="">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</body>
-</html>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+        if (window.location.search.includes("q=")) {
+                const lista = document.querySelector(".card_utils");
+                if (lista) lista.scrollIntoView({ behavior: "smooth" });
+        }
+
+        // Modal: preencher form de eliminação dinamicamente
+        var confirmModal = document.getElementById('confirmDeleteModal');
+        if (confirmModal) {
+                confirmModal.addEventListener('show.bs.modal', function (event) {
+                        var button = event.relatedTarget; // Button that triggered the modal
+                        var clienteId = button.getAttribute('data-id');
+                        var clienteName = button.getAttribute('data-name');
+
+                        // Update modal text
+                        var textEl = confirmModal.querySelector('#confirmDeleteText');
+                        if (textEl) textEl.textContent = 'Tem a certeza que deseja eliminar ' + clienteName + '?';
+
+                        // Build action URL by replacing the placeholder '0' in the named URL
+                        var baseUrl = "{% url 'users:eliminar_cliente' 0 %}"; // e.g. /users/eliminar/0/
+                        var actionUrl = baseUrl.replace('0', clienteId);
+
+                        var form = document.getElementById('confirmDeleteForm');
+                        if (form) form.action = actionUrl;
+                });
+        }
+});
+</script>
+{% endblock %}
