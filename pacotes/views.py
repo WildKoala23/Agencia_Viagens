@@ -296,6 +296,38 @@ def eliminar_hotel(request, hotel_id):
         return redirect('hoteis')
     return redirect('hoteis')
 
+def selecionar_hotel(request, hotel_id, pacote_id):
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+
+    if hasattr(pacote, 'hotel'):
+        pacote.hotel = hotel
+        pacote.save()
+
+    return render(request, "confirmar_hotel.html", {
+        "pacote": pacote,
+        "hotel": hotel,
+    })
+def hotel_detalhes(request, hotel_id):
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    pacote_id = request.GET.get("pacote") 
+    pacote = None
+    if pacote_id:
+        from pacotes.models import Pacote
+        try:
+            pacote = Pacote.objects.get(pacote_id=pacote_id)
+        except Pacote.DoesNotExist:
+            pacote = None
+
+    return render(
+        request,
+        "hotel_detalhes.html",
+        {
+            "hotel": hotel,
+            "pacote": pacote,  
+        },
+    )
+
 
 def pacotes(request, pacote_id=None):
 
@@ -472,4 +504,17 @@ def pacotes_por_pais(request):
         "meses": meses,
         "q": q,
         "pais_query": pais_query,
+    })
+
+def reserva_pacote(request, pacote_id):
+
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+
+    destinos_do_pacote = pacote.destinos.all()
+
+    hoteis = Hotel.objects.filter(destino_id__in=destinos_do_pacote)
+
+    return render(request, "reserva_pacote.html", {
+        "pacote": pacote,
+        "hoteis": hoteis,
     })

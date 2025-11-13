@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
+
+<div class="container my-5 pacote-detalhes">
+
+  <!-- Cabeçalho do hotel -->
+  <div class="pacote-header">
+    <div class="pacote-info">
+      <h2>{{ hotel.nome }}</h2>
+      {% if hotel.endereco %}
+        <p class="pacote-datas"><strong>Localização:</strong> {{ hotel.endereco }}</p>
+      {% endif %}
+    </div>
+    <div class="pacote-preco">
+      <p class="preco-label">desde</p>
+      <p class="preco-valor">€{{ hotel.preco_diario }}</p>
+      <p class="preco-por">por noite</p>
+    </div>
+  </div>
+
+  <!-- Imagem -->
+  <div style="position: relative; text-align: center; margin-top: 20px;">
+    {% if hotel.imagem %}
+      <img src="/media/{{ hotel.imagem }}" alt="{{ hotel.nome }}" class="img-fluid rounded-3"
+           style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% else %}
+      <img src="{% static 'default.jpg' %}" alt="{{ hotel.nome }}" class="img-fluid rounded-3"
+           style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
+    {% endif %}
+  </div>
+
+  <hr class="mt-5">
+
+  <!-- Descrição -->
+  <div class="itinerario">
+    <h3>Descrição</h3>
+    <div class="dia-card">
+      <div class="dia-conteudo active">
+        <p>{{ hotel.descricao_item|linebreaksbr }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Serviços e Notas -->
+  <div class="pacote-informacoes mt-5">
+    <div class="info-card">
+      <button class="info-header" data-target="servicos">
+        <span>Serviços e Instalações</span>
+        <span class="seta">+</span>
+      </button>
+      <div id="servicos" class="info-conteudo">
+        <p>✔️ Wi-Fi gratuito</p>
+        <p>✔️ Piscina e ginásio</p>
+        <p>✔️ Pequeno-almoço incluído</p>
+        <p>❌ Taxas turísticas não incluídas</p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <button class="info-header" data-target="notas">
+        <span>Notas e Condições</span>
+        <span class="seta">+</span>
+      </button>
+      <div id="notas" class="info-conteudo">
+        <ul>
+          <li>Check-in: 14:00 | Check-out: 12:00</li>
+          <li>Cancelamento gratuito até 48h antes da chegada</li>
+          <li>Os quartos triplos são duplos com cama extra</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Selecionar -->
+  <div class="text-center my-5">
+    {% if pacote %}
+      <a href="{% url 'selecionar_hotel' hotel.hotel_id pacote.pacote_id %}" class="btn-reserva">
+        Selecionar este Hotel
+      </a>
+    {% else %}
+      <a href="#" class="btn-reserva disabled">Selecionar</a>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.info-header').forEach(function(header) {
+    header.addEventListener('click', function() {
+      const targetId = header.getAttribute('data-target');
+      const content = document.getElementById(targetId);
+      header.classList.toggle('open');
+      content.classList.toggle('active');
+    });
+  });
+});
+</script>
+
+{% endblock %}

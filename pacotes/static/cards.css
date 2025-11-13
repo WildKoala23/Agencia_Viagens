@@ -104,3 +104,26 @@
         height: 180px;
     }
 }
+/* Botão específico para a página de reserva de hotel */
+.btn-select-hotel {
+    background: #17a2b8; /* mesma cor do botão principal */
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    width: 100%;
+    transition: background 0.2s;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 8px; /* pequeno espaço entre os botões */
+}
+
+.btn-select-hotel:hover {
+    background: #138496; /* mesmo hover */
+    color: white;
+    text-decoration: none;
+}
+

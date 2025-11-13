@@ -15,6 +15,10 @@ urlpatterns = [
     path("hoteis/", views.hotel, name="hoteis"),
     path("hoteis/editar/<int:hotel_id>/", views.editar_hotel, name="editar_hotel"),
     path('hoteis/eliminar/<int:hotel_id>/', views.eliminar_hotel, name='eliminar_hotel'),
+    path("hoteis/<int:hotel_id>/selecionar/<int:pacote_id>/", views.selecionar_hotel, name="selecionar_hotel"),
+    path("hoteis/<int:hotel_id>/detalhes/", views.hotel_detalhes, name="hotel_detalhes"),
+
+
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
     path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
@@ -26,5 +30,6 @@ urlpatterns = [
     path('pacote/<int:pacote_id>/', views.pacote_detalhes, name='pacote_detalhes'),
     path("pacotes/todos/", views.pacotes_por_pais, name="pacotes_por_pais"),
     path("pacotes-por-pais/", views.pacotes_por_pais, name="pacotes_por_pais"),
+    path("<int:pacote_id>/reserva/", views.reserva_pacote, name="reserva_pacote"),
 
 ]

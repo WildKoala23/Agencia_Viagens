@@ -1,0 +1,36 @@
+{% load static %}
+
+{% for hotel in hoteis %}
+<div class="col-md-4">
+    <div class="package-card">
+        <div class="package-image">
+            {% if hotel.imagem %}
+                <img src="/media/{{ hotel.imagem }}" alt="{{ hotel.nome }}"
+                     class="img-fluid rounded shadow-sm"
+                     style="width: 100%; height: 220px; object-fit: cover;">
+            {% else %}
+                <img src="{% static 'default.jpg' %}" alt="Sem imagem"
+                     class="img-fluid rounded shadow-sm"
+                     style="width: 100%; height: 220px; object-fit: cover;">
+            {% endif %}
+        </div>
+
+        <div class="package-body">
+            <div class="package-title">{{ hotel.nome }}</div>
+            <div class="package-location">{{ hotel.endereco }}</div>
+            <div class="package-duration">{{ hotel.descricao_item|truncatewords:12 }}</div>
+            <div class="package-price">Desde {{ hotel.preco_diario }}€ / noite</div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <a href="{% url 'hotel_detalhes' hotel.hotel_id %}" class="btn-details">
+                    Ver Detalhes
+                </a>
+                <a href="{% url 'selecionar_hotel' hotel.hotel_id pacote.pacote_id %}"
+                   class="btn btn-success btn-sm">
+                    Selecionar Hotel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
