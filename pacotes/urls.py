@@ -4,7 +4,7 @@ from . import views
 urlpatterns = [
     path("destinos", views.destinos, name="destinos"),
     path('destinos/editar/<int:destino_id>/', views.editar_destino, name='editar_destino'),
-    path("eliminar/<int:destino_id>/", views.eliminar_destino, name="eliminar_destino"),
+    path("destinos/eliminar/<int:destino_id>/", views.eliminar_destino, name="eliminar_destino"),
     path("pacotes", views.pacotes, name="pacotes"),
     #voos
     path("voos", views.voos, name="voos"),

@@ -6,7 +6,7 @@ from django.db import connection, transaction, IntegrityError, ProgrammingError,
 from django.contrib import messages
 import re
 from pymongo import MongoClient
-from pacotes.models import Pacote, Destino, PacoteDestino
+from pacotes.models import Pacote, Destino, PacoteDestino, Voo, Hotel
 
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -24,7 +24,7 @@ def destinos(request):
     else:
         form = DestinoForm()
 
-    #pesquisa
+    # pesquisa
     q = request.GET.get("q", "").strip()
     if q:
         destinos = Destino.objects.filter(
@@ -33,9 +33,35 @@ def destinos(request):
     else:
         destinos = Destino.objects.all()
 
+    # determinar destinos usados em pacotes (M2M), voos (FK) e hoteis (FK)
+    used_ids = set()
+    try:
+        pacote_dest_ids = Pacote.objects.values_list('destinos__destino_id', flat=True).distinct()
+        used_ids.update([int(x) for x in pacote_dest_ids if x is not None])
+    except Exception:
+        try:
+            used_ids.update([int(x) for x in Destino.objects.filter(pacotes__isnull=False).values_list('destino_id', flat=True) if x is not None])
+        except Exception:
+            pass
+
+    try:
+        voo_dest_ids = Voo.objects.values_list('destino_id', flat=True).distinct()
+        used_ids.update([int(x) for x in voo_dest_ids if x is not None])
+    except Exception:
+        pass
+
+    try:
+        hotel_dest_ids = Hotel.objects.values_list('destino_id', flat=True).distinct()
+        used_ids.update([int(x) for x in hotel_dest_ids if x is not None])
+    except Exception:
+        pass
+
+    used_ids_list = list(used_ids)
+
     return render(request, 'destinos.html', {
         'form': form,
-        'destinos': destinos
+        'destinos': destinos,
+        'used_ids': used_ids_list,
     })
 
 def editar_destino(request, destino_id):
@@ -45,7 +71,6 @@ def editar_destino(request, destino_id):
         form = DestinoForm(request.POST, instance=destino)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Destino atualizado com sucesso!')
             return redirect('destinos')
     else:
         form = DestinoForm(instance=destino)
@@ -59,6 +84,24 @@ def editar_destino(request, destino_id):
 def eliminar_destino(request, destino_id):
     destino = get_object_or_404(Destino, destino_id=destino_id)
     if request.method == 'POST':
+        pacote_exists = Pacote.objects.filter(destinos=destino).exists()
+        voo_exists = Voo.objects.filter(destino_id=destino.destino_id).exists()
+        hotel_exists = Hotel.objects.filter(destino_id=destino.destino_id).exists()
+
+        usado = pacote_exists or voo_exists or hotel_exists
+
+        if usado:
+            from django.contrib import messages
+            reasons = []
+            if pacote_exists:
+                reasons.append('pacotes')
+            if voo_exists:
+                reasons.append('voos')
+            if hotel_exists:
+                reasons.append('hoteis')
+            messages.error(request, 'Não é possível eliminar este destino porque está a ser utilizado em: ' + ', '.join(reasons))
+            return redirect('destinos')
+
         destino.delete()
         return redirect('destinos')
     return redirect('destinos')
