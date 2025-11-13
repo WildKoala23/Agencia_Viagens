@@ -32,6 +32,7 @@
                         <i class="bi bi-lock-fill"></i>
                         <input type="password" placeholder="Password" name="password" required>
                     </div>
+                    <a href="#" class="forgot-password">Recuperar a password</a>
                     <button type="submit" class="btn-submit">Entrar</button>
                 </form>
 
@@ -65,6 +66,7 @@
                     <h3>Novo por aqui?</h3>
                     <p>Descubra destinos incríveis ao redor do mundo. Crie a sua conta e comece a sua aventura!</p>
                     <button class="btn-transparent" id="sign-up-btn">Registar</button>
+                    <a href="{% url 'main:home' %}" class="btn-transparent">Voltar ao Inicio</a>
                 </div>
                 <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500" alt="Viagem" class="image">
             </div>
@@ -76,6 +78,7 @@
                     <h3>Já tem conta?</h3>
                     <p>Entre agora e continue a explorar os melhores destinos e ofertas exclusivas!</p>
                     <button class="btn-transparent" id="sign-in-btn">Entrar</button>
+                    <a href="{% url 'main:home' %}" class="btn-transparent">Voltar ao Inicio</a>
                 </div>
                 <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500" alt="Viagem" class="image">
             </div>

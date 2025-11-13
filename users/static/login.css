@@ -169,6 +169,48 @@ form.sign-up-form {
     box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
 }
 
+.btn-home-alt {
+    margin-top: 10px;
+    background: none;
+    border: 2px solid var(--primary-color);
+    width: 150px;
+    height: 49px;
+    border-radius: 49px;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    line-height: 45px;
+}
+
+.btn-home-alt:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+
+.forgot-password {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: #555;
+    text-decoration: none;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
 /* Painéis Laterais */
 .panels-container {
     position: absolute;
@@ -233,11 +275,17 @@ form.sign-up-form {
     color: #fff;
     cursor: pointer;
     transition: 0.3s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
 }
 
 .btn-transparent:hover {
     background: #fff;
     color: var(--primary-color);
+    text-decoration: none;
 }
 
 .image {
