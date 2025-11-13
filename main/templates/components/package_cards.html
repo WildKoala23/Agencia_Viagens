@@ -4,7 +4,7 @@
     <h4 class="section-title text-center mb-4">Pacotes Populares</h4>
 
     <div class="row g-4">
-        {% for pacote in pacotes %}
+        {% for pacote in pacotes|slice:":6" %}
         <div class="col-md-4">
             <div class="package-card">
             <div class="package-image">
@@ -22,7 +22,7 @@
                     <div class="package-title">{{ pacote.nome }}</div>
                     <div class="package-location">{{ pacote.descricao_item|truncatewords:10 }}</div>
                     <div class="package-duration">{{ pacote.data_inicio }} → {{ pacote.data_fim }}</div>
-                    <div class="package-price">€{{ pacote.preco_total }}</div>
+                    <div class="package-price">desde {{ pacote.preco_total }}€</div>
                    <a href="{% url 'pacote_detalhes' pacote.pacote_id %}" class="btn-details">Ver Detalhes</a>
 
 
