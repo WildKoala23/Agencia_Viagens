@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Cliente{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Editar Cliente{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+    <div class="card_utils">
+        <h2>Editar Cliente</h2>
+
+        <form method="post" class="form_utils">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn_save_utils">Guardar Alterações</button>
+            <a href="{% url 'users:inserir_clientes' %}" class="btn_save_utils" style="margin-left: 0.5rem;">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}
