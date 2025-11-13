@@ -13,83 +13,224 @@
 <div class="container_utils">
 
     <div class="card_utils">
-        <h1>Inserir Destino</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert_utils alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        {% if form.non_field_errors %}
-            <div class="alert_utils alert-error">
-                {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <form method="post" class="form_utils">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn_save_utils">Guardar Destino</button>
-        </form>
-    </div>
-
-    <div class="card_utils">
-        <div class="voos_header_utils">
+        <div class="voos_header_utils d-flex align-items-center justify-content-between">
             <h2>Lista de Destinos</h2>
 
-            <form method="get" class="search_form_utils">
-                <input type="text" name="q" placeholder="Pesquisar por país..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
-                <button type="submit" class="btn_search_utils">Procurar</button>
-            </form>
+            <div class="d-flex align-items-center gap-2">
+                <form method="get" class="search_form_utils" style="margin:0;">
+                    <input type="text" name="q" placeholder="Pesquisar por país..."
+                        value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                    <button type="submit" class="btn_search_utils">Procurar</button>
+                </form>
+
+                <button type="button" class="btn_search_utils edit_btn_utils d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#addDestinoModal">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Adicionar</span>
+                </button>
+            </div>
         </div>
 
         <ul class="lista_utils">
             {% for destino in destinos %}
-                <li>
-                    <div class="voo_info_utils">
-                        <div class="voo_detalhes_utils">
-                            <span class="voo_nome_utils">
-                                {{ destino.pais }}
-                            </span>
-                            <span class="voo_extra_utils">
-                                {{ destino.nome }}
-                            </span>
-                        </div>
-
-                        <div class="voo_acoes_utils">
-                            <a href="{% url 'editar_destino' destino.destino_id %}" class="edit_btn_utils">Editar</a>
-
-                            <form action="{% url 'eliminar_destino' destino.destino_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="delete_btn_utils">Eliminar</button>
-                            </form>
-                        </div>
+            <li>
+                <div class="voo_info_utils">
+                    <div class="voo_detalhes_utils">
+                        <span class="voo_nome_utils">{{ destino.pais }}</span>
+                        <span class="voo_extra_utils">{{ destino.nome }}</span>
                     </div>
-                </li>
-            {% empty %}
-                <div class="empty_state_utils">
-                    Nenhum destino registado ainda.
+
+                    <div class="voo_acoes_utils">
+                            <button type="button" class="edit_btn_utils d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addDestinoModal" data-id="{{ destino.destino_id }}" data-pais="{{ destino.pais|escapejs }}" data-nome="{{ destino.nome|escapejs }}" data-url="{% url 'editar_destino' destino.destino_id %}">Editar</button>
+                        <button type="button" class="delete_btn_utils" data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal" data-id="{{ destino.destino_id }}"
+                            data-name="{{ destino.nome }}"
+                            data-used="{% if destino.destino_id in used_ids %}1{% else %}0{% endif %}"
+                                data-url="/pacotes/destinos/eliminar/{{ destino.destino_id }}/">Eliminar</button>
+                    </div>
                 </div>
+            </li>
+            {% empty %}
+            <div class="empty_state_utils">Nenhum destino registado ainda.</div>
             {% endfor %}
         </ul>
     </div>
+
 </div>
+
+<!-- Modal: Adicionar Destino -->
+<div class="modal fade" id="addDestinoModal" tabindex="-1" aria-labelledby="addDestinoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addDestinoModalLabel">Adicionar Destino</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="alert_utils alert-error">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form id="addDestinoForm" method="post" class="form_utils">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="addDestinoSubmit" class="btn_search_utils edit_btn_utils">Guardar Destino</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminação -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmDeleteText">Tem a certeza que deseja eliminar este destino?</p>
+                <p id="confirmDeleteWarning" class="text-danger" style="display:none;">Este destino está a ser utilizado
+                    e não pode ser eliminado.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="confirmDeleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" id="confirmDeleteBtn" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    if (window.location.search.includes("q=")) {
-        const listaDestinos = document.querySelector(".voos_header_utils");
-        if (listaDestinos) {
-            listaDestinos.scrollIntoView({ behavior: "smooth" });
+    document.addEventListener("DOMContentLoaded", function () {
+        if (window.location.search.includes("q=")) {
+            const listaDestinos = document.querySelector(".voos_header_utils");
+            if (listaDestinos) {
+                listaDestinos.scrollIntoView({ behavior: "smooth" });
+            }
         }
-    }
-});
+
+        var confirmModal = document.getElementById('confirmDeleteModal');
+        if (confirmModal) {
+            confirmModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var destinoId = button.getAttribute('data-id');
+                var destinoName = button.getAttribute('data-name');
+                var destinoUsed = button.getAttribute('data-used') === '1';
+
+                var textEl = confirmModal.querySelector('#confirmDeleteText');
+                var warnEl = confirmModal.querySelector('#confirmDeleteWarning');
+                var form = document.getElementById('confirmDeleteForm');
+                var btn = document.getElementById('confirmDeleteBtn');
+
+                if (textEl) textEl.textContent = 'Tem a certeza que deseja eliminar "' + destinoName + '"?';
+
+                var buttonUrl = button.getAttribute('data-url');
+                if (buttonUrl) {
+                    try {
+                        var absolute = buttonUrl.charAt(0) === '/' ? window.location.origin + buttonUrl : window.location.origin + '/' + buttonUrl;
+                        if (form) form.action = absolute;
+                        console.debug('Set delete form action to', absolute);
+                    } catch (e) {
+                        if (form) form.action = buttonUrl;
+                    }
+                } else {
+                        var baseUrl = "/pacotes/destinos/eliminar/0/"; // fallback: replace 0 with id
+                    var actionUrl = baseUrl.replace('0', destinoId);
+                    if (form) form.action = actionUrl;
+                    console.debug('Fallback delete form action to', actionUrl);
+                }
+
+                if (destinoUsed) {
+                    if (warnEl) warnEl.style.display = 'block';
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.setAttribute('aria-disabled', 'true');
+                        btn.classList.remove('btn-danger');
+                        btn.classList.add('btn-secondary', 'disabled');
+                    }
+                } else {
+                    if (warnEl) warnEl.style.display = 'none';
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.removeAttribute('aria-disabled');
+                        btn.classList.remove('btn-secondary', 'disabled');
+                        if (!btn.classList.contains('btn-danger')) btn.classList.add('btn-danger');
+                    }
+                }
+            });
+        }
+        // Modal add/edit behaviour
+        var addModal = document.getElementById('addDestinoModal');
+        if (addModal) {
+            addModal.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                var form = document.getElementById('addDestinoForm');
+                var title = addModal.querySelector('.modal-title');
+                var submitBtn = document.getElementById('addDestinoSubmit');
+
+                // default: add mode
+                if (!button) return;
+
+                var destinoId = button.getAttribute('data-id');
+                var destinoPais = button.getAttribute('data-pais');
+                var destinoNome = button.getAttribute('data-nome');
+                var editUrl = button.getAttribute('data-url');
+
+                if (destinoId) {
+                    // Edit mode
+                    if (title) title.textContent = 'Editar Destino';
+                    if (form) {
+                        // set action to edit URL (absolute)
+                        try {
+                            var absolute = editUrl && editUrl.charAt(0) === '/' ? window.location.origin + editUrl : editUrl;
+                            form.action = absolute || editUrl || '';
+                        } catch (e) {
+                            form.action = editUrl || '';
+                        }
+                        // prefill known fields if present
+                        try { if (destinoPais && form.elements['pais']) form.elements['pais'].value = destinoPais; } catch(e){}
+                        try { if (destinoNome && form.elements['nome']) form.elements['nome'].value = destinoNome; } catch(e){}
+                    }
+                } else {
+                    // Add mode
+                    if (title) title.textContent = 'Adicionar Destino';
+                    if (form) {
+                        form.action = '';
+                        try { if (form.elements['pais']) form.elements['pais'].value = ''; } catch(e){}
+                        try { if (form.elements['nome']) form.elements['nome'].value = ''; } catch(e){}
+                    }
+                }
+            });
+
+            // When modal hidden, reset title and form action to default add state
+            addModal.addEventListener('hidden.bs.modal', function () {
+                var form = document.getElementById('addDestinoForm');
+                var title = addModal.querySelector('.modal-title');
+                if (title) title.textContent = 'Adicionar Destino';
+                if (form) form.action = '';
+            });
+        }
+    });
 </script>
 {% endblock %}
