@@ -85,11 +85,19 @@
   </div>
 
   <!-- Botão Fazer Reserva -->
- <div class="text-center my-5">
-  <a href="{% url 'reserva_pacote' pacote.pacote_id %}" class="btn-reserva">
-    Fazer Reserva
-  </a>
-</div>
+  {% if request.user.is_authenticated %}
+  <div class="text-center my-5">
+    <a href="{% url 'reserva_pacote' pacote.pacote_id %}" class="btn-reserva">
+      Fazer Reserva
+    </a>
+  </div>
+  {% else %}
+  <div class="text-center my-5">
+    <a href="{% url 'users:login' %}" class="btn-reserva">
+      Fazer Reserva
+    </a>
+  </div>
+  {% endif %}
 
 </div>
 
