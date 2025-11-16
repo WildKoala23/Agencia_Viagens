@@ -116,6 +116,7 @@
     transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
     display: inline-block;
+    margin-top: 12px;
 }
 
 .btn_save_utils:hover,
