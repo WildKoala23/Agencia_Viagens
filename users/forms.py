@@ -1,5 +1,7 @@
 from django import forms
 from .models import Utilizador
+from django.contrib.auth.forms import UserCreationForm
+
 
 class ClienteForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(), required=True, label='Password')
@@ -33,3 +35,27 @@ class LoginForm(forms.Form):
     class Meta:
         model = Utilizador
         fields = ['email', 'password']
+
+
+
+class RegisterForm(UserCreationForm):
+    email = forms.EmailField(
+        label='Email',
+        max_length=150,
+        widget=forms.EmailInput(attrs={'placeholder': 'Email'})
+    )
+    firstname = forms.CharField(
+        label='Nome',
+        max_length=150,
+        widget=forms.TextInput(attrs={'placeholder': 'Nome'})
+    )
+    lastname = forms.CharField(
+        label='Apelido',
+        max_length=150,
+        widget=forms.TextInput(attrs={'placeholder': 'Apelido'})
+    )
+
+    class Meta:
+        model = Utilizador
+        fields = ['email', 'firstname', 'lastname', 'password1', 'password2']
+

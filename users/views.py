@@ -6,7 +6,7 @@ from django.core import serializers
 from django.contrib.auth import authenticate, login
 from .forms import *
 from django.contrib.auth import get_user_model
-
+from django.contrib.auth.forms import UserCreationForm
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -27,7 +27,7 @@ def loginUser(request):
             print(user)
             if user is not None:
                 login(request, user)
-                
+
                 # Redirecionamento condicional
                 if user.is_staff:
                     return redirect('main:dashboard')  # staff
@@ -38,6 +38,20 @@ def loginUser(request):
     else:
         form = LoginForm()
     return render(request, 'registration/login.html')
+
+
+def registerUser(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password1']
+            user = authenticate(request, email=email, password=password)
+            form.save()
+            return redirect('main:dashboard')
+    else:
+        form = RegisterForm()
+    return render(request, 'registration/register.html', {'form': form})
 
 # Create your views here.
 def inserir_clientes(request):
@@ -81,11 +95,11 @@ def user(req):
     # data = list(userData.find())
     print(data)
     return render(req, 'dashboardUser.html', {"data": data})
-   
+
 
 def comprasUser(req):
     user = get_object_or_404(Utilizador, user_id=req.user.user_id)
-    
+
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [req.user.user_id])
         data = cursor.fetchall()
@@ -93,11 +107,11 @@ def comprasUser(req):
 
 def feedbacksUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
-    
+
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
-    
+
     return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
 
 def perfilUser(request):
@@ -112,7 +126,7 @@ def perfilUser(request):
         user.telefone = int(telefone) if telefone else None
         user.save()
         return redirect('users:perfilUser')
-    
+
     return render(request, 'perfilUser.html', {"user": user})
 
 

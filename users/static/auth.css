@@ -1,0 +1,279 @@
+/* Reset e Variáveis */
+:root {
+    --circle-gradient-start: #17a2b8;
+    --circle-gradient-end: #3498db;
+    --primary-color: #17a2b8;
+    --secondary-color: #3498db;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+    background: #f6f5f7;
+    min-height: 100vh;
+}
+
+/* Container Principal */
+.auth-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    background-color: #fff;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Círculo de Fundo */
+.background-circle {
+    position: absolute;
+    width: 2000px;
+    height: 2000px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--circle-gradient-start), var(--circle-gradient-end));
+    top: 50%;
+    right: 48%;
+    transform: translate(0, -50%);
+    z-index: 1;
+}
+
+.register-page .background-circle {
+    right: auto;
+    left: 48%;
+    transform: translate(0, -50%);
+}
+
+/* Container de Conteúdo */
+.content-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    z-index: 2;
+    padding: 2rem;
+}
+
+/* Painel de Informação */
+.info-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem;
+    color: #fff;
+}
+
+.panel-content {
+    margin-bottom: 2rem;
+}
+
+.panel-content h1 {
+    font-weight: 700;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.panel-content h3 {
+    font-weight: 600;
+    line-height: 1;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.panel-content p {
+    font-size: 0.95rem;
+    padding: 0.7rem 0;
+    margin-bottom: 1.5rem;
+}
+
+.btn-transparent {
+    display: inline-block;
+    background: none;
+    border: 2px solid #fff;
+    padding: 0.6rem 2rem;
+    font-weight: 600;
+    font-size: 0.8rem;
+    border-radius: 49px;
+    color: #fff;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+}
+
+.btn-transparent:hover {
+    background: #fff;
+    color: var(--primary-color);
+}
+
+.panel-image {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 15px;
+}
+
+/* Painel do Formulário */
+.form-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.auth-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Título do Formulário */
+.form-title {
+    font-size: 2.2rem;
+    color: #444;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+/* Campos de Input */
+.input-field {
+    width: 100%;
+    max-width: 380px;
+    height: 55px;
+    background-color: #f0f0f0;
+    margin: 10px 0;
+    border-radius: 55px;
+    display: grid;
+    grid-template-columns: 15% 85%;
+    padding: 0 0.4rem;
+}
+
+.input-field i {
+    text-align: center;
+    line-height: 55px;
+    color: #acacac;
+    font-size: 1.1rem;
+}
+
+.input-field input {
+    background: none;
+    outline: none;
+    border: none;
+    line-height: 1;
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: #333;
+}
+
+.input-field input::placeholder {
+    color: #aaa;
+    font-weight: 400;
+}
+
+/* Botão de Submit */
+.btn-submit {
+    width: 150px;
+    height: 49px;
+    border: none;
+    outline: none;
+    border-radius: 49px;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    transition: 0.5s;
+}
+
+.btn-submit:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
+}
+
+/* Responsivo */
+@media (max-width: 870px) {
+    .content-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 1rem;
+    }
+
+    .info-panel {
+        padding: 2rem 1rem;
+    }
+
+    .panel-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .panel-content h3 {
+        font-size: 1.2rem;
+    }
+
+    .panel-content p {
+        font-size: 0.85rem;
+    }
+
+    .panel-image {
+        max-width: 250px;
+    }
+
+    .form-panel {
+        padding: 2rem 1rem;
+    }
+
+    .form-title {
+        font-size: 1.8rem;
+    }
+
+    .background-circle {
+        width: 1000px;
+        height: 1000px;
+    }
+}
+
+@media (max-width: 576px) {
+    .panel-content h1 {
+        font-size: 1.5rem;
+    }
+
+    .panel-content h3 {
+        font-size: 1rem;
+    }
+
+    .panel-content p {
+        font-size: 0.75rem;
+    }
+
+    .form-title {
+        font-size: 1.5rem;
+    }
+
+    .btn-transparent {
+        padding: 0.5rem 1.5rem;
+        font-size: 0.75rem;
+    }
+
+    .input-field {
+        height: 50px;
+    }
+
+    .btn-submit {
+        width: 130px;
+        height: 45px;
+    }
+}
