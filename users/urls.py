@@ -13,5 +13,6 @@ urlpatterns = [
     path('editar/<int:cliente_id>/', views.editar_cliente, name='editar_cliente'),
     path('eliminar/<int:cliente_id>/', views.eliminar_cliente, name='eliminar_cliente'),
     path('login/', views.loginUser, name="login"),
+    path('register/', views.registerUser, name="register"),
     path('logout/', LogoutView.as_view(), name='logout'),
 ]
