@@ -114,12 +114,16 @@
     font-weight: 500;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    display: inline-block;
 }
 
 .btn_save_utils:hover,
 .btn_search_utils:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+    text-decoration: none;
+    color: white;
 }
 
 .btn_save_utils:active,
