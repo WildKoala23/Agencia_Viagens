@@ -20,7 +20,7 @@ def home(request):
          "text": "Momentos inesquecíveis esperam por si"},
     ]
 
-    pacotes = PacoteView.objects.filter(estado="Ativo")
+    pacotes = Pacote.objects.filter(estado="Ativo")
 
     #Pesquisa por nome
     query = request.GET.get("q")
@@ -42,7 +42,7 @@ def home(request):
 
 
 def dashboard(request):
-    pacotes = PacoteView.objects.filter(estado="Ativo")[:3]
+    pacotes = Pacote.objects.filter(estado="Ativo")[:3]
     total_feedbacks = Feedback.objects.count()
 
     context = {
