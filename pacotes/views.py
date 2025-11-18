@@ -360,8 +360,6 @@ def hotel_detalhes(request, hotel_id):
 
 def pacotes(request, pacote_id=None):
 
-    from pymongo import MongoClient
-
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id) if pacote_id else None
 
     if request.method == "POST":
@@ -369,12 +367,9 @@ def pacotes(request, pacote_id=None):
         if form.is_valid():
             pacote = form.save()
 
-            # 🔹 Atualizar / criar no MongoDB
-            client = MongoClient("mongodb://localhost:27017/")
-            db = client["bd2_22598"]
-            collection = db["banners"]
 
-            collection.update_one(
+
+            banners.update_one(
                 {"pacote_id": pacote.pacote_id},
                 {"$set": {
                     "nome": pacote.nome,
@@ -447,10 +442,10 @@ def pacote_detalhes(request, pacote_id):
     # Conecta ao MongoDB
     client = MongoClient("mongodb://localhost:27017/")
     db = client["bd2_22598"]
-    collection = db["banners"]
+    banners = db["banners"]
 
     # Tenta ir buscar o banner correspondente ao pacote
-    banner = collection.find_one({"pacote_id": pacote_id, "ativo": True})
+    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
 
     # Se encontrar, usa a imagem do MongoDB; senão, usa a imagem padrão do modelo
     imagem_url = banner["imagem_url"] if banner else f"/media/{pacote.imagem}"
