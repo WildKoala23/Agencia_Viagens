@@ -7,6 +7,8 @@ from django.contrib import messages
 import re
 from pymongo import MongoClient
 from pacotes.models import Pacote, Destino, PacoteDestino, Voo, Hotel
+from django.contrib import messages
+
 
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -61,7 +63,6 @@ def eliminar_destino(request, destino_id):
         usado = pacote_exists or voo_exists or hotel_exists
 
         if usado:
-            from django.contrib import messages
             reasons = []
             if pacote_exists:
                 reasons.append('pacotes')
