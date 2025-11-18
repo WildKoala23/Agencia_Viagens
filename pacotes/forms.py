@@ -6,7 +6,7 @@ from django.forms import DateTimeInput
 class DestinoForm(forms.ModelForm):
     class Meta:
         model = Destino
-        fields = '__all__'
+        exclude = ['destino_id'] 
 
 class VooForm(forms.ModelForm):
     class Meta:
@@ -54,18 +54,18 @@ class PacoteForm(forms.ModelForm):
     required=False,
     label="Imagem do Pacote",
     widget=forms.FileInput(attrs={'class': 'form-control'}),
-)
+    )
 
     class Meta:
         model = Pacote
-        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado', 'imagem', 'destinos']
+        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado_id', 'imagem', 'destinos']
         labels = {
             'nome': 'Nome do Pacote',
             'descricao_item': 'Descrição',
             'data_inicio': 'Data de Início (AAAA-MM-DD)',
             'data_fim': 'Data de Fim (AAAA-MM-DD)',
             'preco_total': 'Preço Total (€)',
-            'estado': 'Estado',
+            'estado_id': 'Estado',
             'imagem': 'Imagem do Pacote',
             'destinos': 'Destinos',
         }
