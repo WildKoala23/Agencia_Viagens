@@ -20,7 +20,7 @@ BEGIN
 END $$;
 
 -- Função para executar o refresh da materialized view
-CREATE OR REPLACE FUNCTION refresh_mv_destinos()
+CREATE OR REPLACE FUNCTION refresh_mv_pacotes()
 RETURNS TRIGGER AS $$
 BEGIN
     REFRESH MATERIALIZED VIEW mv_pacotes;
@@ -29,7 +29,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para atualizar views sempre que há alteração em base de dados
-CREATE OR REPLACE TRIGGER insertDestino
-AFTER INSERT OR UPDATE OR DELETE ON destino
+CREATE OR REPLACE TRIGGER insertPacote
+AFTER INSERT OR UPDATE OR DELETE ON pacote
 FOR EACH STATEMENT
-EXECUTE FUNCTION refresh_mv_destinos();
+EXECUTE FUNCTION refresh_mv_pacotes();
