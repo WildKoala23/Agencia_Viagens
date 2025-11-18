@@ -41,12 +41,12 @@
                     </div>
 
                     <div class="voo_acoes_utils">
-                            <button type="button" class="edit_btn_utils d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addDestinoModal" data-id="{{ destino.destino_id }}" data-pais="{{ destino.pais|escapejs }}" data-nome="{{ destino.nome|escapejs }}" data-url="{% url 'editar_destino' destino.destino_id %}">Editar</button>
+                        <button type="button" class="edit_btn_utils d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#addDestinoModal" data-id="{{ destino.destino_id }}" data-pais="{{ destino.pais|escapejs }}" data-nome="{{ destino.nome|escapejs }}" data-url="{% url 'editar_destino' destino.destino_id %}">Editar</button>
                         <button type="button" class="delete_btn_utils" data-bs-toggle="modal"
                             data-bs-target="#confirmDeleteModal" data-id="{{ destino.destino_id }}"
                             data-name="{{ destino.nome }}"
                             data-used="{% if destino.destino_id in used_ids %}1{% else %}0{% endif %}"
-                                data-url="/pacotes/destinos/eliminar/{{ destino.destino_id }}/">Eliminar</button>
+                            data-url="/pacotes/destinos/eliminar/{{ destino.destino_id }}/">Eliminar</button>
                     </div>
                 </div>
             </li>
