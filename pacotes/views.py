@@ -439,11 +439,6 @@ def eliminar_pacote(request, pacote_id):
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pk=pacote_id)
 
-    # Conecta ao MongoDB
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client["bd2_22598"]
-    banners = db["banners"]
-
     # Tenta ir buscar o banner correspondente ao pacote
     banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
 
@@ -473,13 +468,13 @@ def pacote_detalhes(request, pacote_id):
 def pacotes_por_pais(request):
     destinos = Destino.objects.all()
     pacotes = Pacote.objects.all()
-
+# ------------------------------------mudar para objetos da bd----#cursor?-------------------------------------------
     q = request.GET.get("q", "").strip()        # pesquisa geral (Home)
     pais_query = request.GET.get("pais", "").strip()  # pesquisa específica na sidebar
     preco = request.GET.get("preco")
     mes = request.GET.get("mes")
 
-    # Filtro (vindo da Home ou sidebar)
+    # Filtro (vindo da Home ou sidebar) #cursor?
     if q:
         pacotes = pacotes.filter(
             Q(nome__icontains=q) |
@@ -487,7 +482,7 @@ def pacotes_por_pais(request):
             Q(destinos__pais__icontains=q) |
             Q(destinos__nome__icontains=q)
         )
-
+   
     # Filtro por país (campo específico do formulário lateral)
     if pais_query:
         pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
@@ -515,13 +510,13 @@ def pacotes_por_pais(request):
             pacotes_por_pais[pais].append(pacote)
 
     preco_maximo = Pacote.objects.aggregate(Max("preco_total"))["preco_total__max"] or 10000
-
+# -------------------------------------------------------------------------------------------------------
     meses = [
         ("01", "Janeiro"), ("02", "Fevereiro"), ("03", "Março"), ("04", "Abril"),
         ("05", "Maio"), ("06", "Junho"), ("07", "Julho"), ("08", "Agosto"),
         ("09", "Setembro"), ("10", "Outubro"), ("11", "Novembro"), ("12", "Dezembro"),
     ]
-
+ 
     return render(request, "pacotes_por_pais.html", {
         "pacotes_por_pais": pacotes_por_pais,
         "preco_maximo": preco_maximo,
