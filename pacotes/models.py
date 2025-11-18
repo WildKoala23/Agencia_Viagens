@@ -1,13 +1,29 @@
 from django.db import models
+from django.conf import settings
+
+class PacoteEstado(models.Model):
+    estado_id = models.AutoField(primary_key=True)
+    desc = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'pacote_estado'
+
+    def __str__(self):
+        return self.desc
+    
 
 class Pacote(models.Model):
     pacote_id = models.AutoField(primary_key=True)
-    nome = models.TextField()
-    descricao_item = models.TextField()
+    nome = models.CharField(max_length=250)
+    descricao_item = models.CharField(max_length=255)
     data_inicio = models.DateField()
     data_fim = models.DateField()
     preco_total = models.DecimalField(max_digits=10, decimal_places=2)
-    estado = models.TextField()
+    estado_id = models.ForeignKey(
+        PacoteEstado,
+        on_delete=models.CASCADE,
+        db_column='estado_id'
+    )
     imagem = models.ImageField(upload_to='pacotes/', blank=True, null=True)
     destinos = models.ManyToManyField('Destino', through='PacoteDestino', related_name='pacotes')
 
@@ -18,28 +34,11 @@ class Pacote(models.Model):
         return f"{self.nome} - {self.preco_total}€"
 
     
-class PacoteView(models.Model):
-    pacote_id = models.AutoField(primary_key=True)
-    nome = models.TextField()
-    descricao_item = models.TextField()
-    data_inicio = models.DateField()
-    data_fim = models.DateField()
-    preco_total = models.DecimalField(max_digits=10, decimal_places=2)
-    estado = models.TextField()
-    imagem = models.TextField()
-
-    class Meta:
-        managed = False
-        db_table = 'pacote_view'
-
-    def __str__(self):
-        return f"{self.nome} - {self.preco_total}€"
-    
 
 class Destino(models.Model):
     destino_id = models.AutoField(primary_key=True)
-    pais = models.TextField()
-    nome = models.TextField()
+    pais = models.CharField(max_length=50)
+    nome = models.CharField(max_length=100)
 
     class Meta:
         db_table = 'destino'
@@ -54,7 +53,7 @@ class Voo(models.Model):
         on_delete=models.CASCADE,
         db_column='destino_id'
     )
-    companhia = models.TextField()
+    companhia = models.CharField(max_length=150)
     numero_voo = models.IntegerField()
     data_saida = models.DateTimeField()
     data_chegada = models.DateTimeField()
@@ -75,9 +74,9 @@ class Hotel(models.Model):
         db_column='destino_id'
     )
     nome = models.CharField(max_length=200)
-    endereco = models.TextField(null=True, blank=True)
+    endereco = models.CharField(max_length=250)
     preco_diario = models.DecimalField(max_digits=10, decimal_places=2)
-    descricao_item = models.TextField()
+    descricao_item = models.CharField(max_length=500)
     
     class Meta:
         db_table = 'hotel'
@@ -102,7 +101,6 @@ class PacoteDestino(models.Model):
     class Meta:
         db_table = 'pacote_destino'
         unique_together = (('pacote_id', 'destino_id'),)
-        managed = False
        
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Destino {self.destino_id.nome}"
@@ -125,7 +123,6 @@ class PacoteHotel(models.Model):
     class Meta:
         db_table = 'pacote_hotel'
         unique_together = (('pacote_id', 'hotel_id'),)  # Composite primary key
-        managed = False
     
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Hotel {self.hotel_id.nome}"
@@ -147,7 +144,6 @@ class PacoteVoo(models.Model):
         
         db_table = 'pacote_voo'
         unique_together = (('pacote_id', 'voo_id'),)  # Composite primary key
-        managed = False
     
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Voo {self.voo_id.numero_voo}"
@@ -160,7 +156,7 @@ class Feedback(models.Model):
         db_column='pacote_id'
     )
     avaliacao = models.IntegerField()
-    comentario = models.TextField()
+    comentario = models.CharField(max_length=500)
     data_feedback = models.DateField()
     
     class Meta:

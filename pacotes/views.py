@@ -7,15 +7,16 @@ from django.contrib import messages
 import re
 from pymongo import MongoClient
 from pacotes.models import Pacote, Destino, PacoteDestino, Voo, Hotel
+from django.contrib import messages
+
 
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 banners = db["banners"]
 
-# Create your views here.
-
 def destinos(request):
+    print('HERE')
     if request.method == "POST":
         form = DestinoForm(request.POST)
         if form.is_valid():
@@ -24,49 +25,20 @@ def destinos(request):
     else:
         form = DestinoForm()
 
-    # pesquisa
-    q = request.GET.get("q", "").strip()
-    if q:
-        destinos = Destino.objects.filter(
-            Q(pais__icontains=q) | Q(nome__icontains=q)
-        )
-    else:
-        destinos = Destino.objects.all()
-
-    # determinar destinos usados em pacotes (M2M), voos (FK) e hoteis (FK)
-    used_ids = set()
-    try:
-        pacote_dest_ids = Pacote.objects.values_list('destinos__destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in pacote_dest_ids if x is not None])
-    except Exception:
-        try:
-            used_ids.update([int(x) for x in Destino.objects.filter(pacotes__isnull=False).values_list('destino_id', flat=True) if x is not None])
-        except Exception:
-            pass
-
-    try:
-        voo_dest_ids = Voo.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in voo_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    try:
-        hotel_dest_ids = Hotel.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in hotel_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    used_ids_list = list(used_ids)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mv_destinos")
+        data = cursor.fetchone()
+        data = data[0]
 
     return render(request, 'destinos.html', {
         'form': form,
-        'destinos': destinos,
-        'used_ids': used_ids_list,
+        'destinos': data,
     })
 
 def editar_destino(request, destino_id):
+    print(f'Destino: {destino_id}')
+
     destino = get_object_or_404(Destino, destino_id=destino_id)
-    
     if request.method == 'POST':
         form = DestinoForm(request.POST, instance=destino)
         if form.is_valid():
@@ -91,7 +63,6 @@ def eliminar_destino(request, destino_id):
         usado = pacote_exists or voo_exists or hotel_exists
 
         if usado:
-            from django.contrib import messages
             reasons = []
             if pacote_exists:
                 reasons.append('pacotes')
@@ -360,8 +331,6 @@ def hotel_detalhes(request, hotel_id):
 
 def pacotes(request, pacote_id=None):
 
-    from pymongo import MongoClient
-
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id) if pacote_id else None
 
     if request.method == "POST":
@@ -369,12 +338,7 @@ def pacotes(request, pacote_id=None):
         if form.is_valid():
             pacote = form.save()
 
-            # 🔹 Atualizar / criar no MongoDB
-            client = MongoClient("mongodb://localhost:27017/")
-            db = client["bd2_22598"]
-            collection = db["banners"]
-
-            collection.update_one(
+            banners.update_one(
                 {"pacote_id": pacote.pacote_id},
                 {"$set": {
                     "nome": pacote.nome,
@@ -398,19 +362,15 @@ def pacotes(request, pacote_id=None):
     else:
         form = PacoteForm(instance=pacote)
 
-    # 🔍 Pesquisa
-    query = request.GET.get('q', '').strip()
-    pacotes = Pacote.objects.all().order_by('pacote_id')
-    if query:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=query) | Q(destinos__nome__icontains=query)
-        ).distinct()
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mv_pacotes")
+        data = cursor.fetchall()
+        print(data)
 
     return render(request, 'pacotes.html', {
         'form': form,
-        'pacotes': pacotes,
         'pacote_editar': pacote,  
-        'query': query,
+        'data': data,
     })
 
 def pacote_detalhes(request, pacote_id):
@@ -444,13 +404,8 @@ def eliminar_pacote(request, pacote_id):
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pk=pacote_id)
 
-    # Conecta ao MongoDB
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client["bd2_22598"]
-    collection = db["banners"]
-
     # Tenta ir buscar o banner correspondente ao pacote
-    banner = collection.find_one({"pacote_id": pacote_id, "ativo": True})
+    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
 
     # Se encontrar, usa a imagem do MongoDB; senão, usa a imagem padrão do modelo
     imagem_url = banner["imagem_url"] if banner else f"/media/{pacote.imagem}"
@@ -478,13 +433,13 @@ def pacote_detalhes(request, pacote_id):
 def pacotes_por_pais(request):
     destinos = Destino.objects.all()
     pacotes = Pacote.objects.all()
-
+# ------------------------------------mudar para objetos da bd----#cursor?-------------------------------------------
     q = request.GET.get("q", "").strip()        # pesquisa geral (Home)
     pais_query = request.GET.get("pais", "").strip()  # pesquisa específica na sidebar
     preco = request.GET.get("preco")
     mes = request.GET.get("mes")
 
-    # Filtro (vindo da Home ou sidebar)
+    # Filtro (vindo da Home ou sidebar) #cursor?
     if q:
         pacotes = pacotes.filter(
             Q(nome__icontains=q) |
@@ -492,7 +447,7 @@ def pacotes_por_pais(request):
             Q(destinos__pais__icontains=q) |
             Q(destinos__nome__icontains=q)
         )
-
+   
     # Filtro por país (campo específico do formulário lateral)
     if pais_query:
         pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
@@ -520,13 +475,13 @@ def pacotes_por_pais(request):
             pacotes_por_pais[pais].append(pacote)
 
     preco_maximo = Pacote.objects.aggregate(Max("preco_total"))["preco_total__max"] or 10000
-
+# -------------------------------------------------------------------------------------------------------
     meses = [
         ("01", "Janeiro"), ("02", "Fevereiro"), ("03", "Março"), ("04", "Abril"),
         ("05", "Maio"), ("06", "Junho"), ("07", "Julho"), ("08", "Agosto"),
         ("09", "Setembro"), ("10", "Outubro"), ("11", "Novembro"), ("12", "Dezembro"),
     ]
-
+ 
     return render(request, "pacotes_por_pais.html", {
         "pacotes_por_pais": pacotes_por_pais,
         "preco_maximo": preco_maximo,
