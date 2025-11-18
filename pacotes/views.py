@@ -13,9 +13,8 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 banners = db["banners"]
 
-# Create your views here.
-
 def destinos(request):
+    print('HERE')
     if request.method == "POST":
         form = DestinoForm(request.POST)
         if form.is_valid():
@@ -24,49 +23,20 @@ def destinos(request):
     else:
         form = DestinoForm()
 
-    # pesquisa
-    q = request.GET.get("q", "").strip()
-    if q:
-        destinos = Destino.objects.filter(
-            Q(pais__icontains=q) | Q(nome__icontains=q)
-        )
-    else:
-        destinos = Destino.objects.all()
-
-    # determinar destinos usados em pacotes (M2M), voos (FK) e hoteis (FK)
-    used_ids = set()
-    try:
-        pacote_dest_ids = Pacote.objects.values_list('destinos__destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in pacote_dest_ids if x is not None])
-    except Exception:
-        try:
-            used_ids.update([int(x) for x in Destino.objects.filter(pacotes__isnull=False).values_list('destino_id', flat=True) if x is not None])
-        except Exception:
-            pass
-
-    try:
-        voo_dest_ids = Voo.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in voo_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    try:
-        hotel_dest_ids = Hotel.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in hotel_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    used_ids_list = list(used_ids)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mv_destinos")
+        data = cursor.fetchone()
+        data = data[0]
 
     return render(request, 'destinos.html', {
         'form': form,
-        'destinos': destinos,
-        'used_ids': used_ids_list,
+        'destinos': data,
     })
 
 def editar_destino(request, destino_id):
+    print(f'Destino: {destino_id}')
+
     destino = get_object_or_404(Destino, destino_id=destino_id)
-    
     if request.method == 'POST':
         form = DestinoForm(request.POST, instance=destino)
         if form.is_valid():
@@ -367,8 +337,6 @@ def pacotes(request, pacote_id=None):
         if form.is_valid():
             pacote = form.save()
 
-
-
             banners.update_one(
                 {"pacote_id": pacote.pacote_id},
                 {"$set": {
@@ -393,19 +361,15 @@ def pacotes(request, pacote_id=None):
     else:
         form = PacoteForm(instance=pacote)
 
-    # 🔍 Pesquisa
-    query = request.GET.get('q', '').strip()
-    pacotes = Pacote.objects.all().order_by('pacote_id')
-    if query:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=query) | Q(destinos__nome__icontains=query)
-        ).distinct()
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mv_pacotes")
+        data = cursor.fetchall()
+        print(data)
 
     return render(request, 'pacotes.html', {
         'form': form,
-        'pacotes': pacotes,
         'pacote_editar': pacote,  
-        'query': query,
+        'data': data,
     })
 
 def pacote_detalhes(request, pacote_id):

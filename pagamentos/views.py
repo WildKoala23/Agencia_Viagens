@@ -40,31 +40,31 @@ def faturas(request):
     })
 
 
-def fatura_detalhes(request, fatura_id):
-    """
-    Mostra os detalhes completos de uma fatura incluindo todas as suas linhas
-    (SQL DIRETO - SUA PARTE - usando FUNCTIONs da BD)
-    """
-    with connection.cursor() as cursor:
-        # Buscar informações da fatura usando FUNCTION
-        cursor.execute("SELECT * FROM get_fatura_detalhes(%s)", [fatura_id])
-        columns = [col[0] for col in cursor.description]
-        result = cursor.fetchone()
+# def fatura_detalhes(request, fatura_id):
+#     """
+#     Mostra os detalhes completos de uma fatura incluindo todas as suas linhas
+#     (SQL DIRETO - SUA PARTE - usando FUNCTIONs da BD)
+#     """
+#     with connection.cursor() as cursor:
+#         # Buscar informações da fatura usando FUNCTION
+#         cursor.execute("SELECT * FROM get_fatura_detalhes(%s)", [fatura_id])
+#         columns = [col[0] for col in cursor.description]
+#         result = cursor.fetchone()
         
-        if not result:
-            return render(request, 'fatura_detalhes.html', {
-                'error': 'Fatura não encontrada'
-            })
+#         if not result:
+#             return render(request, 'fatura_detalhes.html', {
+#                 'error': 'Fatura não encontrada'
+#             })
         
-        fatura = dict(zip(columns, result))
+#         fatura = dict(zip(columns, result))
         
-        # Buscar linhas da fatura usando FUNCTION
-        cursor.execute("SELECT * FROM get_fatura_linhas(%s)", [fatura_id])
-        columns = [col[0] for col in cursor.description]
-        linhas = [dict(zip(columns, row)) for row in cursor.fetchall()]
+#         # Buscar linhas da fatura usando FUNCTION
+#         cursor.execute("SELECT * FROM get_fatura_linhas(%s)", [fatura_id])
+#         columns = [col[0] for col in cursor.description]
+#         linhas = [dict(zip(columns, row)) for row in cursor.fetchall()]
     
-    return render(request, 'fatura_detalhes.html', {
-        'fatura': fatura,
-        'linhas': linhas
-    })
+#     return render(request, 'fatura_detalhes.html', {
+#         'fatura': fatura,
+#         'linhas': linhas
+#     })
 
