@@ -38,3 +38,61 @@ CREATE OR REPLACE TRIGGER trigger_insertPacotes
 AFTER INSERT OR UPDATE OR DELETE ON pacote
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_pacotes();
+
+--  materialized view - destinos agregados (jsonb)
+DO $$
+BEGIN
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS mv_pacotes_full';
+    EXECUTE '
+    CREATE MATERIALIZED VIEW mv_pacotes_full AS
+    SELECT p.pacote_id,
+           p.nome,
+           p.descricao_item,
+           p.preco_total,
+           p.data_inicio,
+           p.data_fim,
+           p.imagem,
+           COALESCE(jsonb_agg(jsonb_build_object(
+               ''destino_id'', d.destino_id,
+               ''nome'', d.nome,
+               ''pais'', d.pais
+           )) FILTER (WHERE d.destino_id IS NOT NULL), ''[]'') AS destinos
+    FROM pacote p
+    LEFT JOIN pacote_destino pd ON pd.pacote_id = p.pacote_id
+    LEFT JOIN destino d ON d.destino_id = pd.destino_id
+    GROUP BY p.pacote_id, p.nome, p.descricao_item, p.preco_total, p.data_inicio, p.data_fim;
+    ';
+END $$;
+
+-- Função que converte a materialized view completa para JSON
+CREATE OR REPLACE FUNCTION pacotesFullToJson()
+RETURNS json AS $$
+    SELECT json_agg(row_to_json(p))
+    FROM mv_pacotes_full p;
+$$ LANGUAGE sql;
+
+-- Índices para melhorar as pesquisas na materialized view
+-- Índice btree para filtragem por preço e data
+DO $$
+BEGIN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_mv_pacotes_full_preco ON mv_pacotes_full (preco_total)';
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_mv_pacotes_full_data ON mv_pacotes_full (data_inicio)';
+    -- Índice GIN para full-text sobre nome+descricao (Português)
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_mv_pacotes_full_ft ON mv_pacotes_full USING GIN (to_tsvector(''portuguese'', coalesce(nome,'''') || '' '' || coalesce(descricao_item, '''')) )';
+    -- Índice GIN para pesquisar dentro do JSONB de destinos
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_mv_pacotes_full_destinos_gin ON mv_pacotes_full USING GIN (destinos)';
+END $$;
+
+-- Trigger para atualizar mv_pacotes_full quando pacote, pacote_destino ou destino mudarem
+CREATE OR REPLACE FUNCTION refresh_mv_pacotes_full()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY mv_pacotes_full;
+    RETURN NULL;
+EXCEPTION WHEN others THEN
+    -- Se não for possível refresh concurrently (por ex. falta de índice), tenta sem concurrently
+    REFRESH MATERIALIZED VIEW mv_pacotes_full;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
