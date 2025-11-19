@@ -152,17 +152,14 @@ def editar_cliente(request, cliente_id):
 
 
 def dashboard(request):
-    try:
-        from pacotes.models import Pacote, Feedback
-        from pagamentos.models import Pagamento, Compra
-        from users.models import Utilizador
-    except Exception:
-        from pacotes.models import Pacote, Feedback
-        from pagamentos.models import Pagamento, Compra
-        from users.models import Utilizador
+    from pacotes.models import Pacote, Feedback
+    from pagamentos.models import Pagamento, Compra
+    from users.models import Utilizador
 
+    mongodb = globals().get('db')
     pacotes = Pacote.objects.filter(estado_id=1)[:3]
 
+#Por alterar--------------------------------------------------#
     total_clientes = Utilizador.objects.count()
     total_compras = Compra.objects.count()
     pagamento_sum = Pagamento.objects.aggregate(total=Sum('valor'))['total']
@@ -174,39 +171,60 @@ def dashboard(request):
     total_feedbacks = Feedback.objects.count()
 
     try:
-        mongodb = globals().get('db')
         if mongodb is not None:
+            if 'dashboard_stats' in mongodb.list_collection_names():
+                doc = mongodb.dashboard_stats.find_one(sort=[('updated_at', -1)]) or mongodb.dashboard_stats.find_one()
+                if doc:
+                    total_clientes = doc.get('total_clientes', total_clientes)
+                    total_compras = doc.get('total_compras', total_compras) or doc.get('total_reservas', total_compras)
+                    lucro_total = doc.get('lucro_total', float(lucro_total))
+                    total_feedbacks = doc.get('total_feedbacks', total_feedbacks) or doc.get('feedbacks', total_feedbacks)
+            else:
+                if 'utilizadores' in mongodb.list_collection_names():
+                    try:
+                        total_clientes = mongodb.utilizadores.count_documents({})
+                    except Exception:
+                        pass
+                if 'compras' in mongodb.list_collection_names():
+                    try:
+                        total_compras = mongodb.compras.count_documents({})
+                    except Exception:
+                        pass
+                if 'pagamentos' in mongodb.list_collection_names():
+                    try:
+                        agg = list(mongodb.pagamentos.aggregate([{'$group': {'_id': None, 'sum': {'$sum': '$valor'}}}]))
+                        if agg:
+                            lucro_total = agg[0].get('sum', float(lucro_total))
+                    except Exception:
+                        pass
+                if 'feedbacks' in mongodb.list_collection_names():
+                    try:
+                        total_feedbacks = mongodb.feedbacks.count_documents({})
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+#---------------------------------------------------------------#
+    pacotes_ativos = None
+    pacotes_cancelados = None
+    pacotes_esgotados = None
+    try:
+        if mongodb is not None and 'dataAdmin' in mongodb.list_collection_names():
             try:
-                if 'dashboard_stats' in mongodb.list_collection_names():
-                    doc = mongodb.dashboard_stats.find_one(sort=[('updated_at', -1)]) or mongodb.dashboard_stats.find_one()
-                    if doc:
-                        total_clientes = doc.get('total_clientes', total_clientes)
-                        total_compras = doc.get('total_compras', total_compras) or doc.get('total_reservas', total_compras)
-                        lucro_total = doc.get('lucro_total', float(lucro_total))
-                        total_feedbacks = doc.get('total_feedbacks', total_feedbacks) or doc.get('feedbacks', total_feedbacks)
-                else:
-                    if 'utilizadores' in mongodb.list_collection_names():
-                        try:
-                            total_clientes = mongodb.utilizadores.count_documents({})
-                        except Exception:
-                            pass
-                    if 'compras' in mongodb.list_collection_names():
-                        try:
-                            total_compras = mongodb.compras.count_documents({})
-                        except Exception:
-                            pass
-                    if 'pagamentos' in mongodb.list_collection_names():
-                        try:
-                            agg = list(mongodb.pagamentos.aggregate([{'$group': {'_id': None, 'sum': {'$sum': '$valor'}}}]))
-                            if agg:
-                                lucro_total = agg[0].get('sum', float(lucro_total))
-                        except Exception:
-                            pass
-                    if 'feedbacks' in mongodb.list_collection_names():
-                        try:
-                            total_feedbacks = mongodb.feedbacks.count_documents({})
-                        except Exception:
-                            pass
+                doc = mongodb.dataAdmin.find_one()
+                if doc:
+                    try:
+                        pacotes_ativos = int(doc.get('NumPacotesAtivos', 0))
+                    except Exception:
+                        pacotes_ativos = None
+                    try:
+                        pacotes_cancelados = int(doc.get('NumPacotesCancelados', 0))
+                    except Exception:
+                        pacotes_cancelados = None
+                    try:
+                        pacotes_esgotados = int(doc.get('NumPacotesEsgotados', 0))
+                    except Exception:
+                        pacotes_esgotados = None
             except Exception:
                 pass
     except Exception:
@@ -218,5 +236,8 @@ def dashboard(request):
         'lucro_total': lucro_total,
         'total_feedbacks': total_feedbacks,
         'pacotes': pacotes,
+        'pacotes_ativos': pacotes_ativos,
+        'pacotes_cancelados': pacotes_cancelados,
+        'pacotes_esgotados': pacotes_esgotados,
     }
     return render(request, 'dashboard.html', context)
