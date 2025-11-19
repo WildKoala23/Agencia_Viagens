@@ -13,28 +13,28 @@ END $$;
 DO $$
 BEGIN
     EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS mv_pacotes';
-    EXECUTE '
-        CREATE MATERIALIZED VIEW mv_pacotes AS
-        SELECT * FROM pacote p
-    ';
+    EXECUTE 'CREATE MATERIALIZED VIEW mv_pacotes AS
+             SELECT * FROM pacote';
 END $$;
 
--- Procedure para retornar os dados da mv_pacotes em json
-DO $$
-CREATE OR REPLACE PROCEDURE pacotesToJson()
-SELECT json_agg(row_to_json(p)) from mv_pacotes;
-END $$
-
--- Função para executar o refresh da materialized view
+-- Cria função que converte materialized view para json 
 CREATE OR REPLACE FUNCTION pacotesToJson()
 RETURNS json AS $$
     SELECT json_agg(row_to_json(p))
     FROM mv_pacotes p;
-$$ LANGUAGE sql STABLE;
+$$ LANGUAGE sql;
 
+-- Função para executar o refresh da materialized view
+CREATE OR REPLACE FUNCTION refresh_mv_pacotes()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW mv_pacotes;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Trigger para atualizar views sempre que há alteração em base de dados
-CREATE OR REPLACE TRIGGER insertDestino
-AFTER INSERT OR UPDATE OR DELETE ON destino
+CREATE OR REPLACE TRIGGER trigger_insertPacotes
+AFTER INSERT OR UPDATE OR DELETE ON pacote
 FOR EACH STATEMENT
-EXECUTE FUNCTION refresh_mv_destinos();
+EXECUTE FUNCTION refresh_mv_pacotes();
