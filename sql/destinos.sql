@@ -4,7 +4,7 @@ BEGIN
     EXECUTE '
                 CREATE MATERIALIZED VIEW mv_destinos
                 AS 
-                SELECT json_agg(row_to_json(d)) FROM destino d
+                SELECT * FROM destino d
             ';
 END $$;
 
@@ -18,7 +18,14 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger para atualizar views sempre que há alteração em base de dados
-CREATE OR REPLACE TRIGGER insertDestino
+CREATE OR REPLACE TRIGGER trigger_insertDestinos
 AFTER INSERT OR UPDATE OR DELETE ON destino
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_destinos();
+
+-- Cria função que converte materialized view para json 
+CREATE OR REPLACE FUNCTION destinosToJson()
+RETURNS json AS $$
+    SELECT json_agg(row_to_json(d))
+    FROM mv_destinos d;
+$$ LANGUAGE sql;

@@ -26,7 +26,7 @@ def destinos(request):
         form = DestinoForm()
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM mv_destinos")
+        cursor.execute("SELECT * FROM destinosToJson()")
         data = cursor.fetchone()
         data = data[0]
 
@@ -202,16 +202,10 @@ def voos(request, voo_id=None):
     else:
         form = VooForm(instance=voo)
 
-    # --- PESQUISA ---
-    q = request.GET.get("q")
-    if q:
-        voos = Voo.objects.filter(
-            Q(destino__nome__icontains=q) |
-            Q(companhia__icontains=q)
-        )
-    else:
-        voos = Voo.objects.all()
-    # --- FIM PESQUISA ---
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mv_voos")
+        data = cursor.fetchone()
+        voos = data[0] if data else []
 
     return render(request, 'voos.html', {
         'form': form,
@@ -240,21 +234,10 @@ def hotel(request):
     else:
         form = HotelForm()
 
-    # Filtro de pesquisa
-    q = request.GET.get('q', '').strip()
-    query = "SELECT * FROM vw_hoteis"
-    params = []
-
-    if q:
-        query += " WHERE nome_hotel ILIKE %s"
-        params.append(f"%{q}%")
-
-    query += " ORDER BY nome_hotel;"
-
     with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        columns = [col[0] for col in cursor.description]
-        hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        cursor.execute("SELECT * FROM mv_hoteis")
+        data = cursor.fetchone()
+        hoteis = data[0] if data else []
 
     return render(request, 'hoteis.html', {
         'form': form,
