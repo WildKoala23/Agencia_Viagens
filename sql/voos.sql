@@ -38,3 +38,35 @@ CREATE OR REPLACE TRIGGER trigger_verificar_voo
 BEFORE INSERT OR UPDATE ON voo
 FOR EACH ROW
 EXECUTE FUNCTION verificar_insercao_voo();
+
+-- Cria uma view na cache de todos os voos
+DO $$
+BEGIN
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS mv_voos';
+    EXECUTE 'CREATE MATERIALIZED VIEW mv_voos AS
+             SELECT v.*, d.nome as destino_nome, d.pais as destino_pais
+             FROM voo v
+             INNER JOIN destino d ON v.destino_id = d.destino_id';
+END $$;
+
+-- Cria função que converte materialized view para json 
+CREATE OR REPLACE FUNCTION voosToJson()
+RETURNS json AS $$
+    SELECT json_agg(row_to_json(v))
+    FROM mv_voos v;
+$$ LANGUAGE sql;
+
+-- Função para executar o refresh da materialized view
+CREATE OR REPLACE FUNCTION refresh_mv_voos()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW mv_voos;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para atualizar views sempre que há alteração em base de dados
+CREATE OR REPLACE TRIGGER trigger_insertVoos
+AFTER INSERT OR UPDATE OR DELETE ON voo
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_voos();
