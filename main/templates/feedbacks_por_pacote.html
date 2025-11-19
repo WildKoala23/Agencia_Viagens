@@ -51,6 +51,12 @@
                                 📅 {{ fb.data_feedback|date:"d/m/Y" }}
                             </div>
                         </div>
+                        <div class="voo_acoes_utils">
+                            <form action="{% url 'eliminar_feedback' fb.feedback_id %}" method="post" onsubmit="return confirm('Tem a certeza que quer eliminar este feedback?');">
+                                {% csrf_token %}
+                                <button type="submit" class="delete_btn_utils">Eliminar</button>
+                            </form>
+                        </div>
                     </div>
                     
                     {% if fb.comentario %}
