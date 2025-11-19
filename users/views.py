@@ -230,6 +230,39 @@ def dashboard(request):
     except Exception:
         pass
 
+    aval1 = aval2 = aval3 = aval4 = aval5 = 0
+    try:
+        if mongodb is not None and 'dataAdmin' in mongodb.list_collection_names():
+            try:
+                rdoc = mongodb.dataAdmin.find_one({'NumAval1': {'$exists': True}})
+                if not rdoc:
+                    rdoc = mongodb.dataAdmin.find_one()
+                if rdoc:
+                    try:
+                        aval1 = int(rdoc.get('NumAval1', 0))
+                    except Exception:
+                        aval1 = 0
+                    try:
+                        aval2 = int(rdoc.get('NumAval2', 0))
+                    except Exception:
+                        aval2 = 0
+                    try:
+                        aval3 = int(rdoc.get('NumAval3', 0))
+                    except Exception:
+                        aval3 = 0
+                    try:
+                        aval4 = int(rdoc.get('NumAval4', 0))
+                    except Exception:
+                        aval4 = 0
+                    try:
+                        aval5 = int(rdoc.get('NumAval5', 0))
+                    except Exception:
+                        aval5 = 0
+            except Exception:
+                pass
+    except Exception:
+        pass
+
     context = {
         'total_clientes': total_clientes,
         'total_compras': total_compras,
@@ -239,5 +272,10 @@ def dashboard(request):
         'pacotes_ativos': pacotes_ativos,
         'pacotes_cancelados': pacotes_cancelados,
         'pacotes_esgotados': pacotes_esgotados,
+        'aval1': aval1,
+        'aval2': aval2,
+        'aval3': aval3,
+        'aval4': aval4,
+        'aval5': aval5,
     }
     return render(request, 'dashboard.html', context)

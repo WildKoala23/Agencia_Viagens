@@ -23,8 +23,19 @@
     <!-- Cards de estatísticas -->
     {% include 'components/dashboard_cards.html' %}
 
-    <!-- Gráfico de exemplo (estático) como componente -->
-    {% include 'components/admin_pie_chart.html' %}
+    <!-- Gráficos lado a lado -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="d-flex" style="gap:1rem; align-items:flex-start;">
+                <div style="flex: 0 0 30%; max-width:30%;">
+                    {% include 'components/admin_pie_chart.html' %}
+                </div>
+                <div style="flex: 0 0 70%; max-width:70%;">
+                    {% include 'components/admin_rating_chart.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Pacotes Populares -->
     <h4 class="section-title mt-4 mb-3">Pacotes Populares</h4>
