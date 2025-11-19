@@ -3,6 +3,7 @@ from django.db import connection
 from django.db.models import Q
 from pymongo import MongoClient
 from django.core import serializers
+from django.db.models import Sum
 from django.contrib.auth import authenticate, login
 from .forms import *
 from django.contrib.auth import get_user_model
@@ -148,3 +149,74 @@ def editar_cliente(request, cliente_id):
         form = EditClienteForm(instance=cliente)
 
     return render(request, 'editar_cliente.html', {'form': form, 'cliente': cliente})
+
+
+def dashboard(request):
+    try:
+        from pacotes.models import Pacote, Feedback
+        from pagamentos.models import Pagamento, Compra
+        from users.models import Utilizador
+    except Exception:
+        from pacotes.models import Pacote, Feedback
+        from pagamentos.models import Pagamento, Compra
+        from users.models import Utilizador
+
+    pacotes = Pacote.objects.filter(estado_id=1)[:3]
+
+    total_clientes = Utilizador.objects.count()
+    total_compras = Compra.objects.count()
+    pagamento_sum = Pagamento.objects.aggregate(total=Sum('valor'))['total']
+    if pagamento_sum is None:
+        lucro_total = Compra.objects.aggregate(total=Sum('valor_total'))['total'] or 0
+    else:
+        lucro_total = pagamento_sum
+
+    total_feedbacks = Feedback.objects.count()
+
+    try:
+        mongodb = globals().get('db')
+        if mongodb is not None:
+            try:
+                if 'dashboard_stats' in mongodb.list_collection_names():
+                    doc = mongodb.dashboard_stats.find_one(sort=[('updated_at', -1)]) or mongodb.dashboard_stats.find_one()
+                    if doc:
+                        total_clientes = doc.get('total_clientes', total_clientes)
+                        total_compras = doc.get('total_compras', total_compras) or doc.get('total_reservas', total_compras)
+                        lucro_total = doc.get('lucro_total', float(lucro_total))
+                        total_feedbacks = doc.get('total_feedbacks', total_feedbacks) or doc.get('feedbacks', total_feedbacks)
+                else:
+                    if 'utilizadores' in mongodb.list_collection_names():
+                        try:
+                            total_clientes = mongodb.utilizadores.count_documents({})
+                        except Exception:
+                            pass
+                    if 'compras' in mongodb.list_collection_names():
+                        try:
+                            total_compras = mongodb.compras.count_documents({})
+                        except Exception:
+                            pass
+                    if 'pagamentos' in mongodb.list_collection_names():
+                        try:
+                            agg = list(mongodb.pagamentos.aggregate([{'$group': {'_id': None, 'sum': {'$sum': '$valor'}}}]))
+                            if agg:
+                                lucro_total = agg[0].get('sum', float(lucro_total))
+                        except Exception:
+                            pass
+                    if 'feedbacks' in mongodb.list_collection_names():
+                        try:
+                            total_feedbacks = mongodb.feedbacks.count_documents({})
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    context = {
+        'total_clientes': total_clientes,
+        'total_compras': total_compras,
+        'lucro_total': lucro_total,
+        'total_feedbacks': total_feedbacks,
+        'pacotes': pacotes,
+    }
+    return render(request, 'dashboard.html', context)

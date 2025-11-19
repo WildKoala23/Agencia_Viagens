@@ -2,8 +2,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from pacotes.models import *
 from pacotes.forms import *
 from pagamentos.models import *
-from pagamentos.models import *
-from users.models import *
 from users.models import *
 
 #---------------------------------------------------------------#
@@ -39,18 +37,5 @@ def home(request):
 
     return render(request, "home.html", context)
 
-
-
-def dashboard(request):
-    pacotes = Pacote.objects.filter(estado_id=1)[:3]
-    total_feedbacks = Feedback.objects.count()
-
-    context = {
-        'visita_site': '2345',  
-        'total_reservas': 15,
-        'lucro_total': 200.50,
-        'ultimos_feeds': total_feedbacks, 
-        'pacotes': pacotes,
-    }
     return render(request, 'dashboard.html', context)
 
