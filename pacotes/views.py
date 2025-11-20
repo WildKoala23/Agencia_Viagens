@@ -350,7 +350,6 @@ def pacotes(request, pacote_id=None):
                 }},
                 upsert=True
             )
-            client.close()
 
             if pacote_id:
                 messages.success(request, "Pacote atualizado com sucesso!")
@@ -371,6 +370,7 @@ def pacotes(request, pacote_id=None):
         'form': form,
         'pacote_editar': pacote,  
         'data': pacotes_data,
+        'pacotes': Pacote.objects.all(),
     })
 
 def pacote_detalhes(request, pacote_id):
@@ -430,9 +430,7 @@ def pacote_detalhes(request, pacote_id):
     })
 
 def pacotes_por_pais(request):
-    # Usar a função SQL `pacotesToJson()` (que retorna os pacotes de `mv_pacotes`)
-    # e agregar destinos separadamente. Isto preserva o uso das funções/materialized
-    # views já existentes que pediste.
+    # Usar a materialized view mv_pacotes_full com filtros SQL diretos para aproveitar os índices
     destinos = Destino.objects.all()
     q = request.GET.get("q", "").strip()
     pais_query = request.GET.get("pais", "").strip()
@@ -441,75 +439,41 @@ def pacotes_por_pais(request):
 
     pacotes = []
     import json as _json
+    
+    sql_query = "SELECT row_to_json(p) FROM mv_pacotes_full p WHERE 1=1"
+    params = []
+    
+    # Filtro de pesquisa de texto
+    if q:
+        sql_query += " AND to_tsvector('portuguese', coalesce(p.nome,'') || ' ' || coalesce(p.descricao_item,'')) @@ plainto_tsquery('portuguese', %s)"
+        params.append(q)
+    
+    # Filtro de país 
+    if pais_query:
+        sql_query += " AND p.destinos @> %s::jsonb"
+        params.append(_json.dumps([{"pais": pais_query}]))
+    
+    # Filtro de preço 
+    if preco:
+        sql_query += " AND p.preco_total <= %s"
+        params.append(float(preco))
+    
+    # Filtro de mês
+    if mes:
+        sql_query += " AND EXTRACT(MONTH FROM p.data_inicio) = %s"
+        params.append(int(mes))
+    
     with connection.cursor() as cursor:
-        # 1) pede os pacotes via função pacotesToJson()
         try:
-            cursor.execute("SELECT pacotesToJson()")
-            row = cursor.fetchone()
-            pacotes = row[0] if row else []
+            cursor.execute(sql_query, params)
+            rows = cursor.fetchall()
+            pacotes = [row[0] for row in rows]
             # se o adaptador retornar string, parse
-            if isinstance(pacotes, (str, bytes)):
-                pacotes = _json.loads(pacotes)
-        except Exception:
+            if pacotes and isinstance(pacotes[0], (str, bytes)):
+                pacotes = [_json.loads(p) if isinstance(p, (str, bytes)) else p for p in pacotes]
+        except Exception as e:
+            print(f"Erro ao executar query: {e}")
             pacotes = []
-
-        # 2) agrega destinos por pacote para evitar N+1
-        try:
-            cursor.execute("SELECT pd.pacote_id, json_agg(json_build_object('destino_id', d.destino_id, 'nome', d.nome, 'pais', d.pais)) AS destinos FROM pacote_destino pd JOIN destino d ON d.destino_id = pd.destino_id GROUP BY pd.pacote_id")
-            destinos_rows = cursor.fetchall()
-            destinos_map = {row[0]: (row[1] or []) for row in destinos_rows}
-        except Exception:
-            destinos_map = {}
-
-    # Anexa destinos a cada pacote
-    for p in pacotes:
-        pid = p.get('pacote_id')
-        p['destinos'] = destinos_map.get(pid, [])
-
-    # Aplica filtros em Python (atenção: pode ser menos eficiente que filtrar no DB)
-    def matches_q(p):
-        if not q:
-            return True
-        ql = q.lower()
-        if ql in (p.get('nome') or '').lower() or ql in (p.get('descricao_item') or '').lower():
-            return True
-        for d in p.get('destinos', []):
-            if ql in (d.get('nome') or '').lower() or ql in (d.get('pais') or '').lower():
-                return True
-        return False
-
-    def matches_pais(p):
-        if not pais_query:
-            return True
-        pq = pais_query.lower()
-        for d in p.get('destinos', []):
-            if pq in (d.get('pais') or '').lower():
-                return True
-        return False
-
-    def matches_preco(p):
-        if not preco:
-            return True
-        try:
-            return float(p.get('preco_total') or 0) <= float(preco)
-        except Exception:
-            return True
-
-    def matches_mes(p):
-        if not mes:
-            return True
-        try:
-            from datetime import datetime
-            di = p.get('data_inicio')
-            if not di:
-                return False
-            # aceita iso string
-            dt = datetime.fromisoformat(di)
-            return dt.month == int(mes)
-        except Exception:
-            return False
-
-    pacotes = [p for p in pacotes if matches_q(p) and matches_pais(p) and matches_preco(p) and matches_mes(p)]
 
     # Monta imagem_url e usa banner do MongoDB quando existir
     for rec in pacotes:
