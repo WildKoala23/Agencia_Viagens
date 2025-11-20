@@ -1,0 +1,113 @@
+<div class="card shadow-sm mb-3">
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Estados dos Pacotes</h6>
+    </div>
+    <div class="card-body">
+        <div style="height:220px; width:100%; overflow-x:auto;">
+            <canvas id="pacotesPaisChart" style="width:100%; height:220px;"></canvas>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const canvasPacotesPais = document.getElementById('pacotesPaisChart');
+    // Ensure canvas fills container width and keeps fixed height
+    canvasPacotesPais.style.width = '100%';
+    canvasPacotesPais.style.height = '220px';
+    const ctxPacotesPais = canvasPacotesPais.getContext('2d');
+    // color palette similar to other charts (will rotate among these)
+    const palette = ['#4e73df', '#1cc88a', '#36b9cc'];
+    const paletteBorders = ['#2e59d9', '#17a673', '#2c9faf'];
+
+    // Fetch data dynamically from the server (use Django URL resolver)
+        const apiUrl = "{% url 'users:api_pacotes_por_pais' %}";
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok: ' + response.status);
+                return response.json();
+            })
+            .then(data => {
+                const labels = Object.keys(data || {});
+                const values = Object.values(data || {});
+
+                if (!labels.length) {
+                    const cardBody = canvasPacotesPais.closest('.card-body');
+                    if (cardBody) {
+                        cardBody.innerHTML = '<div class="text-center text-muted">Sem dados disponíveis</div>';
+                    }
+                    return;
+                }
+
+            new Chart(ctxPacotesPais, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Nº pacotes',
+                        data: values,
+                        backgroundColor: Array.from({ length: labels.length }, (_, i) => palette[i % palette.length]),
+                        borderColor: Array.from({ length: labels.length }, (_, i) => paletteBorders[i % paletteBorders.length]),
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        barPercentage: 0.6,
+                        categoryPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { right: 8 } },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltips: {
+                            backgroundColor: 'rgb(255,255,255)',
+                            bodyFontColor: '#858796',
+                            borderColor: '#dddfeb',
+                            borderWidth: 1,
+                            xPadding: 15,
+                            yPadding: 15,
+                            displayColors: false,
+                            caretPadding: 10,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 2,
+                                color: '#666',
+                                font: { size: 13 }
+                            },
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Nº pacotes',
+                                color: '#888',
+                                font: { size: 14, weight: 'bold' }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#666',
+                                font: { size: 13 }
+                            },
+                            grid: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'País',
+                                color: '#888',
+                                font: { size: 14, weight: 'bold' }
+                            }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(() => {});
+</script>

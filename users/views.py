@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from django.db.models import Q
 from pymongo import MongoClient
+from django.http import JsonResponse
 from django.core import serializers
 from django.db.models import Sum
 from django.contrib.auth import authenticate, login
@@ -11,7 +12,7 @@ from django.contrib.auth.forms import UserCreationForm
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdii_25971"]
 userData = db["dadosUser"]
 
 def loginUser(request):
@@ -279,3 +280,26 @@ def dashboard(request):
         'aval5': aval5,
     }
     return render(request, 'dashboard.html', context)
+
+def api_pacotes_por_pais(request):
+    try:
+        mongodb = globals().get('db')
+        if mongodb is not None and 'dataAdminPais' in mongodb.list_collection_names():
+            cursor = mongodb.dataAdminPais.find()
+            response_data = {}
+            for document in cursor:
+                for key, value in document.items():
+                    if key != '_id':
+                        # ensure numeric type (DB may store strings)
+                        try:
+                            num = int(value)
+                        except Exception:
+                            try:
+                                num = int(float(value))
+                            except Exception:
+                                num = 0
+                        response_data[key] = response_data.get(key, 0) + num
+            return JsonResponse(response_data)
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+    return JsonResponse({}, status=500)

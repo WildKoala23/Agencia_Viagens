@@ -6,6 +6,8 @@ app_name = 'users'
 
 urlpatterns = [
     path('', views.user, name='user'),
+    path('api/pacotes_por_pais/', views.api_pacotes_por_pais, name='api_pacotes_por_pais'),
+    path('pacotes_por_pais', views.api_pacotes_por_pais, name='pacotes_por_pais'),
     path('compras', views.comprasUser, name='comprasUser'),
     path('feedbacks', views.feedbacksUser, name='feedbacksUser'),
     path('perfil', views.perfilUser, name='perfilUser'),
