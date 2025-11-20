@@ -75,7 +75,9 @@
                         </div>
                     {% endif %}
                     
-                    <button type="submit" class="btn-submit">Registar</button>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">Registar</button>
+                    </div>
                 </form>
             </div>
             <!-- Right Panel -->
@@ -84,7 +86,10 @@
                     <h1>Atlas Gateways</h1>
                     <h3>Já tem conta?</h3>
                     <p>Entre agora e continue a explorar os melhores destinos e ofertas exclusivas!</p>
-                    <a href="{% url 'users:login' %}" class="btn-transparent">Entrar</a>
+                    <div class="auth-cta">
+                        <a href="{% url 'users:login' %}" class="btn-transparent">Entrar</a>
+                        <a href="{% url 'main:home' %}" class="btn-transparent">Voltar</a>
+                    </div>
                 </div>
                 <img src="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=500" alt="Viagem" class="panel-image">
             </div>

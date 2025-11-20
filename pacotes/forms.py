@@ -106,5 +106,13 @@ class FeedbackForm(forms.ModelForm):
             'pacote': 'Pacote',
             'avaliacao': 'Avaliação (1-5)',
             'comentario': 'Comentário',
-            'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
+            'data_feedback': 'Data do Feedback',
         }
+        widgets = {
+            'data_feedback': forms.DateInput(attrs={'type': 'date'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Permitir que o comentário seja opcional (pode apenas avaliar sem comentar)
+        if 'comentario' in self.fields:
+            self.fields['comentario'].required = False

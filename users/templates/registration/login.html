@@ -24,7 +24,10 @@
                     <h1>Atlas Gateways</h1>
                     <h3>Novo por aqui?</h3>
                     <p>Descubra destinos incríveis ao redor do mundo. Crie a sua conta e comece a sua aventura!</p>
-                    <a href="{% url 'users:register' %}" class="btn-transparent">Registar</a>
+                    <div class="auth-cta">
+                        <a href="{% url 'users:register' %}" class="btn-transparent">Registar</a>
+                        <a href="{% url 'main:home' %}" class="btn-transparent">Voltar</a>
+                    </div>
                 </div>
                 <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=500" alt="Viagem" class="panel-image">
             </div>
@@ -42,8 +45,12 @@
                         <i class="bi bi-lock-fill"></i>
                         <input type="password" placeholder="Password" name="password" required>
                     </div>
-                    <a href="#" class="forgot-password">Recuperar a password</a>
-                    <button type="submit" class="btn-submit">Entrar</button>
+                    <div class="forgot-password">
+                        <a href="{% url 'password_reset' %}" class="link-muted">Recuperar password</a>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">Entrar</button>
+                    </div>
                 </form>
             </div>
         </div>

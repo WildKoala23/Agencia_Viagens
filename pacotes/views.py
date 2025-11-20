@@ -274,6 +274,28 @@ def eliminar_hotel(request, hotel_id):
         return redirect('hoteis')
     return redirect('hoteis')
 
+
+def eliminar_feedback(request, feedback_id):
+    """
+    Elimina um feedback existente. Apenas aceita POST para prevenir exclusões via GET.
+    Redireciona para a página de feedbacks do pacote correspondente.
+    """
+    from pacotes.models import Feedback
+
+    feedback = get_object_or_404(Feedback, feedback_id=feedback_id)
+    pacote_id = feedback.pacote.pacote_id if feedback.pacote else None
+
+    if request.method == 'POST':
+        feedback.delete()
+        if pacote_id:
+            return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
+        return redirect('feedbacks')
+
+    # If reached by GET, redirect back safely
+    if pacote_id:
+        return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
+    return redirect('feedbacks')
+
 def selecionar_hotel(request, hotel_id, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)

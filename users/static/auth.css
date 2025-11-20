@@ -204,6 +204,60 @@ body {
     box-shadow: 0 8px 20px rgba(23, 162, 184, 0.4);
 }
 
+/* Alinhamento de ações (botões ao lado) */
+.form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 1.2rem;
+}
+
+/* Link de recuperar password (no formulário de login) */
+.forgot-password {
+    width: 100%;
+    max-width: 380px;
+    margin: 8px auto 0;
+    text-align: center;
+    display: block;
+}
+.forgot-password .link-muted {
+    display: inline-block;
+    color: #6c757d;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+.forgot-password .link-muted:hover {
+    color: var(--primary-color);
+    opacity: 0.95;
+    text-decoration: underline;
+}
+
+.auth-cta {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+/* Ajuste visual para btn-transparent quando colocado ao lado do submit */
+.form-actions .btn-transparent {
+    border-color: rgba(0,0,0,0.08);
+    color: #444;
+    background: none;
+}
+
+@media (max-width: 576px) {
+    .form-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .auth-cta {
+        flex-direction: column;
+    }
+}
+
 /* Responsivo */
 @media (max-width: 870px) {
     .content-container {

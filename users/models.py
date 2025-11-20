@@ -30,8 +30,8 @@ class Utilizador(AbstractUser):
     user_id = models.AutoField(primary_key=True)
     email = models.EmailField(max_length=100, unique=True)
     telefone = models.IntegerField(null=True, blank=True)
-    firstname = models.CharField(max_length=150)
-    lastname = models.CharField(max_length=150)
+    firstname = models.CharField(max_length=150, default='', blank=True)
+    lastname = models.CharField(max_length=150, default='', blank=True)
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['firstname', 'lastname']

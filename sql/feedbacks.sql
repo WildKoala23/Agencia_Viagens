@@ -50,9 +50,9 @@ BEGIN
         f.avaliacao,
         f.comentario,
         f.data_feedback,
-        p.nome as nome_pacote,
+        p.nome::text as nome_pacote,
         p.descricao_item as descricao_pacote,
-        p.preco_total,
+        p.preco_total::DECIMAL(10,2) as preco_total,
         d.nome as destino_nome
     FROM feedback f
     JOIN pacote p ON f.pacote_id = p.pacote_id
@@ -83,7 +83,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         p.pacote_id,
-        p.nome as nome_pacote,
+        p.nome::text as nome_pacote,
         COUNT(f.feedback_id)::BIGINT as total_feedbacks,
         COALESCE(AVG(f.avaliacao), 0)::DECIMAL(3,2) as media_avaliacao,
         COUNT(CASE WHEN f.avaliacao = 5 THEN 1 END)::BIGINT as avaliacao_5_estrelas,
@@ -141,7 +141,7 @@ BEGIN
         f.avaliacao,
         f.comentario,
         f.data_feedback,
-        p.nome as nome_pacote
+        p.nome::text as nome_pacote
     FROM feedback f
     JOIN pacote p ON f.pacote_id = p.pacote_id
     WHERE f.avaliacao = p_avaliacao
@@ -166,10 +166,10 @@ BEGIN
     RETURN QUERY
     SELECT 
         p.pacote_id,
-        p.nome as nome_pacote,
+        p.nome::text as nome_pacote,
         COUNT(f.feedback_id)::BIGINT as total_feedbacks,
         COALESCE(AVG(f.avaliacao), 0)::DECIMAL(3,2) as media_avaliacao,
-        p.preco_total
+        p.preco_total::DECIMAL(10,2) as preco_total
     FROM pacote p
     LEFT JOIN feedback f ON p.pacote_id = f.pacote_id
     GROUP BY p.pacote_id, p.nome, p.preco_total

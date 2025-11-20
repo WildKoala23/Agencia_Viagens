@@ -20,22 +20,13 @@ def pagamentos(request):
 #---------------------------------------------------------------#
 
 def faturas(request):
-    if request.method == "POST":
-        form = FaturaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('faturas')
-    else:
-        form = FaturaForm()
-
     # Buscar faturas usando a VIEW criada na BD (SQL DIRETO - SUA PARTE)
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM view_faturas_completas")
         columns = [col[0] for col in cursor.description]
         faturas = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    
+
     return render(request, 'faturas.html', {
-        'form': form,
         'faturas': faturas
     })
 

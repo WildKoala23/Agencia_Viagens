@@ -16,8 +16,8 @@ BEGIN
     RETURN QUERY
     SELECT 
         C.compra_id, 
-        P.nome, 
-        D.pais || ', ' || D.nome AS destino,
+        P.nome::text, 
+        D.pais::text || ', ' || D.nome::text AS destino,
         P.data_inicio, 
         P.data_fim, 
         C.estado, 
