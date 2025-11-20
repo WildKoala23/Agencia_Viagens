@@ -4,7 +4,11 @@
 <div class="col-md-4">
     <div class="package-card">
         <div class="package-image">
-            {% if pacote.imagem %}
+            {% if pacote.imagem_url %}
+                <img src="{{ pacote.imagem_url }}" alt="{{ pacote.nome }}"
+                     class="img-fluid rounded shadow-sm"
+                     style="width: 100%; height: 220px; object-fit: cover;">
+            {% elif pacote.imagem %}
                 <img src="/media/{{ pacote.imagem }}" alt="{{ pacote.nome }}"
                      class="img-fluid rounded shadow-sm"
                      style="width: 100%; height: 220px; object-fit: cover;">

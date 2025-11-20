@@ -26,9 +26,9 @@ def destinos(request):
         form = DestinoForm()
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM destinosToJson()")
+        cursor.execute("SELECT json_agg FROM mv_destinos")
         data = cursor.fetchone()
-        data = data[0]
+        data = data[0] if (data and data[0]) else []
 
     return render(request, 'destinos.html', {
         'form': form,
@@ -171,11 +171,6 @@ def feedback_estatisticas(request):
     })
 
 def voos(request, voo_id=None):
-    """
-    Página de gestão de voos.
-    - Permite inserir e editar voos.
-    - Mostra mensagens de erro vindas do trigger PostgreSQL (RAISE EXCEPTION).
-    """
 
     voo = get_object_or_404(Voo, voo_id=voo_id) if voo_id else None
 
@@ -194,18 +189,18 @@ def voos(request, voo_id=None):
                     erro_texto = erro_texto.split("CONTEXT")[0].strip()
 
                 erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
-                erro_texto = erro_texto.replace("Erro do banco de dados:", "").strip()
+                erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
 
                 messages.error(request, erro_texto or "Erro ao inserir voo. Verifique os dados.")
         else:
-            messages.error(request, "❌ Erro ao validar o formulário. Verifique os dados.")
+            messages.error(request, " Erro ao validar o formulário. Verifique os dados.")
     else:
         form = VooForm(instance=voo)
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM mv_voos")
+        cursor.execute("SELECT json_agg(row_to_json(v)) FROM mv_voos v")
         data = cursor.fetchone()
-        voos = data[0] if data else []
+        voos = data[0] if (data and data[0]) else []
 
     return render(request, 'voos.html', {
         'form': form,
@@ -235,9 +230,9 @@ def hotel(request):
         form = HotelForm()
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM mv_hoteis")
+        cursor.execute("SELECT json_agg(row_to_json(h)) FROM mv_hoteis h")
         data = cursor.fetchone()
-        hoteis = data[0] if data else []
+        hoteis = data[0] if (data and data[0]) else []
 
     return render(request, 'hoteis.html', {
         'form': form,
@@ -368,14 +363,14 @@ def pacotes(request, pacote_id=None):
         form = PacoteForm(instance=pacote)
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM mv_pacotes")
-        data = cursor.fetchall()
-        print(data)
+        cursor.execute("SELECT pacotesToJson()")
+        data = cursor.fetchone()
+        pacotes_data = data[0] if (data and data[0]) else []
 
     return render(request, 'pacotes.html', {
         'form': form,
         'pacote_editar': pacote,  
-        'data': data,
+        'data': pacotes_data,
     })
 
 def pacote_detalhes(request, pacote_id):
@@ -434,51 +429,121 @@ def pacote_detalhes(request, pacote_id):
         "dias": dias
     })
 
-
 def pacotes_por_pais(request):
+    # Usar a função SQL `pacotesToJson()` (que retorna os pacotes de `mv_pacotes`)
+    # e agregar destinos separadamente. Isto preserva o uso das funções/materialized
+    # views já existentes que pediste.
     destinos = Destino.objects.all()
-    pacotes = Pacote.objects.all()
-# ------------------------------------mudar para objetos da bd----#cursor?-------------------------------------------
-    q = request.GET.get("q", "").strip()        # pesquisa geral (Home)
-    pais_query = request.GET.get("pais", "").strip()  # pesquisa específica na sidebar
+    q = request.GET.get("q", "").strip()
+    pais_query = request.GET.get("pais", "").strip()
     preco = request.GET.get("preco")
     mes = request.GET.get("mes")
 
-    # Filtro (vindo da Home ou sidebar) #cursor?
-    if q:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=q) |
-            Q(descricao_item__icontains=q) |
-            Q(destinos__pais__icontains=q) |
-            Q(destinos__nome__icontains=q)
-        )
-   
-    # Filtro por país (campo específico do formulário lateral)
-    if pais_query:
-        pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
-
-    # Filtro por preço máximo
-    if preco:
+    pacotes = []
+    import json as _json
+    with connection.cursor() as cursor:
+        # 1) pede os pacotes via função pacotesToJson()
         try:
-            pacotes = pacotes.filter(preco_total__lte=float(preco))
-        except ValueError:
-            pass
+            cursor.execute("SELECT pacotesToJson()")
+            row = cursor.fetchone()
+            pacotes = row[0] if row else []
+            # se o adaptador retornar string, parse
+            if isinstance(pacotes, (str, bytes)):
+                pacotes = _json.loads(pacotes)
+        except Exception:
+            pacotes = []
 
-    # Filtro por mês
-    if mes:
-        pacotes = pacotes.filter(data_inicio__month=mes)
+        # 2) agrega destinos por pacote para evitar N+1
+        try:
+            cursor.execute("SELECT pd.pacote_id, json_agg(json_build_object('destino_id', d.destino_id, 'nome', d.nome, 'pais', d.pais)) AS destinos FROM pacote_destino pd JOIN destino d ON d.destino_id = pd.destino_id GROUP BY pd.pacote_id")
+            destinos_rows = cursor.fetchall()
+            destinos_map = {row[0]: (row[1] or []) for row in destinos_rows}
+        except Exception:
+            destinos_map = {}
+
+    # Anexa destinos a cada pacote
+    for p in pacotes:
+        pid = p.get('pacote_id')
+        p['destinos'] = destinos_map.get(pid, [])
+
+    # Aplica filtros em Python (atenção: pode ser menos eficiente que filtrar no DB)
+    def matches_q(p):
+        if not q:
+            return True
+        ql = q.lower()
+        if ql in (p.get('nome') or '').lower() or ql in (p.get('descricao_item') or '').lower():
+            return True
+        for d in p.get('destinos', []):
+            if ql in (d.get('nome') or '').lower() or ql in (d.get('pais') or '').lower():
+                return True
+        return False
+
+    def matches_pais(p):
+        if not pais_query:
+            return True
+        pq = pais_query.lower()
+        for d in p.get('destinos', []):
+            if pq in (d.get('pais') or '').lower():
+                return True
+        return False
+
+    def matches_preco(p):
+        if not preco:
+            return True
+        try:
+            return float(p.get('preco_total') or 0) <= float(preco)
+        except Exception:
+            return True
+
+    def matches_mes(p):
+        if not mes:
+            return True
+        try:
+            from datetime import datetime
+            di = p.get('data_inicio')
+            if not di:
+                return False
+            # aceita iso string
+            dt = datetime.fromisoformat(di)
+            return dt.month == int(mes)
+        except Exception:
+            return False
+
+    pacotes = [p for p in pacotes if matches_q(p) and matches_pais(p) and matches_preco(p) and matches_mes(p)]
+
+    # Monta imagem_url e usa banner do MongoDB quando existir
+    for rec in pacotes:
+        # imagem pode estar no registro retornado
+        imagem_field = rec.get('imagem') or rec.get('imagem_url')
+        if imagem_field:
+            try:
+                imagem_str = imagem_field.decode() if isinstance(imagem_field, bytes) else str(imagem_field)
+            except Exception:
+                imagem_str = str(imagem_field)
+            rec['imagem_url'] = imagem_str if imagem_str.startswith('/') else f"/media/{imagem_str}"
+        else:
+            rec['imagem_url'] = None
+
+        try:
+            banner = banners.find_one({"pacote_id": rec.get('pacote_id'), "ativo": True})
+            if banner and banner.get('imagem_url'):
+                rec['imagem_url'] = banner.get('imagem_url')
+        except Exception:
+            pass
 
     # Agrupar pacotes por país
     pacotes_por_pais = {}
-    pacotes = pacotes.prefetch_related("destinos").distinct()
-
     for pacote in pacotes:
-        for destino in pacote.destinos.all():
-            pais = destino.pais or "Sem país"
-            if pais not in pacotes_por_pais:
-                pacotes_por_pais[pais] = []
-            pacotes_por_pais[pais].append(pacote)
+        destinos_list = pacote.get('destinos') or []
+        if not destinos_list:
+            pais = 'Sem país'
+            pacotes_por_pais.setdefault(pais, []).append(pacote)
+        else:
+            for d in destinos_list:
+                pais = d.get('pais') or 'Sem país'
+                pacotes_por_pais.setdefault(pais, []).append(pacote)
 
+    # Preço máximo (mantemos consulta ORM só para agregação simples)
     preco_maximo = Pacote.objects.aggregate(Max("preco_total"))["preco_total__max"] or 10000
 # -------------------------------------------------------------------------------------------------------
     meses = [

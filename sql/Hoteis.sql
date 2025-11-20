@@ -26,3 +26,33 @@ SELECT
     h.descricao_item AS descricao_hotel
 FROM hotel h;
 
+-- Cria uma view na cache de todos os hoteis
+DO $$
+BEGIN
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS mv_hoteis';
+    EXECUTE 'CREATE MATERIALIZED VIEW mv_hoteis AS
+             SELECT * FROM hotel';
+END $$;
+
+-- Cria função que converte materialized view para json 
+CREATE OR REPLACE FUNCTION hoteisToJson()
+RETURNS json AS $$
+    SELECT json_agg(row_to_json(h))
+    FROM mv_hoteis h;
+$$ LANGUAGE sql;
+
+-- Função para executar o refresh da materialized view
+CREATE OR REPLACE FUNCTION refresh_mv_hoteis()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW mv_hoteis;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para atualizar views sempre que há alteração em base de dados
+CREATE OR REPLACE TRIGGER trigger_insertHoteis
+AFTER INSERT OR UPDATE OR DELETE ON hotel
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_hoteis();
+
