@@ -16,7 +16,6 @@ db = client["bd2_22598"]
 banners = db["banners"]
 
 def destinos(request):
-    print('HERE')
     if request.method == "POST":
         form = DestinoForm(request.POST)
         if form.is_valid():
@@ -36,8 +35,6 @@ def destinos(request):
     })
 
 def editar_destino(request, destino_id):
-    print(f'Destino: {destino_id}')
-
     destino = get_object_or_404(Destino, destino_id=destino_id)
     if request.method == 'POST':
         form = DestinoForm(request.POST, instance=destino)
@@ -336,7 +333,16 @@ def pacotes(request, pacote_id=None):
     if request.method == "POST":
         form = PacoteForm(request.POST, request.FILES, instance=pacote)
         if form.is_valid():
-            pacote = form.save()
+            # Coletar descrições dos dias do POST
+            dias_descricao = []
+            i = 1
+            while f'dia_{i}' in request.POST:
+                dias_descricao.append(request.POST[f'dia_{i}'])
+                i += 1
+            
+            pacote = form.save(commit=False, dias_descricao=dias_descricao)
+            pacote.save()
+            form.save_m2m()
 
             banners.update_one(
                 {"pacote_id": pacote.pacote_id},
@@ -361,6 +367,19 @@ def pacotes(request, pacote_id=None):
     else:
         form = PacoteForm(instance=pacote)
 
+    # Processar dias existentes se estiver editando
+    dias_existentes = []
+    if pacote and pacote.descricao_item:
+        import re
+        # Dividir por qualquer formato de dia (1ºDIA, 1º DIA, 1DIA, etc.)
+        partes = re.split(r'\s*(\d+)\s*[°º]?\s*DIA\s*:?\s*', pacote.descricao_item, flags=re.IGNORECASE)
+        
+        for i in range(1, len(partes), 2):
+            if i + 1 < len(partes):
+                descricao = partes[i + 1].strip()
+                if descricao:
+                    dias_existentes.append(descricao)
+
     with connection.cursor() as cursor:
         cursor.execute("SELECT pacotesToJson()")
         data = cursor.fetchone()
@@ -371,25 +390,7 @@ def pacotes(request, pacote_id=None):
         'pacote_editar': pacote,  
         'data': pacotes_data,
         'pacotes': Pacote.objects.all(),
-    })
-
-def pacote_detalhes(request, pacote_id):
-    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
-    
-    # Busca o banner correspondente ao pacote no MongoDB
-    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
-    
-    # Prioridade: MongoDB banner > imagem do pacote no PostgreSQL > imagem padrão
-    if banner and "imagem_url" in banner:
-        imagem_url = banner["imagem_url"]
-    elif pacote.imagem:
-        imagem_url = f"/media/{pacote.imagem}"
-    else:
-        imagem_url = None
-    
-    return render(request, 'pacote_detalhes.html', {
-        "pacote": pacote,
-        "imagem_url": imagem_url
+        'dias_existentes': dias_existentes,
     })
 
 
@@ -412,8 +413,8 @@ def pacote_detalhes(request, pacote_id):
 
     # Divide a descrição em blocos por dia
     texto = pacote.descricao_item or ""
-    partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*", texto, flags=re.IGNORECASE)
-    partes = [p.strip() for p in partes if p.strip()]
+    partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*:?\s*", texto, flags=re.IGNORECASE)
+    partes = [p.strip().lstrip(':').strip() for p in partes if p.strip()]
 
     dias = []
     for i, parte in enumerate(partes, start=1):
@@ -472,7 +473,6 @@ def pacotes_por_pais(request):
             if pacotes and isinstance(pacotes[0], (str, bytes)):
                 pacotes = [_json.loads(p) if isinstance(p, (str, bytes)) else p for p in pacotes]
         except Exception as e:
-            print(f"Erro ao executar query: {e}")
             pacotes = []
 
     # Monta imagem_url e usa banner do MongoDB quando existir
