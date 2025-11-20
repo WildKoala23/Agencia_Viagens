@@ -5,6 +5,7 @@
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'utils.css' %}">
+<link rel="stylesheet" href="{% static 'pag_pacotes.css' %}">
 {% endblock %}
 
 {% block page_title %}
@@ -35,7 +36,29 @@
             {% csrf_token %}
             
             {{ form.nome.label_tag }} {{ form.nome }}<br>
-            {{ form.descricao_item.label_tag }} {{ form.descricao_item }}<br>
+            
+            <!-- Seção Dinâmica de Dias -->
+            <label>Descrição por Dias:</label>
+            <div id="dias-container">
+                {% if dias_existentes %}
+                    {% for descricao in dias_existentes %}
+                    <div class="dia-item" data-dia="{{ forloop.counter }}">
+                        <label>Dia {{ forloop.counter }}:</label>
+                        <textarea name="dia_{{ forloop.counter }}" rows="3" class="form-control mb-2">{{ descricao }}</textarea>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="dia-item" data-dia="1">
+                        <label>Dia 1:</label>
+                        <textarea name="dia_1" rows="3" class="form-control mb-2"></textarea>
+                        <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                    </div>
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-primary" onclick="adicionarDia()"><i class="bi bi-plus-circle"></i> Adicionar Dia</button>
+            <br><br>
+            
             {{ form.data_inicio.label_tag }} {{ form.data_inicio }}<br>
             {{ form.data_fim.label_tag }} {{ form.data_fim }}<br>
             {{ form.preco_total.label_tag }} {{ form.preco_total }}<br>
@@ -106,7 +129,60 @@
 
 {% block scripts %}
 <script>
+// Inicializar contador com base nos dias já existentes no container
+function initDiaCounter() {
+    const container = document.getElementById('dias-container');
+    const diasItems = container.querySelectorAll('.dia-item');
+    return diasItems.length > 0 ? diasItems.length : 1;
+}
+
+let diaCounter = initDiaCounter();
+
+function adicionarDia() {
+    diaCounter++;
+    const container = document.getElementById('dias-container');
+    
+    const diaItem = document.createElement('div');
+    diaItem.className = 'dia-item';
+    diaItem.setAttribute('data-dia', diaCounter);
+    
+    diaItem.innerHTML = `
+        <label>Dia ${diaCounter}:</label>
+        <textarea name="dia_${diaCounter}" rows="3" class="form-control mb-2"></textarea>
+        <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+    `;
+    
+    container.appendChild(diaItem);
+}
+
+function removerDia(button) {
+    const diaItem = button.parentElement;
+    const container = document.getElementById('dias-container');
+    
+    // Não permitir remover se for o único dia
+    if (container.children.length <= 1) {
+        alert('Deve manter pelo menos um dia!');
+        return;
+    }
+    
+    diaItem.remove();
+    
+    // Renumerar os dias restantes
+    const diasItems = container.querySelectorAll('.dia-item');
+    diasItems.forEach((item, index) => {
+        const novoDia = index + 1;
+        item.setAttribute('data-dia', novoDia);
+        item.querySelector('label').textContent = `Dia ${novoDia}:`;
+        item.querySelector('textarea').name = `dia_${novoDia}`;
+    });
+    
+    diaCounter = diasItems.length;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
+    // Reinicializar o contador quando a página carregar
+    diaCounter = initDiaCounter();
+    
     if (window.location.search.includes("q=")) {
         const listaPacotes = document.querySelector(".voos_header_utils");
         if (listaPacotes) listaPacotes.scrollIntoView({ behavior: "smooth" });

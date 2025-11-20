@@ -58,10 +58,9 @@ class PacoteForm(forms.ModelForm):
 
     class Meta:
         model = Pacote
-        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado_id', 'imagem', 'destinos']
+        fields = ['nome', 'data_inicio', 'data_fim', 'preco_total', 'estado_id', 'imagem', 'destinos']
         labels = {
             'nome': 'Nome do Pacote',
-            'descricao_item': 'Descrição',
             'data_inicio': 'Data de Início (AAAA-MM-DD)',
             'data_fim': 'Data de Fim (AAAA-MM-DD)',
             'preco_total': 'Preço Total (€)',
@@ -81,8 +80,16 @@ class PacoteForm(forms.ModelForm):
         self.fields['destinos'].help_text = "Selecione pelo menos um destino."
 
 
-    def save(self, commit=True):
+    def save(self, commit=True, dias_descricao=None):
      instance = super().save(commit=False)
+
+     # Processar descrição dos dias
+     if dias_descricao:
+        descricao_completa = ""
+        for i, descricao in enumerate(dias_descricao, 1):
+            if descricao.strip():
+                descricao_completa += f"{i}ºDIA: {descricao.strip()}\n"
+        instance.descricao_item = descricao_completa.strip()
 
      if self.cleaned_data.get('fatura_linha_id'):
         from .models import FacturaLinha
