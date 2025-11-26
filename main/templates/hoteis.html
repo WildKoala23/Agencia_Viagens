@@ -23,7 +23,32 @@
 
         <form method="post" enctype="multipart/form-data" class="form_utils">
             {% csrf_token %}
-            {{ form.as_p }}
+            {{ form.destino_id.label_tag }} {{ form.destino_id }}<br>
+            {{ form.nome.label_tag }} {{ form.nome }}<br>
+            {{ form.endereco.label_tag }} {{ form.endereco }}<br>
+            {{ form.preco_diario.label_tag }} {{ form.preco_diario }}<br>
+            {{ form.descricao_item.label_tag }} {{ form.descricao_item }}<br>
+
+            <label for="id_imagem">Imagem de Capa do Hotel:</label><br>
+            {% if hotel_editar and imagem_capa_url %}
+                <p><strong>Imagem atual:</strong></p>
+                <img src="{{ imagem_capa_url }}" alt="{{ hotel_editar.nome }}" width="200"
+                     style="border-radius:8px; margin-bottom:10px;">
+            {% endif %}
+            {{ form.imagem }}<br>
+
+            <label for="id_imagens_detalhes">Imagens dos Quartos e Acomodações (múltiplas):</label><br>
+            {% if hotel_editar and imagens_detalhes_existentes %}
+                <p><strong>Imagens atuais:</strong></p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                    {% for imagem in imagens_detalhes_existentes %}
+                        <img src="{% url 'hotel_imagem_detalhe' hotel_editar.hotel_id imagem.id %}" 
+                             alt="{{ hotel_editar.nome }}" 
+                             style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px;">
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {{ form.imagens_detalhes }}<br>
 
             <button type="submit" class="btn_save_utils">
                 {% if hotel_editar %}Guardar Alterações{% else %}Guardar Hotel{% endif %}

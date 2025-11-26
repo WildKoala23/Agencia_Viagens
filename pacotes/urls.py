@@ -18,6 +18,7 @@ urlpatterns = [
     path("hoteis/<int:hotel_id>/selecionar/<int:pacote_id>/", views.selecionar_hotel, name="selecionar_hotel"),
     path("hoteis/<int:hotel_id>/detalhes/", views.hotel_detalhes, name="hotel_detalhes"),
     path("hoteis/<int:hotel_id>/imagem/", views.hotel_imagem, name="hotel_imagem"),
+    path("hoteis/<int:hotel_id>/imagem-detalhe/<str:imagem_id>/", views.hotel_imagem_detalhe, name="hotel_imagem_detalhe"),
 
 
     
