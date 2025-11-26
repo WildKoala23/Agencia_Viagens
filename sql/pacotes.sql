@@ -96,3 +96,24 @@ EXCEPTION WHEN others THEN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_pacotes_full_pk ON mv_pacotes_full (pacote_id);
+-- Triggers para atualizar a mv_pacotes_full automaticamente
+DROP TRIGGER IF EXISTS trigger_refresh_mv_pacotes_full_pacote ON pacote;
+CREATE TRIGGER trigger_refresh_mv_pacotes_full_pacote
+AFTER INSERT OR UPDATE OR DELETE ON pacote
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_pacotes_full();
+
+DROP TRIGGER IF EXISTS trigger_refresh_mv_pacotes_full_pacote_destino ON pacote_destino;
+CREATE TRIGGER trigger_refresh_mv_pacotes_full_pacote_destino
+AFTER INSERT OR UPDATE OR DELETE ON pacote_destino
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_pacotes_full();
+
+DROP TRIGGER IF EXISTS trigger_refresh_mv_pacotes_full_destino ON destino;
+CREATE TRIGGER trigger_refresh_mv_pacotes_full_destino
+AFTER INSERT OR UPDATE OR DELETE ON destino
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_pacotes_full();
+
+
