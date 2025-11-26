@@ -26,7 +26,7 @@ def destinos(request):
         form = DestinoForm()
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT json_agg FROM mv_destinos")
+        cursor.execute("SELECT json_agg(row_to_json(d)) FROM mv_destinos d")
         data = cursor.fetchone()
         data = data[0] if (data and data[0]) else []
 
