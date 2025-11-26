@@ -17,6 +17,7 @@ urlpatterns = [
     path('hoteis/eliminar/<int:hotel_id>/', views.eliminar_hotel, name='eliminar_hotel'),
     path("hoteis/<int:hotel_id>/selecionar/<int:pacote_id>/", views.selecionar_hotel, name="selecionar_hotel"),
     path("hoteis/<int:hotel_id>/detalhes/", views.hotel_detalhes, name="hotel_detalhes"),
+    path("hoteis/<int:hotel_id>/imagem/", views.hotel_imagem, name="hotel_imagem"),
 
 
     

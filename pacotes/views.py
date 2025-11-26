@@ -14,6 +14,7 @@ from django.contrib import messages
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 banners = db["banners"]
+capa_hotel = db["capa_hotel"]
 
 def destinos(request):
     if request.method == "POST":
@@ -218,9 +219,31 @@ def eliminar_voo(request, voo_id):
 def hotel(request):
 
     if request.method == "POST":
-        form = HotelForm(request.POST)
+        form = HotelForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            hotel_obj = form.save()
+            
+            # Salvar imagem no MongoDB se foi enviada
+            imagem = request.FILES.get('imagem')
+            if imagem:
+                # Ler o conteúdo da imagem
+                imagem_data = imagem.read()
+                
+                # Salvar ou atualizar no MongoDB
+                capa_hotel.update_one(
+                    {'hotel_id': hotel_obj.hotel_id},
+                    {
+                        '$set': {
+                            'hotel_id': hotel_obj.hotel_id,
+                            'nome_hotel': hotel_obj.nome,
+                            'imagem': imagem_data,
+                            'content_type': imagem.content_type,
+                            'filename': imagem.name
+                        }
+                    },
+                    upsert=True
+                )
+            
             messages.success(request, "Hotel adicionado com sucesso!")
             return redirect('hoteis')
     else:
@@ -244,9 +267,31 @@ def editar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
 
     if request.method == "POST":
-        form = HotelForm(request.POST, instance=hotel)
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
         if form.is_valid():
-            form.save()
+            hotel_obj = form.save()
+            
+            # Salvar imagem no MongoDB se foi enviada
+            imagem = request.FILES.get('imagem')
+            if imagem:
+                # Ler o conteúdo da imagem
+                imagem_data = imagem.read()
+                
+                # Salvar ou atualizar no MongoDB
+                capa_hotel.update_one(
+                    {'hotel_id': hotel_obj.hotel_id},
+                    {
+                        '$set': {
+                            'hotel_id': hotel_obj.hotel_id,
+                            'nome_hotel': hotel_obj.nome,
+                            'imagem': imagem_data,
+                            'content_type': imagem.content_type,
+                            'filename': imagem.name
+                        }
+                    },
+                    upsert=True
+                )
+            
             messages.success(request, "Hotel atualizado com sucesso!")
             return redirect('hoteis')
     else:
@@ -267,6 +312,10 @@ def editar_hotel(request, hotel_id):
 def eliminar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     if request.method == 'POST':
+        # Eliminar a imagem do MongoDB antes de eliminar o hotel
+        capa_hotel.delete_one({'hotel_id': hotel_id})
+        
+        # Eliminar o hotel da base de dados PostgreSQL
         hotel.delete()
         return redirect('hoteis')
     return redirect('hoteis')
@@ -532,7 +581,43 @@ def reserva_pacote(request, pacote_id):
 
     hoteis = Hotel.objects.filter(destino_id__in=destinos_do_pacote)
 
+    # Buscar imagens dos hotéis do MongoDB
+    hoteis_com_imagem = []
+    for hotel in hoteis:
+        hotel_dict = {
+            'hotel_id': hotel.hotel_id,
+            'nome': hotel.nome,
+            'endereco': hotel.endereco,
+            'preco_diario': hotel.preco_diario,
+            'descricao_item': hotel.descricao_item,
+            'tem_imagem': False
+        }
+        
+        # Verificar se existe imagem no MongoDB
+        imagem_doc = capa_hotel.find_one({'hotel_id': hotel.hotel_id})
+        if imagem_doc:
+            hotel_dict['tem_imagem'] = True
+        
+        hoteis_com_imagem.append(hotel_dict)
+
     return render(request, "reserva_pacote.html", {
         "pacote": pacote,
-        "hoteis": hoteis,
+        "hoteis": hoteis_com_imagem,
     })
+
+
+def hotel_imagem(request, hotel_id):
+    """
+    Serve a imagem de capa do hotel armazenada no MongoDB.
+    """
+    from django.http import HttpResponse, Http404
+    
+    # Buscar a imagem no MongoDB
+    imagem_doc = capa_hotel.find_one({'hotel_id': hotel_id})
+    
+    if not imagem_doc or 'imagem' not in imagem_doc:
+        raise Http404("Imagem não encontrada")
+    
+    # Retornar a imagem com o content type correto
+    response = HttpResponse(imagem_doc['imagem'], content_type=imagem_doc.get('content_type', 'image/jpeg'))
+    return response

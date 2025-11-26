@@ -41,6 +41,12 @@ class VooForm(forms.ModelForm):
         return voo
      
 class HotelForm(forms.ModelForm):
+    imagem = forms.ImageField(
+        required=False,
+        label="Imagem de Capa do Hotel",
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+    )
+
     class Meta:
         model = Hotel
         fields = '__all__'  

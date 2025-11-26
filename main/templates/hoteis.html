@@ -21,7 +21,7 @@
             {% endfor %}
         {% endif %}
 
-        <form method="post" class="form_utils">
+        <form method="post" enctype="multipart/form-data" class="form_utils">
             {% csrf_token %}
             {{ form.as_p }}
 
