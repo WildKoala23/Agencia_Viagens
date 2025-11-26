@@ -312,12 +312,31 @@ def editar_hotel(request, hotel_id):
 def eliminar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     if request.method == 'POST':
-        # Eliminar a imagem do MongoDB antes de eliminar o hotel
-        capa_hotel.delete_one({'hotel_id': hotel_id})
+        try:
+            with connection.cursor() as cursor:
+                # Chamar a função SQL para eliminar
+                cursor.execute("SELECT eliminar_hotel(%s)", [hotel_id])
+                
+            # Eliminar a imagem do MongoDB
+            capa_hotel.delete_one({'hotel_id': hotel_id})
+            
+            messages.success(request, "Hotel eliminado com sucesso!")
+            
+        except DatabaseError as e:
+            # Capturar erro da função SQL
+            erro_texto = str(e)
+            
+            # Limpar mensagem de erro
+            if "CONTEXT" in erro_texto:
+                erro_texto = erro_texto.split("CONTEXT")[0].strip()
+            
+            erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+            erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+            
+            messages.error(request, erro_texto or "Erro ao eliminar hotel.")
         
-        # Eliminar o hotel da base de dados PostgreSQL
-        hotel.delete()
         return redirect('hoteis')
+    
     return redirect('hoteis')
 
 

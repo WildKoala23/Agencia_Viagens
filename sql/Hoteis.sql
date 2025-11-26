@@ -56,3 +56,38 @@ AFTER INSERT OR UPDATE OR DELETE ON hotel
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_hoteis();
 
+-- Função para eliminar hotel com validações
+CREATE OR REPLACE FUNCTION eliminar_hotel(p_hotel_id INTEGER)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_pacote_exists BOOLEAN;
+BEGIN
+    -- Verificar se o hotel está associado a algum pacote
+    SELECT EXISTS(
+        SELECT 1 FROM pacote_hotel 
+        WHERE hotel_id = p_hotel_id
+    ) INTO v_pacote_exists;
+    
+    -- Se estiver associado a pacotes, lançar erro
+    IF v_pacote_exists THEN
+        RAISE EXCEPTION 'Não é possível eliminar este hotel porque está associado a pacotes existentes.';
+    END IF;
+    
+    -- Eliminar o hotel
+    DELETE FROM hotel WHERE hotel_id = p_hotel_id;
+    
+    -- Retornar sucesso
+    RETURN TRUE;
+    
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE EXCEPTION 'Não é possível eliminar este hotel porque está a ser utilizado por outros registos.';
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Erro ao eliminar hotel: %', SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Comentário da função
+COMMENT ON FUNCTION eliminar_hotel(INTEGER) IS 
+'Elimina um hotel se não estiver associado a nenhum pacote. Lança exceção caso contrário.';
+
