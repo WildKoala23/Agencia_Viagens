@@ -427,10 +427,8 @@ def selecionar_hotel(request, hotel_id, pacote_id):
         pacote.hotel = hotel
         pacote.save()
 
-    return render(request, "confirmar_hotel.html", {
-        "pacote": pacote,
-        "hotel": hotel,
-    })
+    # Redirecionar para a seleção de voos
+    return redirect('selecionar_voo', pacote_id=pacote_id, hotel_id=hotel_id)
 def hotel_detalhes(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     pacote_id = request.GET.get("pacote") 
@@ -726,3 +724,44 @@ def hotel_imagem_detalhe(request, hotel_id, imagem_id):
     # Retornar a imagem com o content type correto
     response = HttpResponse(imagem_doc['imagem'], content_type=imagem_doc.get('content_type', 'image/jpeg'))
     return response
+
+
+def selecionar_voo_view(request, pacote_id, hotel_id):
+    """
+    Exibe a lista de voos disponíveis para o pacote selecionado.
+    """
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    
+    # Buscar destinos do pacote
+    destinos_do_pacote = pacote.destinos.all()
+    
+    # Buscar voos para os destinos do pacote
+    voos = Voo.objects.filter(destino__in=destinos_do_pacote)
+    
+    return render(request, "selecionar_voo.html", {
+        "pacote": pacote,
+        "hotel": hotel,
+        "voos": voos,
+    })
+
+
+def confirmar_voo(request, voo_id, pacote_id, hotel_id):
+    """
+    Processa a seleção do voo e redireciona para a confirmação final.
+    """
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    voo = get_object_or_404(Voo, voo_id=voo_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    
+    # Aqui você pode salvar a escolha do voo na sessão ou em um modelo
+    # Por exemplo: request.session['voo_selecionado'] = voo_id
+    
+    # Por enquanto, vamos apenas renderizar uma página de confirmação
+    # ou redirecionar para a próxima etapa do processo de reserva
+    
+    return render(request, "confirmacao_pacote.html", {
+        "pacote": pacote,
+        "voo": voo,
+        "hotel": hotel,
+    })

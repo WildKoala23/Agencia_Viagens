@@ -20,6 +20,11 @@ urlpatterns = [
     path("hoteis/<int:hotel_id>/imagem/", views.hotel_imagem, name="hotel_imagem"),
     path("hoteis/<int:hotel_id>/imagem-detalhe/<str:imagem_id>/", views.hotel_imagem_detalhe, name="hotel_imagem_detalhe"),
 
+    # VOOS
+    path("pacotes/<int:pacote_id>/hotel/<int:hotel_id>/selecionar-voo/", views.selecionar_voo_view, name="selecionar_voo"),
+    path("voos/<int:voo_id>/confirmar/<int:pacote_id>/<int:hotel_id>/", views.confirmar_voo, name="confirmar_voo"),
+
+
 
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
