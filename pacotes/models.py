@@ -86,22 +86,22 @@ class Hotel(models.Model):
     
 
 class PacoteDestino(models.Model):
-    destino_id = models.ForeignKey(
-        Destino, 
-        on_delete=models.CASCADE,
-        db_column='destino_id',
-        primary_key=True
-    )
+    id = models.AutoField(primary_key=True)
     pacote_id = models.ForeignKey(
         Pacote, 
         on_delete=models.CASCADE,
         db_column='pacote_id'
     )
+    destino_id = models.ForeignKey(
+        Destino, 
+        on_delete=models.CASCADE,
+        db_column='destino_id'
+    )
     
     class Meta:
         db_table = 'pacote_destino'
         unique_together = (('pacote_id', 'destino_id'),)
-       
+        
     def __str__(self):
         return f"Pacote {self.pacote_id.pacote_id} -> Destino {self.destino_id.nome}"
 
@@ -164,4 +164,4 @@ class Feedback(models.Model):
     
     def __str__(self):
         return f"Feedback sobre {self.pacote} - {self.avaliacao}/5"
-    
+
