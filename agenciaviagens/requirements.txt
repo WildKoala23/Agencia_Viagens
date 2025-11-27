@@ -3,3 +3,4 @@ Django==5.2.6
 psycopg2-binary==2.9.10
 sqlparse==0.5.3
 tzdata==2025.2
+reportlab==4.2.2

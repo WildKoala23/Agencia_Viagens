@@ -47,28 +47,23 @@
       </tr>
     </thead>
     <tbody>
-      <tr>
-        {% for i in data %}
-          <td>{{i.0}}</td>
-          <td>{{i.1}}</td>
-          <td>{{i.2}}</td>
-          <td>{{i.3}}</td>
-          <td>{{i.4}}</td>
-          <td>{{i.5}}</td>
-          <td>{{i.6}}</td>
+      {% for i in data %}
+        <tr>
+          <td>{{ i.0 }}</td>
+          <td>{{ i.1 }}</td>
+          <td>{{ i.2 }}</td>
+          <td>{{ i.3 }}</td>
+          <td>{{ i.4 }}</td>
+          <td>{{ i.5 }}</td>
+          <td>{{ i.6 }}</td>
           <td>
-            <div class="container d-flex gap-2">
-              <button type="button" class="btn btn-outline-primary d-flex btn-sm align-items-center gap-2">
-                Ver
-              </button>
-          
-              <button type="button" class="btn btn-outline-primary d-flex btn-sm align-items-center gap-2">
-                Cancelar
-              </button>
+            <div class="d-flex justify-content-center gap-2">
+              <a href="{% url 'compra_sucesso' i.0 %}" class="btn btn-outline-primary btn-sm">Ver</a>
+              <a href="{% url 'compra_pdf' i.0 %}" class="btn btn-outline-secondary btn-sm">PDF</a>
             </div>
           </td>
-        {% endfor %}
-      </tr>
+        </tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
