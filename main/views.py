@@ -11,8 +11,7 @@ def home(request):
     if request.user.is_authenticated:
         if request.user.is_staff:
             return redirect('main:dashboard')  # Admin dashboard
-        elif Group.objects.filter(name='Users', user=request.user).exists():
-            return redirect('users:dashboardUser')  # User dashboard
+        # utilizadores normais continuam a ver a página pública 'home'
     return render(request, "home.html", {  # Visitor
         "slides": [
             {"image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb",

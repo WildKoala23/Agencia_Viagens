@@ -34,7 +34,8 @@ def loginUser(request):
                 if user.is_staff:
                     return redirect('main:dashboard')  # staff
                 else:
-                    return redirect('users:user')  # usuário comum
+                    # usuários comuns redirecionam para a página pública 'home'
+                    return redirect('main:home')
             else:
                 form.add_error(None, "Email ou senha inválidos")
     else:
@@ -96,7 +97,7 @@ def user(req):
     data = userData.find_one({"Id_User": req.user.user_id})
     # data = list(userData.find())
     print(data)
-    return render(req, 'dashboardUser.html', {"data": data})
+    return render(req, 'dashboardUser.html', {"data": data, "brand_name": "Atlas Gateways"})
 
 
 def comprasUser(req):

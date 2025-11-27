@@ -14,24 +14,24 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
-
-    <!-- Sidebar -->
+    <!-- Sidebar: visível para staff, ou para utilizadores autenticados em páginas que não sejam a home -->
+    {% if request.user.is_staff %}
     <nav id="sidebar">
         <div class="sidebar-header">
             <a href="{% url 'main:home' %}" class="brand-link">
                 <i class="bi bi-airplane-fill"></i>
-                <span>Agência Viagens</span>
+                <span>{% if brand_name %}{{ brand_name }}{% else %}Atlas Gateways{% endif %}</span>
             </a>
         </div>
         <ul class="nav flex-column">
-            <li class="nav-item"><a class="nav-link active" href="{% url 'main:home' %}"><i class="bi bi-house-door-fill"></i>Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'main:pacotes_por_pais' %}"><i class="bi bi-box-seam"></i>Pacotes</a></li>
+            <li class="nav-item"><a class="nav-link active" href="{% url 'main:home' %}"><i class="bi bi-house-door-fill"></i>Dashboard</a></li>
+            {# Removido: link público 'Pacotes' para admin; admins têm 'Inserir Pacotes' abaixo #}
 
             {% if request.user.is_authenticated and request.user.is_staff %}
                 <li class="nav-item"><a class="nav-link" href="{% url 'users:inserir_clientes' %}"><i class="bi bi-people-fill"></i>Clientes</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'destinos' %}"><i class="bi bi-geo-alt-fill"></i>Destinos</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'faturas' %}"><i class="bi bi-receipt"></i>Faturas</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'pacotes' %}"><i class="bi bi-plus-square"></i>Inserir Pacotes</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'pacotes' %}"><i class="bi bi-plus-square"></i>Pacotes</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'feedbacks' %}"><i class="bi bi-chat-left-text-fill"></i>Feedbacks</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'pagamentos' %}"><i class="bi bi-credit-card-fill"></i>Pagamentos</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'voos' %}"><i class="bi bi-airplane"></i>Voos</a></li>
@@ -39,22 +39,74 @@
             {% endif %}
         </ul>
     </nav>
+    {% else %}
+        {% if request.user.is_authenticated %}
+            {% if request.path != '/' %}
+                <nav id="sidebar">
+                <!-- sidebar for authenticated non-staff on internal pages -->
+                </nav>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+
+    {# Se não houver sidebar (nem staff nem utilizador autenticado em página interna), ajustar layout #}
+    {% if not request.user.is_staff %}
+        {% if not request.user.is_authenticated or request.path == '/' %}
+            <style>
+                .top-navbar { left: 0 !important; }
+                main, .main-content { margin-left: 0 !important; margin-top: 80px; padding: 20px 30px; }
+            </style>
+        {% endif %}
+    {% endif %}
 
     <!-- Top Navigation -->
     <nav class="top-navbar d-flex justify-content-between align-items-center px-3 py-2">
-        <div class="navbar-title">
-            <h1>{% block page_title %}{% endblock %}</h1>
+        <div class="d-flex align-items-center navbar-left">
+            {% if not request.user.is_staff %}
+            <div class="d-flex align-items-center text-dark me-3 brand-block">
+                <i class="bi bi-airplane-fill fs-4"></i>
+                <span class="ms-2 brand-text">Atlas Gateways</span>
+            </div>
+            {% endif %}
+            <div class="navbar-title">
+                <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
+            </div>
         </div>
         <div class="user-info d-flex align-items-center gap-2">
             {% if request.user.is_authenticated %}
-                <p class="mb-0">{{ request.user.email }}</p>
-                <div class="circle-initials">
-                    {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
-                </div>
-                <form method="post" action="{% url 'users:logout' %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
-                </form>
+                {% if request.user.is_staff or request.path != '/' %}
+                    <p class="mb-0">{{ request.user.email }}</p>
+                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                    <form method="post" action="{% url 'users:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
+                    </form>
+                {% else %}
+                    <p class="mb-0">{{ request.user.email }}</p>
+                    <div class="dropdown">
+                        <button class="btn btn-light d-flex align-items-center dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="circle-initials me-2">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'users:user' %}">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>Minha Conta</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'users:logout' %}" class="m-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger" style="border:0; background:transparent;">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        <span>Sair</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
             {% else %}
                 <a href="{% url 'users:login' %}" class="btn btn-outline-primary">Login / Sign Up</a>
             {% endif %}
@@ -68,6 +120,53 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* garantir que o dropdown aparece por cima da sidebar */
+        .dropdown-menu.dropdown-menu-end { z-index: 1300; }
+
+        /* estilos do brand no topo */
+        .top-navbar .brand-block { color: inherit; }
+        .top-navbar .brand-block .fs-4 { line-height: 1; }
+        .top-navbar .brand-text { font-weight: 700; font-size: 1.0625rem; color: #000; }
+        .top-navbar .brand-block i { color: #000; }
+        .top-navbar .navbar-left { gap: 12px; }
+        .top-navbar .navbar-title h1 { font-size: 1rem; margin: 0; }
+        @media (min-width: 768px) {
+            .top-navbar .brand-text { font-size: 1.25rem; }
+            .top-navbar .navbar-title h1 { font-size: 1.25rem; }
+        }
+    </style>
+    <script>
+        // Fallback simples: ativar dropdown manualmente se o Bootstrap não inicializar
+        (function(){
+            try{
+                var btn = document.getElementById('userMenu');
+                if(!btn) return;
+                var menu = btn && btn.nextElementSibling;
+                if(!menu) return;
+                btn.addEventListener('click', function(e){
+                    e.preventDefault();
+                    var shown = menu.classList.contains('show');
+                    if(shown){
+                        menu.classList.remove('show');
+                        btn.setAttribute('aria-expanded','false');
+                    } else {
+                        menu.classList.add('show');
+                        btn.setAttribute('aria-expanded','true');
+                    }
+                });
+                // fechar ao clicar fora
+                document.addEventListener('click', function(e){
+                    if(!btn.contains(e.target) && !menu.contains(e.target)){
+                        if(menu.classList.contains('show')){
+                            menu.classList.remove('show');
+                            btn.setAttribute('aria-expanded','false');
+                        }
+                    }
+                });
+            }catch(err){ console && console.warn && console.warn('dropdown fallback error', err); }
+        })();
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
