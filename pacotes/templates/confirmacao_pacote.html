@@ -24,7 +24,8 @@
     <div class="card-body">
       <h5>{{ pacote.nome }}</h5>
       <p><strong>Datas:</strong> {{ pacote.data_inicio }} → {{ pacote.data_fim }}</p>
-      <p class="mb-0"><strong>Preço total:</strong> €{{ pacote.preco_total }}</p>
+      <p><strong>Duração:</strong> {{ num_noites }} noite{{ num_noites|pluralize }}</p>
+      <p class="mb-0"><strong>Preço base do pacote:</strong> <span class="text-muted">desde</span> €{{ preco_base_pacote }}</p>
     </div>
   </div>
 
@@ -67,6 +68,48 @@
           <p><strong>🛫 Partida:</strong> {{ voo.data_saida|date:"d/m/Y H:i" }}</p>
           <p><strong>🛬 Chegada:</strong> {{ voo.data_chegada|date:"d/m/Y H:i" }}</p>
           <p><strong>Preço:</strong> €{{ voo.preco }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumo de Custos -->
+  <div class="card mb-4 border-success">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Resumo de Custos</h4>
+    </div>
+    <div class="card-body">
+      <div class="row mb-2">
+        <div class="col-8">
+          <p class="mb-1">Preço base do pacote:</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_base_pacote }}</p>
+        </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-8">
+          <p class="mb-1">Hotel ({{ num_noites }} noite{{ num_noites|pluralize }} × €{{ hotel.preco_diario }}):</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_hotel_total }}</p>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-8">
+          <p class="mb-1">Voo:</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_voo_total }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-8">
+          <h5 class="mb-0"><strong>Preço Total Final:</strong></h5>
+        </div>
+        <div class="col-4 text-end">
+          <h5 class="mb-0 text-success"><strong>€{{ preco_total_final }}</strong></h5>
         </div>
       </div>
     </div>

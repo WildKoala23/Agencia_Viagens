@@ -754,6 +754,17 @@ def confirmar_voo(request, voo_id, pacote_id, hotel_id):
     voo = get_object_or_404(Voo, voo_id=voo_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     
+    # Calcular número de noites
+    num_noites = (pacote.data_fim - pacote.data_inicio).days
+    
+    # Calcular preços
+    preco_hotel_total = hotel.preco_diario * num_noites
+    preco_voo_total = voo.preco
+    preco_base_pacote = pacote.preco_total
+    
+    # Calcular preço total final
+    preco_total_final = preco_base_pacote + preco_hotel_total + preco_voo_total
+    
     # Aqui você pode salvar a escolha do voo na sessão ou em um modelo
     # Por exemplo: request.session['voo_selecionado'] = voo_id
     
@@ -764,4 +775,9 @@ def confirmar_voo(request, voo_id, pacote_id, hotel_id):
         "pacote": pacote,
         "voo": voo,
         "hotel": hotel,
+        "num_noites": num_noites,
+        "preco_hotel_total": preco_hotel_total,
+        "preco_voo_total": preco_voo_total,
+        "preco_base_pacote": preco_base_pacote,
+        "preco_total_final": preco_total_final,
     })
