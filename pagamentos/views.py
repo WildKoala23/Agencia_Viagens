@@ -1,8 +1,153 @@
 from django.shortcuts import render, redirect, get_object_or_404  
-from django.db import connection
+from django.db import connection, transaction
+from django.contrib import messages
+from django.utils import timezone
+from datetime import date
 from .forms import *
+from .models import Compra, Pagamento, Factura, FacturaLinha
+from pacotes.models import Pacote, Hotel, Voo, PacoteHotel, PacoteVoo
 
 # Create your views here.
+def processar_pagamento(request, pacote_id, hotel_id, voo_id):
+    """
+    Página de seleção de método de pagamento e processamento da compra
+    """
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    voo = get_object_or_404(Voo, voo_id=voo_id)
+    
+    # Calcular preços
+    num_noites = (pacote.data_fim - pacote.data_inicio).days
+    preco_hotel_total = hotel.preco_diario * num_noites
+    preco_voo_total = voo.preco
+    preco_base_pacote = pacote.preco_total
+    preco_total_final = preco_base_pacote + preco_hotel_total + preco_voo_total
+    
+    if request.method == "POST":
+        form = MetodoPagamentoForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    metodo = form.cleaned_data['metodo']
+                    
+                    # 1. Criar a Compra
+                    compra = Compra.objects.create(
+                        user=request.user,
+                        pacote=pacote,
+                        data_compra=date.today(),
+                        valor_total=preco_total_final,
+                        estado='Confirmada'
+                    )
+                    
+                    # 2. Criar o Pagamento
+                    pagamento = Pagamento.objects.create(
+                        compra_id=compra.compra_id,
+                        data_pagamento=date.today(),
+                        valor=preco_total_final,
+                        estado='Aprovado',
+                        metodo=metodo
+                    )
+                    
+                    # 3. Atualizar a compra com o ID do pagamento
+                    compra.pagamento_id = pagamento.pagamento_id
+                    compra.save()
+                    
+                    # 4. Criar a Fatura
+                    fatura = Factura.objects.create(
+                        compra_id=compra,
+                        pagamento_id=pagamento,
+                        data_emissao=timezone.now(),
+                        valor_total=preco_total_final
+                    )
+                    
+                    # 5. Criar as Linhas da Fatura
+                    # Linha 1: Pacote base
+                    FacturaLinha.objects.create(
+                        fatura=fatura,
+                        pacote=pacote,
+                        descricao_item=f"Pacote Base - {pacote.nome}",
+                        preco=preco_base_pacote,
+                        subtotal=preco_base_pacote
+                    )
+                    
+                    # Linha 2: Hotel
+                    FacturaLinha.objects.create(
+                        fatura=fatura,
+                        pacote=pacote,
+                        descricao_item=f"Hotel - {hotel.nome} ({num_noites} noite{'s' if num_noites > 1 else ''})",
+                        preco=hotel.preco_diario,
+                        subtotal=preco_hotel_total
+                    )
+                    
+                    # Linha 3: Voo
+                    FacturaLinha.objects.create(
+                        fatura=fatura,
+                        pacote=pacote,
+                        descricao_item=f"Voo - {voo.companhia}",
+                        preco=preco_voo_total,
+                        subtotal=preco_voo_total
+                    )
+                    
+                    # 6. Associar Hotel e Voo ao Pacote
+                    PacoteHotel.objects.get_or_create(
+                        pacote_id=pacote,
+                        hotel_id=hotel
+                    )
+                    
+                    PacoteVoo.objects.get_or_create(
+                        pacote_id=pacote,
+                        voo_id=voo
+                    )
+                    
+                    # Redirecionar para página de sucesso
+                    return redirect('compra_sucesso', compra_id=compra.compra_id)
+                    
+            except Exception as e:
+                messages.error(request, f'Erro ao processar pagamento: {str(e)}')
+        else:
+            messages.error(request, 'Por favor, corrija os erros no formulário.')
+    else:
+        form = MetodoPagamentoForm()
+    
+    return render(request, "processar_pagamento.html", {
+        "form": form,
+        "pacote": pacote,
+        "hotel": hotel,
+        "voo": voo,
+        "num_noites": num_noites,
+        "preco_hotel_total": preco_hotel_total,
+        "preco_voo_total": preco_voo_total,
+        "preco_base_pacote": preco_base_pacote,
+        "preco_total_final": preco_total_final,
+    })
+
+
+def compra_sucesso(request, compra_id):
+    """
+    Página de confirmação de compra realizada com sucesso
+    """
+    compra = get_object_or_404(Compra, compra_id=compra_id)
+    
+    # Verificar se a compra pertence ao usuário logado
+    if compra.user != request.user:
+        messages.error(request, 'Acesso negado.')
+        return redirect('pacotes_por_pais')
+    
+    # Buscar fatura e suas linhas
+    fatura = Factura.objects.filter(compra_id=compra).first()
+    linhas_fatura = FacturaLinha.objects.filter(fatura=fatura) if fatura else []
+    
+    # Buscar pagamento
+    pagamento = Pagamento.objects.filter(pagamento_id=compra.pagamento_id).first()
+    
+    return render(request, "compra_sucesso.html", {
+        "compra": compra,
+        "fatura": fatura,
+        "linhas_fatura": linhas_fatura,
+        "pagamento": pagamento,
+    })
+
+
 def pagamentos(request):
     if request.method == "POST":
         form = PagamentoForm(request.POST)
@@ -58,4 +203,5 @@ def faturas(request):
 #         'fatura': fatura,
 #         'linhas': linhas
 #     })
+
 

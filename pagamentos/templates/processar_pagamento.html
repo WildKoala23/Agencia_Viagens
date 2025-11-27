@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'pagamento.css' %}">
+
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Cabeçalho -->
+      <div class="text-center mb-5">
+        <h2 class="text-primary">Finalizar Pagamento</h2>
+        <p class="text-muted">Selecione o método de pagamento e complete a compra</p>
+      </div>
+
+      <div class="row">
+        <!-- Coluna do Resumo da Compra -->
+        <div class="col-md-5 mb-4">
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0"> Resumo da Compra</h5>
+            </div>
+            <div class="card-body">
+              <h6 class="text-primary">{{ pacote.nome }}</h6>
+              <hr>
+              
+              <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Pacote base:</span>
+                <span>€{{ preco_base_pacote }}</span>
+              </div>
+              
+              <div class="d-flex justify-content-between mb-2">
+                <span class="text-muted">Hotel ({{ num_noites }} noites):</span>
+                <span>€{{ preco_hotel_total }}</span>
+              </div>
+              
+              <div class="d-flex justify-content-between mb-3">
+                <span class="text-muted">Voo:</span>
+                <span>€{{ preco_voo_total }}</span>
+              </div>
+              
+              <hr>
+              
+              <div class="d-flex justify-content-between">
+                <strong>Total a Pagar:</strong>
+                <strong class="text-success" style="font-size: 1.3rem;">€{{ preco_total_final }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna do Formulário de Pagamento -->
+        <div class="col-md-7">
+          <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Método de Pagamento</h5>
+            </div>
+            <div class="card-body">
+              
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                  </div>
+                {% endfor %}
+              {% endif %}
+
+              <form method="POST" id="formPagamento">
+                {% csrf_token %}
+                
+                <!-- Seleção do Método -->
+                <div class="mb-4">
+                  <label class="form-label fw-bold">{{ form.metodo.label }}</label>
+                  <div class="payment-methods">
+                    {% for value, label in form.metodo.field.choices %}
+                      <div class="payment-method-option">
+                        <input type="radio" name="metodo" value="{{ value }}" id="metodo_{{ value }}" 
+                               {% if forloop.first %}checked{% endif %}
+                               class="payment-radio">
+                        <label for="metodo_{{ value }}" class="payment-label">
+                          {% if value == 'mbway' %}
+                            <span class="payment-icon">📱</span>
+                          {% elif value == 'cartao_credito' %}
+                            <span class="payment-icon">💳</span>
+                          {% endif %}
+                          <span class="payment-name">{{ label }}</span>
+                        </label>
+                      </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Campos MBWay -->
+                <div id="campos_mbway" class="payment-fields">
+                  <h6 class="mb-3">📱 Dados MBWay</h6>
+                  <div class="mb-3">
+                    {{ form.mbway_telefone.label_tag }}
+                    {{ form.mbway_telefone }}
+                    {% if form.mbway_telefone.errors %}
+                      <div class="text-danger small">{{ form.mbway_telefone.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <!-- Campos Cartão de Crédito -->
+                <div id="campos_cartao_credito" class="payment-fields" style="display: none;">
+                  <h6 class="mb-3">💳 Dados do Cartão</h6>
+                  
+                  <div class="mb-3">
+                    {{ form.cartao_numero.label_tag }}
+                    {{ form.cartao_numero }}
+                    {% if form.cartao_numero.errors %}
+                      <div class="text-danger small">{{ form.cartao_numero.errors }}</div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="mb-3">
+                    {{ form.cartao_nome.label_tag }}
+                    {{ form.cartao_nome }}
+                    {% if form.cartao_nome.errors %}
+                      <div class="text-danger small">{{ form.cartao_nome.errors }}</div>
+                    {% endif %}
+                  </div>
+                  
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      {{ form.cartao_validade.label_tag }}
+                      {{ form.cartao_validade }}
+                      {% if form.cartao_validade.errors %}
+                        <div class="text-danger small">{{ form.cartao_validade.errors }}</div>
+                      {% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                      {{ form.cartao_cvv.label_tag }}
+                      {{ form.cartao_cvv }}
+                      {% if form.cartao_cvv.errors %}
+                        <div class="text-danger small">{{ form.cartao_cvv.errors }}</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+
+                <hr class="my-4">
+
+                <!-- Botões -->
+                <div class="d-flex justify-content-between">
+                  <a href="{% url 'confirmar_voo' voo.voo_id pacote.pacote_id hotel.hotel_id %}" 
+                     class="btn btn-outline-secondary">
+                    ← Voltar
+                  </a>
+                  <button type="submit" class="btn btn-success btn-lg">
+                    Confirmar Pagamento
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Mostrar/esconder campos baseado no método selecionado
+document.addEventListener('DOMContentLoaded', function() {
+  const radios = document.querySelectorAll('.payment-radio');
+  const camposMbway = document.getElementById('campos_mbway');
+  const camposCartao = document.getElementById('campos_cartao_credito');
+  
+  function atualizarCampos() {
+    const metodoSelecionado = document.querySelector('.payment-radio:checked').value;
+    
+    camposMbway.style.display = 'none';
+    camposCartao.style.display = 'none';
+    
+    if (metodoSelecionado === 'mbway') {
+      camposMbway.style.display = 'block';
+    } else if (metodoSelecionado === 'cartao_credito') {
+      camposCartao.style.display = 'block';
+    }
+  }
+  
+  radios.forEach(radio => {
+    radio.addEventListener('change', atualizarCampos);
+  });
+  
+  atualizarCampos();
+});
+</script>
+
+{% endblock %}

@@ -120,7 +120,7 @@
     <a href="{% url 'pacotes_por_pais' %}" class="btn-voltar btn-lg me-3">
       ← Voltar aos Pacotes
     </a>
-    <a href="#" class="btn btn-success btn-lg">
+    <a href="{% url 'processar_pagamento' pacote.pacote_id hotel.hotel_id voo.voo_id %}" class="btn btn-success btn-lg">
       Continuar para Pagamento →
     </a>
   </div>
