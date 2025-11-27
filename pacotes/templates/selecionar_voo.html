@@ -28,7 +28,7 @@
               <p class="text-muted mb-0">Voo #{{ voo.numero_voo }}</p>
             </div>
             <div class="text-end">
-              <p class="package-price text-primary fw-bold mb-0">
+              <p class="package-price fw-bold mb-0" style="color: #17a2b8;">
                 €{{ voo.preco }}
               </p>
             </div>
@@ -50,7 +50,7 @@
 
           <div class="d-grid mt-4">
             <a href="{% url 'confirmar_voo' voo.voo_id pacote.pacote_id hotel.hotel_id %}" 
-               class="btn-select-hotel">
+               class="btn-select-hotel ">
               Selecionar Voo
             </a>
           </div>
@@ -68,7 +68,7 @@
 
   <!-- Botão voltar -->
   <div class="text-center mt-5">
-    <a href="{% url 'reserva_pacote' pacote.pacote_id %}" class="btn btn-secondary">
+    <a href="{% url 'reserva_pacote' pacote.pacote_id %}" class="btn-voltar">
       ← Voltar para seleção de hotel
     </a>
   </div>
@@ -80,11 +80,11 @@
   background-color: white;
   padding: 15px;
   border-radius: 8px;
-  border-left: 4px solid #0d6efd;
+  border-left: 4px solid #17a2b8;
 }
 
 .btn-select-hotel {
-  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  background: #17a2b8;
   color: white;
   padding: 12px 24px;
   border-radius: 8px;
@@ -98,8 +98,27 @@
 
 .btn-select-hotel:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.4);
+  background: #138496;
   color: white;
+}
+
+.btn-voltar {
+  background: #004085;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background: #002752;
+  color: white;
+  text-decoration: none;
 }
 </style>
 

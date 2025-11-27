@@ -11,7 +11,7 @@
       <div class="success-icon" style="font-size: 64px; color: #28a745;">✓</div>
     </div>
     <h2 class="text-success">Confirmação do Pacote</h2>
-    <p class="text-muted">Revise os detalhes da sua seleção abaixo.</p>
+    <p class="text-muted">Reveja os detalhes da sua seleção abaixo.</p>
   </div>
 
   <hr class="mb-5">
@@ -30,7 +30,7 @@
 
   <!-- Informações do Hotel -->
   <div class="card mb-4">
-    <div class="card-header bg-success text-white">
+    <div class="card-header bg-primary text-white">
       <h4 class="mb-0">Hotel Selecionado</h4>
     </div>
     <div class="card-body">
@@ -53,7 +53,7 @@
 
   <!-- Informações do Voo -->
   <div class="card mb-4">
-    <div class="card-header bg-info text-white">
+    <div class="card-header bg-primary text-white">
       <h4 class="mb-0">Voo Selecionado</h4>
     </div>
     <div class="card-body">
@@ -74,7 +74,7 @@
 
   <!-- Botões de ação -->
   <div class="text-center mt-5">
-    <a href="{% url 'pacotes_por_pais' %}" class="btn btn-secondary btn-lg me-3">
+    <a href="{% url 'pacotes_por_pais' %}" class="btn-voltar btn-lg me-3">
       ← Voltar aos Pacotes
     </a>
     <a href="#" class="btn btn-success btn-lg">
@@ -107,6 +107,24 @@
 
 .card-body {
   padding: 1.5rem;
+}
+
+.btn-voltar {
+  background: #004085;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background: #002752;
+  color: white;
+  text-decoration: none;
 }
 </style>
 
