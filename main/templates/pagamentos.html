@@ -1,28 +1,59 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <title>Inserir Pagamento</title>
-</head>
-<body>
-    <h1>Inserir Pagamento</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Guardar</button>
-    </form>
+{% extends "base.html" %}
+{% load static %}
 
-    <h2>Lista de Pagamentos</h2>
-    <ul>
-        {% for p in pagamentos %}
-            <li>
-                {{ p.reserva }} - {{ p.montante }}€ em {{ p.data_pagamento }}
-            </li>
-        {% empty %}
-            <li>Nenhum pagamento registado.</li>
-        {% endfor %}
-    </ul>
+{% block title %}Gestão de Pagamentos{% endblock %}
 
-    <a href="{% url 'main:home' %}">Voltar ao Início</a>
-</body>
-</html>
+{% block styles %}
+<link rel="stylesheet" href="{% static 'utils.css' %}">
+{% endblock %}
+
+{% block page_title %}Gestão de Pagamentos{% endblock %}
+
+{% block content %}
+<div class="container_utils">
+    <div class="card_utils">
+        <div class="voos_header_utils">
+            <h2>Lista de Pagamentos</h2>
+
+            <form method="get" class="search_form_utils">
+                <input type="text" name="q" placeholder="Pesquisar por nome de cliente..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                <button type="submit" class="btn_search_utils">Procurar</button>
+            </form>
+        </div>
+
+        <ul class="lista_utils">
+            {% for pagamento in pagamentos %}
+                <li>
+                    <div class="voo_info_utils">
+                        <div class="voo_detalhes_utils">
+                            <span class="voo_nome_utils">
+                                {{ pagamento.cliente_nome }} - {{ pagamento.metodo }}
+                            </span>
+                            <span class="voo_extra_utils">
+                                Valor: {{ pagamento.valor }}€ | Data: {{ pagamento.data_pagamento }} | Estado: {{ pagamento.estado }}
+                            </span>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <div class="empty_state_utils">
+                    Nenhum pagamento registado ainda.
+                </div>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.search.includes("q=")) {
+        const listaPagamentos = document.querySelector(".voos_header_utils");
+        if (listaPagamentos) {
+            listaPagamentos.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+});
+</script>
+{% endblock %}
