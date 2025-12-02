@@ -7,13 +7,17 @@ from django.contrib import messages
 import re
 from pymongo import MongoClient
 from pacotes.models import Pacote, Destino, PacoteDestino, Voo, Hotel
+from django.contrib import messages
+from django.http import HttpResponse, Http404
+from bson.objectid import ObjectId
+from django.urls import reverse
 
 
 client = MongoClient("mongodb://localhost:27017/")
 db = client["bd2_22598"]
 banners = db["banners"]
-
-# Create your views here.
+capa_hotel = db["capa_hotel"]
+detalhes_hotel = db["detalhes_hotel"]
 
 def destinos(request):
     if request.method == "POST":
@@ -24,49 +28,18 @@ def destinos(request):
     else:
         form = DestinoForm()
 
-    # pesquisa
-    q = request.GET.get("q", "").strip()
-    if q:
-        destinos = Destino.objects.filter(
-            Q(pais__icontains=q) | Q(nome__icontains=q)
-        )
-    else:
-        destinos = Destino.objects.all()
-
-    # determinar destinos usados em pacotes (M2M), voos (FK) e hoteis (FK)
-    used_ids = set()
-    try:
-        pacote_dest_ids = Pacote.objects.values_list('destinos__destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in pacote_dest_ids if x is not None])
-    except Exception:
-        try:
-            used_ids.update([int(x) for x in Destino.objects.filter(pacotes__isnull=False).values_list('destino_id', flat=True) if x is not None])
-        except Exception:
-            pass
-
-    try:
-        voo_dest_ids = Voo.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in voo_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    try:
-        hotel_dest_ids = Hotel.objects.values_list('destino_id', flat=True).distinct()
-        used_ids.update([int(x) for x in hotel_dest_ids if x is not None])
-    except Exception:
-        pass
-
-    used_ids_list = list(used_ids)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT json_agg(row_to_json(d)) FROM mv_destinos d")
+        data = cursor.fetchone()
+        data = data[0] if (data and data[0]) else []
 
     return render(request, 'destinos.html', {
         'form': form,
-        'destinos': destinos,
-        'used_ids': used_ids_list,
+        'destinos': data,
     })
 
 def editar_destino(request, destino_id):
     destino = get_object_or_404(Destino, destino_id=destino_id)
-    
     if request.method == 'POST':
         form = DestinoForm(request.POST, instance=destino)
         if form.is_valid():
@@ -91,7 +64,6 @@ def eliminar_destino(request, destino_id):
         usado = pacote_exists or voo_exists or hotel_exists
 
         if usado:
-            from django.contrib import messages
             reasons = []
             if pacote_exists:
                 reasons.append('pacotes')
@@ -200,11 +172,6 @@ def feedback_estatisticas(request):
     })
 
 def voos(request, voo_id=None):
-    """
-    Página de gestão de voos.
-    - Permite inserir e editar voos.
-    - Mostra mensagens de erro vindas do trigger PostgreSQL (RAISE EXCEPTION).
-    """
 
     voo = get_object_or_404(Voo, voo_id=voo_id) if voo_id else None
 
@@ -223,24 +190,18 @@ def voos(request, voo_id=None):
                     erro_texto = erro_texto.split("CONTEXT")[0].strip()
 
                 erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
-                erro_texto = erro_texto.replace("Erro do banco de dados:", "").strip()
+                erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
 
                 messages.error(request, erro_texto or "Erro ao inserir voo. Verifique os dados.")
         else:
-            messages.error(request, "❌ Erro ao validar o formulário. Verifique os dados.")
+            messages.error(request, " Erro ao validar o formulário. Verifique os dados.")
     else:
         form = VooForm(instance=voo)
 
-    # --- PESQUISA ---
-    q = request.GET.get("q")
-    if q:
-        voos = Voo.objects.filter(
-            Q(destino__nome__icontains=q) |
-            Q(companhia__icontains=q)
-        )
-    else:
-        voos = Voo.objects.all()
-    # --- FIM PESQUISA ---
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT json_agg(row_to_json(v)) FROM mv_voos v")
+        data = cursor.fetchone()
+        voos = data[0] if (data and data[0]) else []
 
     return render(request, 'voos.html', {
         'form': form,
@@ -261,29 +222,58 @@ def eliminar_voo(request, voo_id):
 def hotel(request):
 
     if request.method == "POST":
-        form = HotelForm(request.POST)
+        form = HotelForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            hotel_obj = form.save()
+            
+            # Salvar imagem de capa no MongoDB se foi enviada
+            imagem = request.FILES.get('imagem')
+            if imagem:
+                # Ler o conteúdo da imagem
+                imagem_data = imagem.read()
+                
+                # Salvar ou atualizar no MongoDB
+                capa_hotel.update_one(
+                    {'hotel_id': hotel_obj.hotel_id},
+                    {
+                        '$set': {
+                            'hotel_id': hotel_obj.hotel_id,
+                            'nome_hotel': hotel_obj.nome,
+                            'imagem': imagem_data,
+                            'content_type': imagem.content_type,
+                            'filename': imagem.name
+                        }
+                    },
+                    upsert=True
+                )
+            
+            # Salvar múltiplas imagens de detalhes no MongoDB
+            imagens_detalhes = request.FILES.getlist('imagens_detalhes')
+            if imagens_detalhes:
+                # Remover imagens antigas se existirem
+                detalhes_hotel.delete_many({'hotel_id': hotel_obj.hotel_id})
+                
+                # Salvar cada imagem
+                for idx, img in enumerate(imagens_detalhes):
+                    imagem_data = img.read()
+                    detalhes_hotel.insert_one({
+                        'hotel_id': hotel_obj.hotel_id,
+                        'nome_hotel': hotel_obj.nome,
+                        'imagem': imagem_data,
+                        'content_type': img.content_type,
+                        'filename': img.name,
+                        'ordem': idx
+                    })
+            
             messages.success(request, "Hotel adicionado com sucesso!")
             return redirect('hoteis')
     else:
         form = HotelForm()
 
-    # Filtro de pesquisa
-    q = request.GET.get('q', '').strip()
-    query = "SELECT * FROM vw_hoteis"
-    params = []
-
-    if q:
-        query += " WHERE nome_hotel ILIKE %s"
-        params.append(f"%{q}%")
-
-    query += " ORDER BY nome_hotel;"
-
     with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        columns = [col[0] for col in cursor.description]
-        hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        cursor.execute("SELECT json_agg(row_to_json(h)) FROM mv_hoteis h")
+        data = cursor.fetchone()
+        hoteis = data[0] if (data and data[0]) else []
 
     return render(request, 'hoteis.html', {
         'form': form,
@@ -298,32 +288,136 @@ def editar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
 
     if request.method == "POST":
-        form = HotelForm(request.POST, instance=hotel)
+        form = HotelForm(request.POST, request.FILES, instance=hotel)
         if form.is_valid():
-            form.save()
+            hotel_obj = form.save()
+            
+            # Salvar imagem de capa no MongoDB se foi enviada
+            imagem = request.FILES.get('imagem')
+            if imagem:
+                # Ler o conteúdo da imagem
+                imagem_data = imagem.read()
+                
+                # Salvar ou atualizar no MongoDB
+                capa_hotel.update_one(
+                    {'hotel_id': hotel_obj.hotel_id},
+                    {
+                        '$set': {
+                            'hotel_id': hotel_obj.hotel_id,
+                            'nome_hotel': hotel_obj.nome,
+                            'imagem': imagem_data,
+                            'content_type': imagem.content_type,
+                            'filename': imagem.name
+                        }
+                    },
+                    upsert=True
+                )
+            
+            # Salvar múltiplas imagens de detalhes no MongoDB
+            imagens_detalhes = request.FILES.getlist('imagens_detalhes')
+            if imagens_detalhes:
+                # Remover imagens antigas
+                detalhes_hotel.delete_many({'hotel_id': hotel_obj.hotel_id})
+                
+                # Salvar cada nova imagem
+                for idx, img in enumerate(imagens_detalhes):
+                    imagem_data = img.read()
+                    detalhes_hotel.insert_one({
+                        'hotel_id': hotel_obj.hotel_id,
+                        'nome_hotel': hotel_obj.nome,
+                        'imagem': imagem_data,
+                        'content_type': img.content_type,
+                        'filename': img.name,
+                        'ordem': idx
+                    })
+            
             messages.success(request, "Hotel atualizado com sucesso!")
             return redirect('hoteis')
     else:
         form = HotelForm(instance=hotel)
 
+    # Buscar imagem de capa do MongoDB
+    imagem_capa_url = None
+    imagem_capa_doc = capa_hotel.find_one({'hotel_id': hotel_id})
+    if imagem_capa_doc:
+        
+        imagem_capa_url = reverse('hotel_imagem', args=[hotel_id])
+    
+    # Buscar imagens de detalhes do MongoDB
+    imagens_detalhes_raw = list(detalhes_hotel.find({'hotel_id': hotel_id}).sort('ordem', 1))
+    imagens_detalhes_existentes = []
+    for img in imagens_detalhes_raw:
+        img['id'] = str(img['_id'])
+        imagens_detalhes_existentes.append(img)
+
     with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM vw_hoteis ORDER BY nome_hotel;")
-        columns = [col[0] for col in cursor.description]
-        hoteis = [dict(zip(columns, row)) for row in cursor.fetchall()]
+        cursor.execute("SELECT json_agg(row_to_json(h)) FROM mv_hoteis h")
+        data = cursor.fetchone()
+        hoteis = data[0] if (data and data[0]) else []
 
     return render(request, 'hoteis.html', {
         'form': form,
         'hoteis': hoteis,
-        'hotel_editar': hotel
+        'hotel_editar': hotel,
+        'imagem_capa_url': imagem_capa_url,
+        'imagens_detalhes_existentes': imagens_detalhes_existentes,
     })
 
 
 def eliminar_hotel(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     if request.method == 'POST':
-        hotel.delete()
+        try:
+            with connection.cursor() as cursor:
+                # Chamar a função SQL para eliminar
+                cursor.execute("SELECT eliminar_hotel(%s)", [hotel_id])
+                
+            # Eliminar a imagem do MongoDB
+            capa_hotel.delete_one({'hotel_id': hotel_id})
+            
+            # Eliminar imagens de detalhes do MongoDB
+            detalhes_hotel.delete_many({'hotel_id': hotel_id})
+            
+            messages.success(request, "Hotel eliminado com sucesso!")
+            
+        except DatabaseError as e:
+            # Capturar erro da função SQL
+            erro_texto = str(e)
+            
+            # Limpar mensagem de erro
+            if "CONTEXT" in erro_texto:
+                erro_texto = erro_texto.split("CONTEXT")[0].strip()
+            
+            erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+            erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+            
+            messages.error(request, erro_texto or "Erro ao eliminar hotel.")
+        
         return redirect('hoteis')
+    
     return redirect('hoteis')
+
+
+def eliminar_feedback(request, feedback_id):
+    """
+    Elimina um feedback existente. Apenas aceita POST para prevenir exclusões via GET.
+    Redireciona para a página de feedbacks do pacote correspondente.
+    """
+    from pacotes.models import Feedback
+
+    feedback = get_object_or_404(Feedback, feedback_id=feedback_id)
+    pacote_id = feedback.pacote.pacote_id if feedback.pacote else None
+
+    if request.method == 'POST':
+        feedback.delete()
+        if pacote_id:
+            return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
+        return redirect('feedbacks')
+
+    # If reached by GET, redirect back safely
+    if pacote_id:
+        return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
+    return redirect('feedbacks')
 
 def selecionar_hotel(request, hotel_id, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
@@ -333,10 +427,8 @@ def selecionar_hotel(request, hotel_id, pacote_id):
         pacote.hotel = hotel
         pacote.save()
 
-    return render(request, "confirmar_hotel.html", {
-        "pacote": pacote,
-        "hotel": hotel,
-    })
+    # Redirecionar para a seleção de voos
+    return redirect('selecionar_voo', pacote_id=pacote_id, hotel_id=hotel_id)
 def hotel_detalhes(request, hotel_id):
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     pacote_id = request.GET.get("pacote") 
@@ -348,33 +440,45 @@ def hotel_detalhes(request, hotel_id):
         except Pacote.DoesNotExist:
             pacote = None
 
+    # Buscar imagens de detalhes do MongoDB
+    imagens_detalhes_raw = list(detalhes_hotel.find({'hotel_id': hotel_id}).sort('ordem', 1))
+    
+    # Converter _id para id (sem underscore) para uso no template
+    imagens_detalhes = []
+    for img in imagens_detalhes_raw:
+        img['id'] = str(img['_id'])
+        imagens_detalhes.append(img)
+    
     return render(
         request,
         "hotel_detalhes.html",
         {
             "hotel": hotel,
-            "pacote": pacote,  
+            "pacote": pacote,
+            "imagens_detalhes": imagens_detalhes,
         },
     )
 
 
 def pacotes(request, pacote_id=None):
 
-    from pymongo import MongoClient
-
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id) if pacote_id else None
 
     if request.method == "POST":
         form = PacoteForm(request.POST, request.FILES, instance=pacote)
         if form.is_valid():
-            pacote = form.save()
+            # Coletar descrições dos dias do POST
+            dias_descricao = []
+            i = 1
+            while f'dia_{i}' in request.POST:
+                dias_descricao.append(request.POST[f'dia_{i}'])
+                i += 1
+            
+            pacote = form.save(commit=False, dias_descricao=dias_descricao)
+            pacote.save()
+            form.save_m2m()
 
-            # 🔹 Atualizar / criar no MongoDB
-            client = MongoClient("mongodb://localhost:27017/")
-            db = client["bd2_22598"]
-            collection = db["banners"]
-
-            collection.update_one(
+            banners.update_one(
                 {"pacote_id": pacote.pacote_id},
                 {"$set": {
                     "nome": pacote.nome,
@@ -386,7 +490,6 @@ def pacotes(request, pacote_id=None):
                 }},
                 upsert=True
             )
-            client.close()
 
             if pacote_id:
                 messages.success(request, "Pacote atualizado com sucesso!")
@@ -398,38 +501,30 @@ def pacotes(request, pacote_id=None):
     else:
         form = PacoteForm(instance=pacote)
 
-    # 🔍 Pesquisa
-    query = request.GET.get('q', '').strip()
-    pacotes = Pacote.objects.all().order_by('pacote_id')
-    if query:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=query) | Q(destinos__nome__icontains=query)
-        ).distinct()
+    # Processar dias existentes se estiver editando
+    dias_existentes = []
+    if pacote and pacote.descricao_item:
+        import re
+        # Dividir por qualquer formato de dia (1ºDIA, 1º DIA, 1DIA, etc.)
+        partes = re.split(r'\s*(\d+)\s*[°º]?\s*DIA\s*:?\s*', pacote.descricao_item, flags=re.IGNORECASE)
+        
+        for i in range(1, len(partes), 2):
+            if i + 1 < len(partes):
+                descricao = partes[i + 1].strip()
+                if descricao:
+                    dias_existentes.append(descricao)
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT pacotesToJson()")
+        data = cursor.fetchone()
+        pacotes_data = data[0] if (data and data[0]) else []
 
     return render(request, 'pacotes.html', {
         'form': form,
-        'pacotes': pacotes,
         'pacote_editar': pacote,  
-        'query': query,
-    })
-
-def pacote_detalhes(request, pacote_id):
-    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
-    
-    # Busca o banner correspondente ao pacote no MongoDB
-    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
-    
-    # Prioridade: MongoDB banner > imagem do pacote no PostgreSQL > imagem padrão
-    if banner and "imagem_url" in banner:
-        imagem_url = banner["imagem_url"]
-    elif pacote.imagem:
-        imagem_url = f"/media/{pacote.imagem}"
-    else:
-        imagem_url = None
-    
-    return render(request, 'pacote_detalhes.html', {
-        "pacote": pacote,
-        "imagem_url": imagem_url
+        'data': pacotes_data,
+        'pacotes': Pacote.objects.all(),
+        'dias_existentes': dias_existentes,
     })
 
 
@@ -444,21 +539,16 @@ def eliminar_pacote(request, pacote_id):
 def pacote_detalhes(request, pacote_id):
     pacote = get_object_or_404(Pacote, pk=pacote_id)
 
-    # Conecta ao MongoDB
-    client = MongoClient("mongodb://localhost:27017/")
-    db = client["bd2_22598"]
-    collection = db["banners"]
-
     # Tenta ir buscar o banner correspondente ao pacote
-    banner = collection.find_one({"pacote_id": pacote_id, "ativo": True})
+    banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
 
     # Se encontrar, usa a imagem do MongoDB; senão, usa a imagem padrão do modelo
     imagem_url = banner["imagem_url"] if banner else f"/media/{pacote.imagem}"
 
     # Divide a descrição em blocos por dia
     texto = pacote.descricao_item or ""
-    partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*", texto, flags=re.IGNORECASE)
-    partes = [p.strip() for p in partes if p.strip()]
+    partes = re.split(r"\s*\d+\s*[°º]\s*DIA\s*:?\s*", texto, flags=re.IGNORECASE)
+    partes = [p.strip().lstrip(':').strip() for p in partes if p.strip()]
 
     dias = []
     for i, parte in enumerate(partes, start=1):
@@ -474,59 +564,92 @@ def pacote_detalhes(request, pacote_id):
         "dias": dias
     })
 
-
 def pacotes_por_pais(request):
+    # Usar a materialized view mv_pacotes_full com filtros SQL diretos para aproveitar os índices
     destinos = Destino.objects.all()
-    pacotes = Pacote.objects.all()
-
-    q = request.GET.get("q", "").strip()        # pesquisa geral (Home)
-    pais_query = request.GET.get("pais", "").strip()  # pesquisa específica na sidebar
+    q = request.GET.get("q", "").strip()
+    pais_query = request.GET.get("pais", "").strip()
     preco = request.GET.get("preco")
     mes = request.GET.get("mes")
 
-    # Filtro (vindo da Home ou sidebar)
+    pacotes = []
+    import json as _json
+    
+    sql_query = "SELECT row_to_json(p) FROM mv_pacotes_full p WHERE 1=1"
+    params = []
+    
+    # Filtro de pesquisa de texto
     if q:
-        pacotes = pacotes.filter(
-            Q(nome__icontains=q) |
-            Q(descricao_item__icontains=q) |
-            Q(destinos__pais__icontains=q) |
-            Q(destinos__nome__icontains=q)
-        )
-
-    # Filtro por país (campo específico do formulário lateral)
+        sql_query += " AND to_tsvector('portuguese', coalesce(p.nome,'') || ' ' || coalesce(p.descricao_item,'')) @@ plainto_tsquery('portuguese', %s)"
+        params.append(q)
+    
+    # Filtro de país 
     if pais_query:
-        pacotes = pacotes.filter(destinos__pais__icontains=pais_query)
-
-    # Filtro por preço máximo
+        sql_query += " AND p.destinos @> %s::jsonb"
+        params.append(_json.dumps([{"pais": pais_query}]))
+    
+    # Filtro de preço 
     if preco:
-        try:
-            pacotes = pacotes.filter(preco_total__lte=float(preco))
-        except ValueError:
-            pass
-
-    # Filtro por mês
+        sql_query += " AND p.preco_total <= %s"
+        params.append(float(preco))
+    
+    # Filtro de mês
     if mes:
-        pacotes = pacotes.filter(data_inicio__month=mes)
+        sql_query += " AND EXTRACT(MONTH FROM p.data_inicio) = %s"
+        params.append(int(mes))
+    
+    with connection.cursor() as cursor:
+        try:
+            cursor.execute(sql_query, params)
+            rows = cursor.fetchall()
+            pacotes = [row[0] for row in rows]
+            # se o adaptador retornar string, parse
+            if pacotes and isinstance(pacotes[0], (str, bytes)):
+                pacotes = [_json.loads(p) if isinstance(p, (str, bytes)) else p for p in pacotes]
+        except Exception as e:
+            pacotes = []
+
+    # Monta imagem_url e usa banner do MongoDB quando existir
+    for rec in pacotes:
+        # imagem pode estar no registro retornado
+        imagem_field = rec.get('imagem') or rec.get('imagem_url')
+        if imagem_field:
+            try:
+                imagem_str = imagem_field.decode() if isinstance(imagem_field, bytes) else str(imagem_field)
+            except Exception:
+                imagem_str = str(imagem_field)
+            rec['imagem_url'] = imagem_str if imagem_str.startswith('/') else f"/media/{imagem_str}"
+        else:
+            rec['imagem_url'] = None
+
+        try:
+            banner = banners.find_one({"pacote_id": rec.get('pacote_id'), "ativo": True})
+            if banner and banner.get('imagem_url'):
+                rec['imagem_url'] = banner.get('imagem_url')
+        except Exception:
+            pass
 
     # Agrupar pacotes por país
     pacotes_por_pais = {}
-    pacotes = pacotes.prefetch_related("destinos").distinct()
-
     for pacote in pacotes:
-        for destino in pacote.destinos.all():
-            pais = destino.pais or "Sem país"
-            if pais not in pacotes_por_pais:
-                pacotes_por_pais[pais] = []
-            pacotes_por_pais[pais].append(pacote)
+        destinos_list = pacote.get('destinos') or []
+        if not destinos_list:
+            pais = 'Sem país'
+            pacotes_por_pais.setdefault(pais, []).append(pacote)
+        else:
+            for d in destinos_list:
+                pais = d.get('pais') or 'Sem país'
+                pacotes_por_pais.setdefault(pais, []).append(pacote)
 
+    # Preço máximo (mantemos consulta ORM só para agregação simples)
     preco_maximo = Pacote.objects.aggregate(Max("preco_total"))["preco_total__max"] or 10000
-
+# -------------------------------------------------------------------------------------------------------
     meses = [
         ("01", "Janeiro"), ("02", "Fevereiro"), ("03", "Março"), ("04", "Abril"),
         ("05", "Maio"), ("06", "Junho"), ("07", "Julho"), ("08", "Agosto"),
         ("09", "Setembro"), ("10", "Outubro"), ("11", "Novembro"), ("12", "Dezembro"),
     ]
-
+ 
     return render(request, "pacotes_por_pais.html", {
         "pacotes_por_pais": pacotes_por_pais,
         "preco_maximo": preco_maximo,
@@ -543,7 +666,118 @@ def reserva_pacote(request, pacote_id):
 
     hoteis = Hotel.objects.filter(destino_id__in=destinos_do_pacote)
 
+    # Buscar imagens dos hotéis do MongoDB
+    hoteis_com_imagem = []
+    for hotel in hoteis:
+        hotel_dict = {
+            'hotel_id': hotel.hotel_id,
+            'nome': hotel.nome,
+            'endereco': hotel.endereco,
+            'preco_diario': hotel.preco_diario,
+            'descricao_item': hotel.descricao_item,
+            'tem_imagem': False
+        }
+        
+        # Verificar se existe imagem no MongoDB
+        imagem_doc = capa_hotel.find_one({'hotel_id': hotel.hotel_id})
+        if imagem_doc:
+            hotel_dict['tem_imagem'] = True
+        
+        hoteis_com_imagem.append(hotel_dict)
+
     return render(request, "reserva_pacote.html", {
         "pacote": pacote,
-        "hoteis": hoteis,
+        "hoteis": hoteis_com_imagem,
+    })
+
+
+def hotel_imagem(request, hotel_id):
+    """
+    Serve a imagem de capa do hotel armazenada no MongoDB.
+    """
+    from django.http import HttpResponse, Http404
+    
+    # Buscar a imagem no MongoDB
+    imagem_doc = capa_hotel.find_one({'hotel_id': hotel_id})
+    
+    if not imagem_doc or 'imagem' not in imagem_doc:
+        raise Http404("Imagem não encontrada")
+    
+    # Retornar a imagem com o content type correto
+    response = HttpResponse(imagem_doc['imagem'], content_type=imagem_doc.get('content_type', 'image/jpeg'))
+    return response
+
+
+def hotel_imagem_detalhe(request, hotel_id, imagem_id):
+    """
+    Serve uma imagem de detalhe do hotel armazenada no MongoDB.
+    """
+    # Buscar a imagem no MongoDB usando o _id
+    try:
+        imagem_doc = detalhes_hotel.find_one({'_id': ObjectId(imagem_id), 'hotel_id': hotel_id})
+    except:
+        raise Http404("Imagem não encontrada")
+    
+    if not imagem_doc or 'imagem' not in imagem_doc:
+        raise Http404("Imagem não encontrada")
+    
+    # Retornar a imagem com o content type correto
+    response = HttpResponse(imagem_doc['imagem'], content_type=imagem_doc.get('content_type', 'image/jpeg'))
+    return response
+
+
+def selecionar_voo_view(request, pacote_id, hotel_id):
+    """
+    Exibe a lista de voos disponíveis para o pacote selecionado.
+    """
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    
+    # Buscar destinos do pacote
+    destinos_do_pacote = pacote.destinos.all()
+    
+    # Buscar voos para os destinos do pacote
+    voos = Voo.objects.filter(destino__in=destinos_do_pacote)
+    
+    return render(request, "selecionar_voo.html", {
+        "pacote": pacote,
+        "hotel": hotel,
+        "voos": voos,
+    })
+
+
+def confirmar_voo(request, voo_id, pacote_id, hotel_id):
+    """
+    Processa a seleção do voo e redireciona para a confirmação final.
+    """
+    pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
+    voo = get_object_or_404(Voo, voo_id=voo_id)
+    hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
+    
+    # Calcular número de noites
+    num_noites = (pacote.data_fim - pacote.data_inicio).days
+    
+    # Calcular preços
+    preco_hotel_total = hotel.preco_diario * num_noites
+    preco_voo_total = voo.preco
+    preco_base_pacote = pacote.preco_total
+    
+    # Calcular preço total final
+    preco_total_final = preco_base_pacote + preco_hotel_total + preco_voo_total
+    
+    # Aqui você pode salvar a escolha do voo na sessão ou em um modelo
+    # Por exemplo: request.session['voo_selecionado'] = voo_id
+    
+    # Por enquanto, vamos apenas renderizar uma página de confirmação
+    # ou redirecionar para a próxima etapa do processo de reserva
+    
+    return render(request, "confirmacao_pacote.html", {
+        "pacote": pacote,
+        "voo": voo,
+        "hotel": hotel,
+        "num_noites": num_noites,
+        "preco_hotel_total": preco_hotel_total,
+        "preco_voo_total": preco_voo_total,
+        "preco_base_pacote": preco_base_pacote,
+        "preco_total_final": preco_total_final,
     })

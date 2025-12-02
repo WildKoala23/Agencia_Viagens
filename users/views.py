@@ -2,7 +2,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.db import connection
 from django.db.models import Q
 from pymongo import MongoClient
+from django.http import JsonResponse
 from django.core import serializers
+from django.db.models import Sum
 from django.contrib.auth import authenticate, login
 from .forms import *
 from django.contrib.auth import get_user_model
@@ -10,7 +12,7 @@ from django.contrib.auth.forms import UserCreationForm
 Utilizador = get_user_model()
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdii_25971"]
 userData = db["dadosUser"]
 
 def loginUser(request):
@@ -32,7 +34,8 @@ def loginUser(request):
                 if user.is_staff:
                     return redirect('main:dashboard')  # staff
                 else:
-                    return redirect('users:user')  # usuário comum
+                    # usuários comuns redirecionam para a página pública 'home'
+                    return redirect('main:home')
             else:
                 form.add_error(None, "Email ou senha inválidos")
     else:
@@ -94,7 +97,7 @@ def user(req):
     data = userData.find_one({"Id_User": req.user.user_id})
     # data = list(userData.find())
     print(data)
-    return render(req, 'dashboardUser.html', {"data": data})
+    return render(req, 'dashboardUser.html', {"data": data, "brand_name": "Atlas Gateways"})
 
 
 def comprasUser(req):
@@ -148,3 +151,156 @@ def editar_cliente(request, cliente_id):
         form = EditClienteForm(instance=cliente)
 
     return render(request, 'editar_cliente.html', {'form': form, 'cliente': cliente})
+
+
+def dashboard(request):
+    from pacotes.models import Pacote, Feedback
+    from pagamentos.models import Pagamento, Compra
+    from users.models import Utilizador
+
+    mongodb = globals().get('db')
+    pacotes = Pacote.objects.filter(estado_id=1)[:3]
+
+#Por alterar--------------------------------------------------#
+    total_clientes = Utilizador.objects.count()
+    total_compras = Compra.objects.count()
+    pagamento_sum = Pagamento.objects.aggregate(total=Sum('valor'))['total']
+    if pagamento_sum is None:
+        lucro_total = Compra.objects.aggregate(total=Sum('valor_total'))['total'] or 0
+    else:
+        lucro_total = pagamento_sum
+
+    total_feedbacks = Feedback.objects.count()
+
+    try:
+        if mongodb is not None:
+            if 'dashboard_stats' in mongodb.list_collection_names():
+                doc = mongodb.dashboard_stats.find_one(sort=[('updated_at', -1)]) or mongodb.dashboard_stats.find_one()
+                if doc:
+                    total_clientes = doc.get('total_clientes', total_clientes)
+                    total_compras = doc.get('total_compras', total_compras) or doc.get('total_reservas', total_compras)
+                    lucro_total = doc.get('lucro_total', float(lucro_total))
+                    total_feedbacks = doc.get('total_feedbacks', total_feedbacks) or doc.get('feedbacks', total_feedbacks)
+            else:
+                if 'utilizadores' in mongodb.list_collection_names():
+                    try:
+                        total_clientes = mongodb.utilizadores.count_documents({})
+                    except Exception:
+                        pass
+                if 'compras' in mongodb.list_collection_names():
+                    try:
+                        total_compras = mongodb.compras.count_documents({})
+                    except Exception:
+                        pass
+                if 'pagamentos' in mongodb.list_collection_names():
+                    try:
+                        agg = list(mongodb.pagamentos.aggregate([{'$group': {'_id': None, 'sum': {'$sum': '$valor'}}}]))
+                        if agg:
+                            lucro_total = agg[0].get('sum', float(lucro_total))
+                    except Exception:
+                        pass
+                if 'feedbacks' in mongodb.list_collection_names():
+                    try:
+                        total_feedbacks = mongodb.feedbacks.count_documents({})
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+#---------------------------------------------------------------#
+    pacotes_ativos = None
+    pacotes_cancelados = None
+    pacotes_esgotados = None
+    try:
+        if mongodb is not None and 'dataAdmin' in mongodb.list_collection_names():
+            try:
+                doc = mongodb.dataAdmin.find_one()
+                if doc:
+                    try:
+                        pacotes_ativos = int(doc.get('NumPacotesAtivos', 0))
+                    except Exception:
+                        pacotes_ativos = None
+                    try:
+                        pacotes_cancelados = int(doc.get('NumPacotesCancelados', 0))
+                    except Exception:
+                        pacotes_cancelados = None
+                    try:
+                        pacotes_esgotados = int(doc.get('NumPacotesEsgotados', 0))
+                    except Exception:
+                        pacotes_esgotados = None
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    aval1 = aval2 = aval3 = aval4 = aval5 = 0
+    try:
+        if mongodb is not None and 'dataAdmin' in mongodb.list_collection_names():
+            try:
+                rdoc = mongodb.dataAdmin.find_one({'NumAval1': {'$exists': True}})
+                if not rdoc:
+                    rdoc = mongodb.dataAdmin.find_one()
+                if rdoc:
+                    try:
+                        aval1 = int(rdoc.get('NumAval1', 0))
+                    except Exception:
+                        aval1 = 0
+                    try:
+                        aval2 = int(rdoc.get('NumAval2', 0))
+                    except Exception:
+                        aval2 = 0
+                    try:
+                        aval3 = int(rdoc.get('NumAval3', 0))
+                    except Exception:
+                        aval3 = 0
+                    try:
+                        aval4 = int(rdoc.get('NumAval4', 0))
+                    except Exception:
+                        aval4 = 0
+                    try:
+                        aval5 = int(rdoc.get('NumAval5', 0))
+                    except Exception:
+                        aval5 = 0
+            except Exception:
+                pass
+    except Exception:
+        pass
+
+    context = {
+        'total_clientes': total_clientes,
+        'total_compras': total_compras,
+        'lucro_total': lucro_total,
+        'total_feedbacks': total_feedbacks,
+        'pacotes': pacotes,
+        'pacotes_ativos': pacotes_ativos,
+        'pacotes_cancelados': pacotes_cancelados,
+        'pacotes_esgotados': pacotes_esgotados,
+        'aval1': aval1,
+        'aval2': aval2,
+        'aval3': aval3,
+        'aval4': aval4,
+        'aval5': aval5,
+    }
+    return render(request, 'dashboard.html', context)
+
+def api_pacotes_por_pais(request):
+    try:
+        mongodb = globals().get('db')
+        if mongodb is not None and 'dataAdminPais' in mongodb.list_collection_names():
+            cursor = mongodb.dataAdminPais.find()
+            response_data = {}
+            for document in cursor:
+                for key, value in document.items():
+                    if key != '_id':
+                        # ensure numeric type (DB may store strings)
+                        try:
+                            num = int(value)
+                        except Exception:
+                            try:
+                                num = int(float(value))
+                            except Exception:
+                                num = 0
+                        response_data[key] = response_data.get(key, 0) + num
+            return JsonResponse(response_data)
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+    return JsonResponse({}, status=500)

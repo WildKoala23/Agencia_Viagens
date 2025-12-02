@@ -121,3 +121,23 @@
         margin-bottom: 30px;
     }
 }
+
+/* ===== Estilos para Dias Dinâmicos ===== */
+.dia-item {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+}
+
+.dia-item label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+#dias-container {
+    margin-bottom: 15px;
+}

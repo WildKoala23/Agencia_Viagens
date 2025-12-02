@@ -21,11 +21,11 @@
     <div class="col-md-4">
       <div class="package-card shadow-sm rounded-3 border-0" style="overflow:hidden;">
         <div class="package-image">
-          {% if hotel.imagem %}
-            <img src="/media/{{ hotel.imagem }}" alt="{{ hotel.nome }}"
+          {% if hotel.tem_imagem %}
+            <img src="{% url 'hotel_imagem' hotel.hotel_id %}" alt="{{ hotel.nome }}"
                  class="img-fluid rounded-top" style="width:100%; height:220px; object-fit:cover;">
           {% else %}
-            <img src="{% static 'default_hotel.jpg' %}" alt="Sem imagem"
+            <img src="https://via.placeholder.com/400x220?text=Sem+Imagem" alt="Sem imagem"
                  class="img-fluid rounded-top" style="width:100%; height:220px; object-fit:cover;">
           {% endif %}
         </div>
@@ -36,7 +36,7 @@
             <p class="package-location text-muted mb-2">{{ hotel.endereco }}</p>
           {% endif %}
           <p class="package-duration mb-2">{{ hotel.descricao_item|truncatewords:15 }}</p>
-          <p class="package-price text-primary fw-bold mb-3">
+          <p class="package-price fw-bold mb-3" style="color: #17a2b8;">
             Desde {{ hotel.preco_diario }}€ / noite
           </p>
 

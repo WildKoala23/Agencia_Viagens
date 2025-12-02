@@ -3,10 +3,28 @@ from .models import Destino, Voo, Hotel, Pacote, Feedback
 from django.forms import DateTimeInput
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", MultipleFileInput())
+        super().__init__(*args, **kwargs)
+
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            result = [single_file_clean(d, initial) for d in data]
+        else:
+            result = single_file_clean(data, initial)
+        return result
+
+
 class DestinoForm(forms.ModelForm):
     class Meta:
         model = Destino
-        fields = '__all__'
+        exclude = ['destino_id'] 
 
 class VooForm(forms.ModelForm):
     class Meta:
@@ -41,6 +59,17 @@ class VooForm(forms.ModelForm):
         return voo
      
 class HotelForm(forms.ModelForm):
+    imagem = forms.ImageField(
+        required=False,
+        label="Imagem de Capa do Hotel",
+        widget=forms.FileInput(attrs={'class': 'form-control'}),
+    )
+    
+    imagens_detalhes = MultipleFileField(
+        required=False,
+        label="Imagens dos Quartos e Acomodações (múltiplas)",
+    )
+
     class Meta:
         model = Hotel
         fields = '__all__'  
@@ -54,18 +83,17 @@ class PacoteForm(forms.ModelForm):
     required=False,
     label="Imagem do Pacote",
     widget=forms.FileInput(attrs={'class': 'form-control'}),
-)
+    )
 
     class Meta:
         model = Pacote
-        fields = ['nome', 'descricao_item', 'data_inicio', 'data_fim', 'preco_total', 'estado', 'imagem', 'destinos']
+        fields = ['nome', 'data_inicio', 'data_fim', 'preco_total', 'estado_id', 'imagem', 'destinos']
         labels = {
             'nome': 'Nome do Pacote',
-            'descricao_item': 'Descrição',
             'data_inicio': 'Data de Início (AAAA-MM-DD)',
             'data_fim': 'Data de Fim (AAAA-MM-DD)',
             'preco_total': 'Preço Total (€)',
-            'estado': 'Estado',
+            'estado_id': 'Estado',
             'imagem': 'Imagem do Pacote',
             'destinos': 'Destinos',
         }
@@ -81,8 +109,16 @@ class PacoteForm(forms.ModelForm):
         self.fields['destinos'].help_text = "Selecione pelo menos um destino."
 
 
-    def save(self, commit=True):
+    def save(self, commit=True, dias_descricao=None):
      instance = super().save(commit=False)
+
+     # Processar descrição dos dias
+     if dias_descricao:
+        descricao_completa = ""
+        for i, descricao in enumerate(dias_descricao, 1):
+            if descricao.strip():
+                descricao_completa += f"{i}ºDIA: {descricao.strip()}\n"
+        instance.descricao_item = descricao_completa.strip()
 
      if self.cleaned_data.get('fatura_linha_id'):
         from .models import FacturaLinha
@@ -106,5 +142,13 @@ class FeedbackForm(forms.ModelForm):
             'pacote': 'Pacote',
             'avaliacao': 'Avaliação (1-5)',
             'comentario': 'Comentário',
-            'data_feedback': 'Data do Feedback (AAAA-MM-DD)',
+            'data_feedback': 'Data do Feedback',
         }
+        widgets = {
+            'data_feedback': forms.DateInput(attrs={'type': 'date'}),
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Permitir que o comentário seja opcional (pode apenas avaliar sem comentar)
+        if 'comentario' in self.fields:
+            self.fields['comentario'].required = False

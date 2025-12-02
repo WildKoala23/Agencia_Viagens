@@ -17,12 +17,20 @@ urlpatterns = [
     path('hoteis/eliminar/<int:hotel_id>/', views.eliminar_hotel, name='eliminar_hotel'),
     path("hoteis/<int:hotel_id>/selecionar/<int:pacote_id>/", views.selecionar_hotel, name="selecionar_hotel"),
     path("hoteis/<int:hotel_id>/detalhes/", views.hotel_detalhes, name="hotel_detalhes"),
+    path("hoteis/<int:hotel_id>/imagem/", views.hotel_imagem, name="hotel_imagem"),
+    path("hoteis/<int:hotel_id>/imagem-detalhe/<str:imagem_id>/", views.hotel_imagem_detalhe, name="hotel_imagem_detalhe"),
+
+    # VOOS
+    path("pacotes/<int:pacote_id>/hotel/<int:hotel_id>/selecionar-voo/", views.selecionar_voo_view, name="selecionar_voo"),
+    path("voos/<int:voo_id>/confirmar/<int:pacote_id>/<int:hotel_id>/", views.confirmar_voo, name="confirmar_voo"),
+
 
 
     
     path('feedbacks/', views.feedbacks, name='feedbacks'),
     path('feedbacks/estatisticas/', views.feedback_estatisticas, name='feedback_estatisticas'),
     path('feedbacks/pacote/<int:pacote_id>/', views.feedbacks_por_pacote, name='feedbacks_por_pacote'),
+    path('feedbacks/eliminar/<int:feedback_id>/', views.eliminar_feedback, name='eliminar_feedback'),
     
      # PACOTES
     path('pacotes/', views.pacotes, name='pacotes'),

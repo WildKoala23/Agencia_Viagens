@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
+
+<div class="container my-5 pacote-detalhes">
+
+  <!-- Cabeçalho de confirmação -->
+  <div class="text-center mb-5">
+    <div class="mb-4">
+      <div class="success-icon" style="font-size: 64px; color: #28a745;">✓</div>
+    </div>
+    <h2 class="text-success">Confirmação do Pacote</h2>
+    <p class="text-muted">Reveja os detalhes da sua seleção abaixo.</p>
+  </div>
+
+  <hr class="mb-5">
+
+  <!-- Informações do Pacote -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Informações do Pacote</h4>
+    </div>
+    <div class="card-body">
+      <h5>{{ pacote.nome }}</h5>
+      <p><strong>Datas:</strong> {{ pacote.data_inicio }} → {{ pacote.data_fim }}</p>
+      <p><strong>Duração:</strong> {{ num_noites }} noite{{ num_noites|pluralize }}</p>
+      <p class="mb-0"><strong>Preço base do pacote:</strong> <span class="text-muted">desde</span> €{{ preco_base_pacote }}</p>
+    </div>
+  </div>
+
+  <!-- Informações do Hotel -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Hotel Selecionado</h4>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Nome:</strong> {{ hotel.nome }}</p>
+          <p><strong>Endereço:</strong> {{ hotel.endereco }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Destino:</strong> {{ hotel.destino_id.nome }}, {{ hotel.destino_id.pais }}</p>
+          <p><strong>Preço por noite:</strong> €{{ hotel.preco_diario }}</p>
+        </div>
+      </div>
+      {% if hotel.descricao_item %}
+      <hr>
+      <p class="mb-0"><strong>Descrição:</strong> {{ hotel.descricao_item }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Informações do Voo -->
+  <div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Voo Selecionado</h4>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Companhia:</strong> {{ voo.companhia }}</p>
+          <p><strong>Número do Voo:</strong> #{{ voo.numero_voo }}</p>
+          <p><strong>Destino:</strong> {{ voo.destino.nome }}, {{ voo.destino.pais }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>🛫 Partida:</strong> {{ voo.data_saida|date:"d/m/Y H:i" }}</p>
+          <p><strong>🛬 Chegada:</strong> {{ voo.data_chegada|date:"d/m/Y H:i" }}</p>
+          <p><strong>Preço:</strong> €{{ voo.preco }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Resumo de Custos -->
+  <div class="card mb-4 border-success">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Resumo de Custos</h4>
+    </div>
+    <div class="card-body">
+      <div class="row mb-2">
+        <div class="col-8">
+          <p class="mb-1">Preço base do pacote:</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_base_pacote }}</p>
+        </div>
+      </div>
+      <div class="row mb-2">
+        <div class="col-8">
+          <p class="mb-1">Hotel ({{ num_noites }} noite{{ num_noites|pluralize }} × €{{ hotel.preco_diario }}):</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_hotel_total }}</p>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-8">
+          <p class="mb-1">Voo:</p>
+        </div>
+        <div class="col-4 text-end">
+          <p class="mb-1">€{{ preco_voo_total }}</p>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div class="col-8">
+          <h5 class="mb-0"><strong>Preço Total Final:</strong></h5>
+        </div>
+        <div class="col-4 text-end">
+          <h5 class="mb-0 text-success"><strong>€{{ preco_total_final }}</strong></h5>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botões de ação -->
+  <div class="text-center mt-5">
+    <a href="{% url 'pacotes_por_pais' %}" class="btn-voltar btn-lg me-3">
+      ← Voltar aos Pacotes
+    </a>
+    <a href="{% url 'processar_pagamento' pacote.pacote_id hotel.hotel_id voo.voo_id %}" class="btn btn-success btn-lg">
+      Continuar para Pagamento →
+    </a>
+  </div>
+
+</div>
+
+<style>
+.success-icon {
+  display: inline-block;
+  width: 100px;
+  height: 100px;
+  line-height: 100px;
+  border-radius: 50%;
+  background-color: #d4edda;
+  border: 4px solid #28a745;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+  border-bottom: none;
+  padding: 1rem 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.btn-voltar {
+  background: #004085;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background: #002752;
+  color: white;
+  text-decoration: none;
+}
+</style>
+
+{% endblock %}

@@ -20,18 +20,65 @@
     </div>
   </div>
 
-  <!-- Imagem -->
-  <div style="position: relative; text-align: center; margin-top: 20px;">
-    {% if hotel.imagem %}
-      <img src="/media/{{ hotel.imagem }}" alt="{{ hotel.nome }}" class="img-fluid rounded-3"
-           style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
-    {% else %}
-      <img src="{% static 'default.jpg' %}" alt="{{ hotel.nome }}" class="img-fluid rounded-3"
-           style="width: 100%; height: 400px; object-fit: cover; filter: brightness(80%); border-radius: 10px;">
-    {% endif %}
-  </div>
-
   <hr class="mt-5">
+
+  <!-- Galeria de Imagens dos Quartos e Acomodações -->
+  {% if imagens_detalhes %}
+  <div class="itinerario">
+    <h3>Quartos e Acomodações</h3>
+    
+    <!-- Carrossel de Imagens -->
+    <div style="position: relative; max-width: 1200px; margin: 20px auto;">
+      <!-- Container do Carrossel -->
+      <div id="carrosselHotel" style="overflow: hidden; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div id="carrosselSlides" style="display: flex; transition: transform 0.5s ease-in-out;">
+          {% for imagem in imagens_detalhes %}
+            <div class="carrossel-slide" style="min-width: 100%; position: relative;">
+              <img src="{% url 'hotel_imagem_detalhe' hotel.hotel_id imagem.id %}" 
+                   alt="{{ hotel.nome }}" 
+                   style="width: 100%; height: 500px; object-fit: cover; cursor: pointer;"
+                   onclick="abrirModalImagem(this.src)">
+              <div style="position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 8px 15px; border-radius: 20px; font-size: 14px;">
+                {{ forloop.counter }} / {{ imagens_detalhes|length }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+      
+      <!-- Botões de Navegação -->
+      {% if imagens_detalhes|length > 1 %}
+      <button onclick="moverCarrossel(-1)" 
+              style="position: absolute; top: 50%; left: 20px; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; transition: background 0.3s;"
+              onmouseover="this.style.background='white'" 
+              onmouseout="this.style.background='rgba(255,255,255,0.9)'">
+        &#8249;
+      </button>
+      <button onclick="moverCarrossel(1)" 
+              style="position: absolute; top: 50%; right: 20px; transform: translateY(-50%); background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 50px; height: 50px; font-size: 24px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; transition: background 0.3s;"
+              onmouseover="this.style.background='white'" 
+              onmouseout="this.style.background='rgba(255,255,255,0.9)'">
+        &#8250;
+      </button>
+      {% endif %}
+      
+      <!-- Indicadores (pontos) -->
+      {% if imagens_detalhes|length > 1 %}
+      <div style="text-align: center; margin-top: 15px;">
+        {% for imagem in imagens_detalhes %}
+          <span class="carrossel-indicador" 
+                data-slide="{{ forloop.counter0 }}"
+                onclick="irParaSlide({{ forloop.counter0 }})"
+                style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #ccc; margin: 0 5px; cursor: pointer; transition: background 0.3s;">
+          </span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <hr class="mt-5">
+  {% endif %}
 
   <!-- Descrição -->
   <div class="itinerario">
@@ -86,9 +133,64 @@
 
 </div>
 
+<!-- Modal para visualizar imagem em tamanho grande -->
+<div id="modalImagem" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); padding: 20px;">
+  <span onclick="fecharModalImagem()" style="position: absolute; top: 15px; right: 35px; color: #f1f1f1; font-size: 40px; font-weight: bold; cursor: pointer;">&times;</span>
+  <img id="imagemModal" style="margin: auto; display: block; max-width: 90%; max-height: 90%; object-fit: contain;">
+</div>
+
 <!-- Script -->
 <script>
+// Controle do carrossel
+let slideAtual = 0;
+const totalSlides = {{ imagens_detalhes|length|default:0 }};
+
+function atualizarCarrossel() {
+  const carrosselSlides = document.getElementById('carrosselSlides');
+  if (carrosselSlides) {
+    carrosselSlides.style.transform = `translateX(-${slideAtual * 100}%)`;
+    
+    // Atualizar indicadores
+    const indicadores = document.querySelectorAll('.carrossel-indicador');
+    indicadores.forEach((ind, idx) => {
+      ind.style.background = idx === slideAtual ? '#2c5aa0' : '#ccc';
+    });
+  }
+}
+
+function moverCarrossel(direcao) {
+  slideAtual += direcao;
+  
+  // Loop infinito
+  if (slideAtual < 0) {
+    slideAtual = totalSlides - 1;
+  } else if (slideAtual >= totalSlides) {
+    slideAtual = 0;
+  }
+  
+  atualizarCarrossel();
+}
+
+function irParaSlide(indice) {
+  slideAtual = indice;
+  atualizarCarrossel();
+}
+
+// Suporte para navegação por teclado
+document.addEventListener('keydown', function(e) {
+  if (totalSlides > 1) {
+    if (e.key === 'ArrowLeft') {
+      moverCarrossel(-1);
+    } else if (e.key === 'ArrowRight') {
+      moverCarrossel(1);
+    }
+  }
+});
+
+// Inicializar carrossel ao carregar
 document.addEventListener('DOMContentLoaded', function() {
+  atualizarCarrossel();
+  
   document.querySelectorAll('.info-header').forEach(function(header) {
     header.addEventListener('click', function() {
       const targetId = header.getAttribute('data-target');
@@ -97,6 +199,24 @@ document.addEventListener('DOMContentLoaded', function() {
       content.classList.toggle('active');
     });
   });
+});
+
+function abrirModalImagem(src) {
+  const modal = document.getElementById('modalImagem');
+  const imagemModal = document.getElementById('imagemModal');
+  modal.style.display = 'block';
+  imagemModal.src = src;
+}
+
+function fecharModalImagem() {
+  document.getElementById('modalImagem').style.display = 'none';
+}
+
+// Fechar modal ao clicar fora da imagem
+document.getElementById('modalImagem').addEventListener('click', function(e) {
+  if (e.target === this) {
+    fecharModalImagem();
+  }
 });
 </script>
 

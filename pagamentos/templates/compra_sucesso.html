@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'compra_sucesso.css' %}">
+
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Cabeçalho de Sucesso -->
+      <div class="text-center mb-5">
+        <div class="mb-4">
+          <div class="success-checkmark">
+            <div class="check-icon">
+              <span class="icon-line line-tip"></span>
+              <span class="icon-line line-long"></span>
+              <div class="icon-circle"></div>
+              <div class="icon-fix"></div>
+            </div>
+          </div>
+        </div>
+        <h2 class="text-success mb-3">Compra Realizada com Sucesso!</h2>
+        <p class="text-muted">Obrigado pela sua compra!</p>
+      </div>
+
+      <!-- Informações da Compra -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-success text-white">
+          <h5 class="mb-0">Detalhes da Compra</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <p class="mb-2"><strong>Data da Compra:</strong> {{ compra.data_compra|date:"d/m/Y" }}</p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-2"><strong>Estado:</strong> 
+                <span class="badge {% if compra.estado == 'Confirmada' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                  {{ compra.estado }}
+                </span>
+              </p>
+              <p class="mb-2"><strong>Pacote:</strong> {{ compra.pacote.nome }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Informações do Pagamento -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Informações do Pagamento</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <p class="mb-2"><strong>Método de Pagamento:</strong>
+                {% if pagamento.metodo == 'mbway' %}
+                  MBWay
+                {% elif pagamento.metodo == 'cartao_credito' %}
+                  Cartão de Crédito
+                {% endif %}
+              </p>
+              <p class="mb-2"><strong>Estado do Pagamento:</strong>
+                <span class="badge {% if pagamento.estado == 'Aprovado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                  {{ pagamento.estado }}
+                </span>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-2"><strong>Data do Pagamento:</strong> {{ pagamento.data_pagamento|date:"d/m/Y" }}</p>
+              <p class="mb-2"><strong>Valor Pago:</strong> €{{ pagamento.valor }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fatura -->
+      {% if fatura %}
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+          <h5 class="mb-0">Fatura</h5>
+        </div>
+        <div class="card-body">
+          <p class="mb-3"><strong>Data de Emissão:</strong> {{ fatura.data_emissao|date:"d/m/Y H:i" }}</p>
+          
+          <table class="table table-bordered">
+            <thead class="table-light">
+              <tr>
+                <th>Descrição</th>
+                <th class="text-end">Preço Unit.</th>
+                <th class="text-end">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for linha in linhas_fatura %}
+              <tr>
+                <td>{{ linha.descricao_item }}</td>
+                <td class="text-end">€{{ linha.preco }}</td>
+                <td class="text-end">€{{ linha.subtotal }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="table-light">
+              <tr>
+                <td colspan="2" class="text-end"><strong>Total:</strong></td>
+                <td class="text-end"><strong class="text-success">€{{ fatura.valor_total }}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Botões de Ação -->
+      <div class="text-center mt-5">
+        <a href="{% url 'users:comprasUser' %}" class="btn btn-primary btn-lg me-3">
+          Ver as Minhas Compras
+        </a>
+        <a href="{% url 'pacotes_por_pais' %}" class="btn btn-outline-secondary btn-lg">
+          ← Voltar aos Pacotes
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

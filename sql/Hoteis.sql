@@ -26,3 +26,68 @@ SELECT
     h.descricao_item AS descricao_hotel
 FROM hotel h;
 
+-- Cria uma view na cache de todos os hoteis
+DO $$
+BEGIN
+    EXECUTE 'DROP MATERIALIZED VIEW IF EXISTS mv_hoteis';
+    EXECUTE 'CREATE MATERIALIZED VIEW mv_hoteis AS
+             SELECT * FROM hotel';
+END $$;
+
+-- Cria função que converte materialized view para json 
+CREATE OR REPLACE FUNCTION hoteisToJson()
+RETURNS json AS $$
+    SELECT json_agg(row_to_json(h))
+    FROM mv_hoteis h;
+$$ LANGUAGE sql;
+
+-- Função para executar o refresh da materialized view
+CREATE OR REPLACE FUNCTION refresh_mv_hoteis()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW mv_hoteis;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger para atualizar views sempre que há alteração em base de dados
+CREATE OR REPLACE TRIGGER trigger_insertHoteis
+AFTER INSERT OR UPDATE OR DELETE ON hotel
+FOR EACH STATEMENT
+EXECUTE FUNCTION refresh_mv_hoteis();
+
+-- Função para eliminar hotel com validações
+CREATE OR REPLACE FUNCTION eliminar_hotel(p_hotel_id INTEGER)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_pacote_exists BOOLEAN;
+BEGIN
+    -- Verificar se o hotel está associado a algum pacote
+    SELECT EXISTS(
+        SELECT 1 FROM pacote_hotel 
+        WHERE hotel_id = p_hotel_id
+    ) INTO v_pacote_exists;
+    
+    -- Se estiver associado a pacotes, lançar erro
+    IF v_pacote_exists THEN
+        RAISE EXCEPTION 'Não é possível eliminar este hotel porque está associado a pacotes existentes.';
+    END IF;
+    
+    -- Eliminar o hotel
+    DELETE FROM hotel WHERE hotel_id = p_hotel_id;
+    
+    -- Retornar sucesso
+    RETURN TRUE;
+    
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE EXCEPTION 'Não é possível eliminar este hotel porque está a ser utilizado por outros registos.';
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Erro ao eliminar hotel: %', SQLERRM;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Comentário da função
+COMMENT ON FUNCTION eliminar_hotel(INTEGER) IS 
+'Elimina um hotel se não estiver associado a nenhum pacote. Lança exceção caso contrário.';
+

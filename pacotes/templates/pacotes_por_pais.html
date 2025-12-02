@@ -1,10 +1,13 @@
-{% extends "base.html" %}
+{% extends "baseUser.html" %}
 {% load static %}
 
 {% block styles %}
 <link rel="stylesheet" href="{% static 'cards.css' %}">
 <link rel="stylesheet" href="{% static 'pag_pacotes.css' %}">
 {% endblock %}
+
+{% block page_title %}Pacotes{% endblock %}
+
 
 {% block content %}
 

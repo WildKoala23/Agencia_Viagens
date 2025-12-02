@@ -14,16 +14,6 @@
 <div class="container_utils">
 
     <div class="card_utils">
-        <h1>Nova Fatura</h1>
-        
-        <form method="post" class="form_utils">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn_save_utils">Guardar Fatura</button>
-        </form>
-    </div>
-
-    <div class="card_utils">
         <h2>Lista de Faturas</h2>
         
         <div style="overflow-x: auto;">
