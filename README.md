@@ -3,7 +3,6 @@
 ## Elementos no grupo
 
 Francisco Vitorino 25288\
-Guilherme Pedrinho 25215\
 Rafael Rodrigues 25170\
 Rodrigo Marques 25971\
 Tiago Carvalgo 22598
