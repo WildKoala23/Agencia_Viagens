@@ -44,19 +44,21 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if f.estado_pagamento == 'Pago' %}
-                                <span class="badge badge-success">Pago</span>
+                            {% if f.estado_pagamento == 'Aprovado' or f.estado_pagamento == 'Pago' %}
+                                <span class="badge badge-success">{{ f.estado_pagamento }}</span>
                             {% elif f.estado_pagamento == 'Pendente' %}
                                 <span class="badge badge-warning">Pendente</span>
-                            {% elif f.estado_pagamento == 'Falhado' %}
-                                <span class="badge badge-danger">Falhado</span>
+                            {% elif f.estado_pagamento == 'Falhado' or f.estado_pagamento == 'Recusado' %}
+                                <span class="badge badge-danger">{{ f.estado_pagamento }}</span>
+                            {% elif f.estado_pagamento %}
+                                <span class="badge badge-info">{{ f.estado_pagamento }}</span>
                             {% else %}
                                 <span class="badge badge-secondary">N/A</span>
                             {% endif %}
                         </td>
                         <td>
-                            <a href="{% url 'fatura_detalhes' f.fatura_id %}" class="edit_btn_utils">
-                                Ver Detalhes
+                            <a href="{% url 'fatura_pdf' f.fatura_id %}" class="edit_btn_utils" style="background-color: #28a745;">
+                                PDF
                             </a>
                         </td>
                     </tr>
