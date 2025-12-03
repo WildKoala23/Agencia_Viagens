@@ -220,33 +220,33 @@ FOR EACH ROW
 EXECUTE FUNCTION validar_datas_pacote();
 
 -- VIEW: Estatísticas de preços (pacotes, hotéis, voos)
-CREATE OR REPLACE VIEW vw_estatisticas_precos AS
-SELECT 
-    'Pacotes' AS tipo,
-    COUNT(*) AS total,
-    MIN(preco_total) AS preco_minimo,
-    MAX(preco_total) AS preco_maximo,
-    ROUND(AVG(preco_total), 2) AS preco_medio,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_total), 2) AS preco_mediano
-FROM pacote
-UNION ALL
-SELECT 
-    'Hotéis (diária)' AS tipo,
-    COUNT(*) AS total,
-    MIN(preco_diario) AS preco_minimo,
-    MAX(preco_diario) AS preco_maximo,
-    ROUND(AVG(preco_diario), 2) AS preco_medio,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_diario), 2) AS preco_mediano
-FROM hotel
-UNION ALL
-SELECT 
-    'Voos' AS tipo,
-    COUNT(*) AS total,
-    MIN(preco) AS preco_minimo,
-    MAX(preco) AS preco_maximo,
-    ROUND(AVG(preco), 2) AS preco_medio,
-    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco), 2) AS preco_mediano
-FROM voo;
+ CREATE OR REPLACE VIEW vw_estatisticas_precos AS
+    SELECT 
+        'Pacotes' AS tipo,
+        COUNT(*) AS total,
+        MIN(preco_total) AS preco_minimo,
+        MAX(preco_total) AS preco_maximo,
+        ROUND(AVG(preco_total), 2) AS preco_medio,
+        ROUND(CAST(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_total) AS NUMERIC), 2) AS preco_mediano
+    FROM pacote
+    UNION ALL
+    SELECT 
+        'Hotéis (diária)' AS tipo,
+        COUNT(*) AS total,
+        MIN(preco_diario) AS preco_minimo,
+        MAX(preco_diario) AS preco_maximo,
+        ROUND(AVG(preco_diario), 2) AS preco_medio,
+        ROUND(CAST(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_diario) AS NUMERIC), 2) AS preco_mediano
+    FROM hotel
+    UNION ALL
+    SELECT 
+        'Voos' AS tipo,
+        COUNT(*) AS total,
+        MIN(preco) AS preco_minimo,
+        MAX(preco) AS preco_maximo,
+        ROUND(AVG(preco), 2) AS preco_medio,
+        ROUND(CAST(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco) AS NUMERIC), 2) AS preco_mediano
+    FROM voo;
 
 COMMENT ON VIEW vw_estatisticas_precos IS 
 'Estatísticas agregadas de preços de pacotes, hotéis e voos';
