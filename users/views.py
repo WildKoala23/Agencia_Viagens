@@ -280,6 +280,17 @@ def dashboard(request):
         'aval4': aval4,
         'aval5': aval5,
     }
+    
+    # Buscar estatísticas de preços usando a VIEW SQL
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM vw_estatisticas_precos")
+            columns = [col[0] for col in cursor.description]
+            estatisticas_precos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            context['estatisticas_precos'] = estatisticas_precos
+    except Exception:
+        context['estatisticas_precos'] = []
+    
     return render(request, 'dashboard.html', context)
 
 def api_pacotes_por_pais(request):

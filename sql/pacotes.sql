@@ -116,4 +116,139 @@ AFTER INSERT OR UPDATE OR DELETE ON destino
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_pacotes_full();
 
+-- FUNCTION: Calcular preço total da reserva (pacote + hotel + voo)
+CREATE OR REPLACE FUNCTION calcular_preco_reserva(
+    p_pacote_id INTEGER,
+    p_hotel_id INTEGER,
+    p_voo_id INTEGER
+)
+RETURNS TABLE (
+    preco_base NUMERIC(10,2),
+    num_noites INTEGER,
+    preco_hotel_diario NUMERIC(10,2),
+    preco_hotel_total NUMERIC(10,2),
+    preco_voo NUMERIC(10,2),
+    preco_total NUMERIC(10,2)
+) AS $$
+DECLARE
+    v_data_inicio DATE;
+    v_data_fim DATE;
+    v_preco_base NUMERIC(10,2);
+    v_preco_hotel_diario NUMERIC(10,2);
+    v_preco_voo NUMERIC(10,2);
+    v_num_noites INTEGER;
+BEGIN
+    -- Buscar dados do pacote
+    SELECT p.data_inicio, p.data_fim, p.preco_total
+    INTO v_data_inicio, v_data_fim, v_preco_base
+    FROM pacote p
+    WHERE p.pacote_id = p_pacote_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Pacote % não encontrado', p_pacote_id;
+    END IF;
+    
+    -- Buscar preço do hotel
+    SELECT h.preco_diario
+    INTO v_preco_hotel_diario
+    FROM hotel h
+    WHERE h.hotel_id = p_hotel_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Hotel % não encontrado', p_hotel_id;
+    END IF;
+    
+    -- Buscar preço do voo
+    SELECT v.preco
+    INTO v_preco_voo
+    FROM voo v
+    WHERE v.voo_id = p_voo_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Voo % não encontrado', p_voo_id;
+    END IF;
+    
+    -- Calcular número de noites
+    v_num_noites := v_data_fim - v_data_inicio;
+    
+    -- Retornar tudo calculado
+    RETURN QUERY SELECT
+        v_preco_base,
+        v_num_noites,
+        v_preco_hotel_diario,
+        v_preco_hotel_diario * v_num_noites,
+        v_preco_voo,
+        v_preco_base + (v_preco_hotel_diario * v_num_noites) + v_preco_voo;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION calcular_preco_reserva(INTEGER, INTEGER, INTEGER) IS 
+'Calcula o preço total de uma reserva incluindo pacote base, hotel (por noite) e voo';
+
+-- TRIGGER: Validar datas e preços do pacote
+CREATE OR REPLACE FUNCTION validar_datas_pacote()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Validar que data_fim > data_inicio
+    IF NEW.data_fim <= NEW.data_inicio THEN
+        RAISE EXCEPTION 'A data de fim deve ser posterior à data de início';
+    END IF;
+    
+    -- Validar que data_inicio não é no passado (para novos pacotes)
+    IF TG_OP = 'INSERT' AND NEW.data_inicio < CURRENT_DATE THEN
+        RAISE EXCEPTION 'A data de início não pode ser no passado';
+    END IF;
+    
+    -- Validar preço positivo
+    IF NEW.preco_total <= 0 THEN
+        RAISE EXCEPTION 'O preço do pacote deve ser positivo';
+    END IF;
+    
+    -- Validar nome não vazio
+    IF NEW.nome IS NULL OR LENGTH(TRIM(NEW.nome)) = 0 THEN
+        RAISE EXCEPTION 'O nome do pacote é obrigatório';
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_validar_pacote ON pacote;
+CREATE TRIGGER trigger_validar_pacote
+BEFORE INSERT OR UPDATE ON pacote
+FOR EACH ROW
+EXECUTE FUNCTION validar_datas_pacote();
+
+-- VIEW: Estatísticas de preços (pacotes, hotéis, voos)
+CREATE OR REPLACE VIEW vw_estatisticas_precos AS
+SELECT 
+    'Pacotes' AS tipo,
+    COUNT(*) AS total,
+    MIN(preco_total) AS preco_minimo,
+    MAX(preco_total) AS preco_maximo,
+    ROUND(AVG(preco_total), 2) AS preco_medio,
+    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_total), 2) AS preco_mediano
+FROM pacote
+UNION ALL
+SELECT 
+    'Hotéis (diária)' AS tipo,
+    COUNT(*) AS total,
+    MIN(preco_diario) AS preco_minimo,
+    MAX(preco_diario) AS preco_maximo,
+    ROUND(AVG(preco_diario), 2) AS preco_medio,
+    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco_diario), 2) AS preco_mediano
+FROM hotel
+UNION ALL
+SELECT 
+    'Voos' AS tipo,
+    COUNT(*) AS total,
+    MIN(preco) AS preco_minimo,
+    MAX(preco) AS preco_maximo,
+    ROUND(AVG(preco), 2) AS preco_medio,
+    ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY preco), 2) AS preco_mediano
+FROM voo;
+
+COMMENT ON VIEW vw_estatisticas_precos IS 
+'Estatísticas agregadas de preços de pacotes, hotéis e voos';
+
 

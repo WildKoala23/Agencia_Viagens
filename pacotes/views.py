@@ -57,25 +57,28 @@ def editar_destino(request, destino_id):
 def eliminar_destino(request, destino_id):
     destino = get_object_or_404(Destino, destino_id=destino_id)
     if request.method == 'POST':
-        pacote_exists = Pacote.objects.filter(destinos=destino).exists()
-        voo_exists = Voo.objects.filter(destino_id=destino.destino_id).exists()
-        hotel_exists = Hotel.objects.filter(destino_id=destino.destino_id).exists()
-
-        usado = pacote_exists or voo_exists or hotel_exists
-
-        if usado:
-            reasons = []
-            if pacote_exists:
-                reasons.append('pacotes')
-            if voo_exists:
-                reasons.append('voos')
-            if hotel_exists:
-                reasons.append('hoteis')
-            messages.error(request, 'Não é possível eliminar este destino porque está a ser utilizado em: ' + ', '.join(reasons))
-            return redirect('destinos')
-
-        destino.delete()
+        try:
+            with connection.cursor() as cursor:
+                # Usar a FUNCTION SQL para validar e eliminar
+                cursor.execute("SELECT eliminar_destino(%s)", [destino_id])
+            
+            messages.success(request, "Destino eliminado com sucesso!")
+            
+        except DatabaseError as e:
+            # Capturar erro da função SQL
+            erro_texto = str(e)
+            
+            # Limpar mensagem de erro
+            if "CONTEXT" in erro_texto:
+                erro_texto = erro_texto.split("CONTEXT")[0].strip()
+            
+            erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+            erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+            
+            messages.error(request, erro_texto or "Erro ao eliminar destino.")
+        
         return redirect('destinos')
+    
     return redirect('destinos')
 
 def feedbacks(request):
@@ -467,36 +470,52 @@ def pacotes(request, pacote_id=None):
     if request.method == "POST":
         form = PacoteForm(request.POST, request.FILES, instance=pacote)
         if form.is_valid():
-            # Coletar descrições dos dias do POST
-            dias_descricao = []
-            i = 1
-            while f'dia_{i}' in request.POST:
-                dias_descricao.append(request.POST[f'dia_{i}'])
-                i += 1
+            try:
+                # Coletar descrições dos dias do POST
+                dias_descricao = []
+                i = 1
+                while f'dia_{i}' in request.POST:
+                    dias_descricao.append(request.POST[f'dia_{i}'])
+                    i += 1
+                
+                pacote = form.save(commit=False, dias_descricao=dias_descricao)
+                pacote.save()
+                form.save_m2m()
+
+                banners.update_one(
+                    {"pacote_id": pacote.pacote_id},
+                    {"$set": {
+                        "nome": pacote.nome,
+                        "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
+                        "preco_total": float(pacote.preco_total),
+                        "data_inicio": str(pacote.data_inicio),
+                        "data_fim": str(pacote.data_fim),
+                        "ativo": True
+                    }},
+                    upsert=True
+                )
+
+                if pacote_id:
+                    messages.success(request, "Pacote atualizado com sucesso!")
+                else:
+                    messages.success(request, "Pacote criado com sucesso!")
+
+                return redirect('pacotes')
             
-            pacote = form.save(commit=False, dias_descricao=dias_descricao)
-            pacote.save()
-            form.save_m2m()
-
-            banners.update_one(
-                {"pacote_id": pacote.pacote_id},
-                {"$set": {
-                    "nome": pacote.nome,
-                    "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
-                    "preco_total": float(pacote.preco_total),
-                    "data_inicio": str(pacote.data_inicio),
-                    "data_fim": str(pacote.data_fim),
-                    "ativo": True
-                }},
-                upsert=True
-            )
-
-            if pacote_id:
-                messages.success(request, "Pacote atualizado com sucesso!")
-            else:
-                messages.success(request, "Pacote criado com sucesso!")
-
-            return redirect('pacotes')
+            except (ProgrammingError, DatabaseError) as e:
+                # Capturar erros dos TRIGGERs SQL
+                erro_texto = str(e)
+                
+                # Limpar mensagem de erro
+                if "CONTEXT" in erro_texto:
+                    erro_texto = erro_texto.split("CONTEXT")[0].strip()
+                
+                erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+                erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+                
+                messages.error(request, erro_texto or "Erro ao salvar pacote.")
+        else:
+            messages.error(request, "Erro ao validar formulário. Verifique os dados.")
 
     else:
         form = PacoteForm(instance=pacote)
@@ -504,7 +523,6 @@ def pacotes(request, pacote_id=None):
     # Processar dias existentes se estiver editando
     dias_existentes = []
     if pacote and pacote.descricao_item:
-        import re
         # Dividir por qualquer formato de dia (1ºDIA, 1º DIA, 1DIA, etc.)
         partes = re.split(r'\s*(\d+)\s*[°º]?\s*DIA\s*:?\s*', pacote.descricao_item, flags=re.IGNORECASE)
         
@@ -662,24 +680,24 @@ def reserva_pacote(request, pacote_id):
 
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
 
-    destinos_do_pacote = pacote.destinos.all()
-
-    hoteis = Hotel.objects.filter(destino_id__in=destinos_do_pacote)
+    # Usar a VIEW SQL em vez de ORM
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT hotel_id, hotel_nome, preco_diario, endereco, descricao_item, destino_nome, destino_pais
+            FROM vw_hoteis_por_pacote 
+            WHERE pacote_id = %s
+        """, [pacote_id])
+        
+        columns = [col[0] for col in cursor.description]
+        hoteis_data = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     # Buscar imagens dos hotéis do MongoDB
     hoteis_com_imagem = []
-    for hotel in hoteis:
-        hotel_dict = {
-            'hotel_id': hotel.hotel_id,
-            'nome': hotel.nome,
-            'endereco': hotel.endereco,
-            'preco_diario': hotel.preco_diario,
-            'descricao_item': hotel.descricao_item,
-            'tem_imagem': False
-        }
+    for hotel_dict in hoteis_data:
+        hotel_dict['tem_imagem'] = False
         
         # Verificar se existe imagem no MongoDB
-        imagem_doc = capa_hotel.find_one({'hotel_id': hotel.hotel_id})
+        imagem_doc = capa_hotel.find_one({'hotel_id': hotel_dict['hotel_id']})
         if imagem_doc:
             hotel_dict['tem_imagem'] = True
         
@@ -729,15 +747,22 @@ def hotel_imagem_detalhe(request, hotel_id, imagem_id):
 def selecionar_voo_view(request, pacote_id, hotel_id):
     """
     Exibe a lista de voos disponíveis para o pacote selecionado.
+    Usa VIEW SQL para otimizar a query.
     """
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     
-    # Buscar destinos do pacote
-    destinos_do_pacote = pacote.destinos.all()
-    
-    # Buscar voos para os destinos do pacote
-    voos = Voo.objects.filter(destino__in=destinos_do_pacote)
+    # Usar a VIEW SQL em vez de ORM
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT voo_id, companhia, numero_voo, data_saida, data_chegada, preco, destino_nome, destino_pais
+            FROM vw_voos_por_pacote 
+            WHERE pacote_id = %s
+            ORDER BY data_saida
+        """, [pacote_id])
+        
+        columns = [col[0] for col in cursor.description]
+        voos = [dict(zip(columns, row)) for row in cursor.fetchall()]
     
     return render(request, "selecionar_voo.html", {
         "pacote": pacote,
@@ -749,35 +774,28 @@ def selecionar_voo_view(request, pacote_id, hotel_id):
 def confirmar_voo(request, voo_id, pacote_id, hotel_id):
     """
     Processa a seleção do voo e redireciona para a confirmação final.
+    Usa FUNCTION SQL para calcular todos os preços.
     """
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     voo = get_object_or_404(Voo, voo_id=voo_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     
-    # Calcular número de noites
-    num_noites = (pacote.data_fim - pacote.data_inicio).days
-    
-    # Calcular preços
-    preco_hotel_total = hotel.preco_diario * num_noites
-    preco_voo_total = voo.preco
-    preco_base_pacote = pacote.preco_total
-    
-    # Calcular preço total final
-    preco_total_final = preco_base_pacote + preco_hotel_total + preco_voo_total
-    
-    # Aqui você pode salvar a escolha do voo na sessão ou em um modelo
-    # Por exemplo: request.session['voo_selecionado'] = voo_id
-    
-    # Por enquanto, vamos apenas renderizar uma página de confirmação
-    # ou redirecionar para a próxima etapa do processo de reserva
+    # Usar FUNCTION SQL para calcular preços
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT * FROM calcular_preco_reserva(%s, %s, %s)
+        """, [pacote_id, hotel_id, voo_id])
+        
+        columns = [col[0] for col in cursor.description]
+        resultado = dict(zip(columns, cursor.fetchone()))
     
     return render(request, "confirmacao_pacote.html", {
         "pacote": pacote,
         "voo": voo,
         "hotel": hotel,
-        "num_noites": num_noites,
-        "preco_hotel_total": preco_hotel_total,
-        "preco_voo_total": preco_voo_total,
-        "preco_base_pacote": preco_base_pacote,
-        "preco_total_final": preco_total_final,
+        "num_noites": resultado['num_noites'],
+        "preco_hotel_total": resultado['preco_hotel_total'],
+        "preco_voo_total": resultado['preco_voo'],
+        "preco_base_pacote": resultado['preco_base'],
+        "preco_total_final": resultado['preco_total'],
     })

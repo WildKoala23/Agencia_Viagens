@@ -1,0 +1,43 @@
+{% if estatisticas_precos %}
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5 class="card-title mb-3">📊 Estatísticas de Preços</h5>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">Mínimo</th>
+                        <th class="text-end">Máximo</th>
+                        <th class="text-end">Médio</th>
+                        <th class="text-end">Mediano</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stat in estatisticas_precos %}
+                    <tr>
+                        <td>
+                            <strong>{{ stat.tipo }}</strong>
+                        </td>
+                        <td class="text-end">
+                            <span class="badge bg-primary">{{ stat.total }}</span>
+                        </td>
+                        <td class="text-end">€{{ stat.preco_minimo }}</td>
+                        <td class="text-end">€{{ stat.preco_maximo }}</td>
+                        <td class="text-end">
+                            <strong>€{{ stat.preco_medio }}</strong>
+                        </td>
+                        <td class="text-end">€{{ stat.preco_mediano }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="text-muted small mb-0 mt-2">
+            <i class="bi bi-info-circle"></i> 
+            Estatísticas calculadas automaticamente pela base de dados usando a VIEW <code>vw_estatisticas_precos</code>
+        </p>
+    </div>
+</div>
+{% endif %}

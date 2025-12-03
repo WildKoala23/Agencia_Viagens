@@ -22,7 +22,7 @@
       <div class="package-card shadow-sm rounded-3 border-0" style="overflow:hidden;">
         <div class="package-image">
           {% if hotel.tem_imagem %}
-            <img src="{% url 'hotel_imagem' hotel.hotel_id %}" alt="{{ hotel.nome }}"
+            <img src="{% url 'hotel_imagem' hotel.hotel_id %}" alt="{{ hotel.hotel_nome }}"
                  class="img-fluid rounded-top" style="width:100%; height:220px; object-fit:cover;">
           {% else %}
             <img src="https://via.placeholder.com/400x220?text=Sem+Imagem" alt="Sem imagem"
@@ -31,7 +31,7 @@
         </div>
 
         <div class="package-body p-3">
-          <h5 class="package-title mb-1">{{ hotel.nome }}</h5>
+          <h5 class="package-title mb-1">{{ hotel.hotel_nome }}</h5>
           {% if hotel.endereco %}
             <p class="package-location text-muted mb-2">{{ hotel.endereco }}</p>
           {% endif %}
