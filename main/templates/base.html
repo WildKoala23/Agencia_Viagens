@@ -58,17 +58,18 @@
                 <i class="bi bi-airplane-fill fs-4"></i>
                 <span class="ms-2 brand-text">Atlas Gateways</span>
             </div>
-            {% endif %}
+            {% else %}
             <div class="navbar-title">
-                <h1 class="m-0">{% block page_title %}{% endblock %}</h1>
+                <h1 class="m-0">{% block page_title %}Dashboard{% endblock %}</h1>
             </div>
+            {% endif %}
         </div>
         <div class="user-info d-flex align-items-center gap-2">
             {% if request.user.is_authenticated %}
                 {% if request.user.is_staff %}
                     <!-- Para administradores: mostrar email, iniciais e botão Log Out -->
                     <p class="mb-0">{{ request.user.email }}</p>
-                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                    <div class="circle-initials">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
                     <form method="post" action="{% url 'users:logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
@@ -79,7 +80,7 @@
                     {% if request.path == '/' or 'user' in request.path %}
                     <div class="dropdown">
                         <button class="btn btn-light d-flex align-items-center dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer; border: 1px solid #ddd;">
-                            <div class="circle-initials me-2" style="cursor: pointer;">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                            <div class="circle-initials me-2" style="cursor: pointer;">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="z-index: 9999;">
                             <li>
@@ -101,7 +102,7 @@
                         </ul>
                     </div>
                     {% else %}
-                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                    <div class="circle-initials">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
                     {% endif %}
                 {% endif %}
             {% else %}

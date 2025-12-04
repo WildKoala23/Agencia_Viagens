@@ -1,0 +1,31 @@
+<!-- templates/components/package_cards_admin.html -->
+{% load static %}
+<div class="row g-4">
+    {% for pacote in pacotes|slice:":6" %}
+    <div class="col-md-4">
+        <div class="package-card">
+            <div class="package-image">
+                {% if pacote.imagem %}
+                    <img src="/media/{{ pacote.imagem }}" alt="{{ pacote.nome }}"
+                         class="img-fluid rounded shadow-sm"
+                         style="width: 100%; height: 220px; object-fit: cover;">
+                {% else %}
+                    <img src="{% static 'default.jpg' %}" alt="Sem imagem"
+                         class="img-fluid rounded shadow-sm"
+                         style="width: 100%; height: 220px; object-fit: cover;">
+                {% endif %}
+            </div>
+            <div class="package-body">
+                <div class="package-title">{{ pacote.nome }}</div>
+                <div class="package-location">{{ pacote.descricao_item|truncatewords:10 }}</div>
+                <div class="package-duration">{{ pacote.data_inicio|date:"d/m/Y" }} → {{ pacote.data_fim|date:"d/m/Y" }}</div>
+                <div class="package-price">desde {{ pacote.preco_total }}€</div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-center text-muted">Nenhum pacote disponível no momento.</p>
+    </div>
+    {% endfor %}
+</div>

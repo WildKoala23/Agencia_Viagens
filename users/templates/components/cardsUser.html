@@ -3,33 +3,37 @@
         <div class="stats-card reserva">
             <div class="stats-icon"><i class="fas fa-plane"></i></div>
             <div class="stats-label">Próxima Reserva</div>
-            <div class="stats-value">{{ data.Proxima|date:"d/m"  }}</div>
-            <div class="stats-subtitle">{{data.Destino}}</div>
-
-
+            {% if proximas_viagens %}
+                <div class="stats-value">{{ proximas_viagens.0.data_inicio|date:"d/m" }}</div>
+                <div class="stats-subtitle">{{ proximas_viagens.0.destino_nome }}</div>
+            {% else %}
+                <div class="stats-value">-</div>
+                <div class="stats-subtitle">Sem viagens agendadas</div>
+            {% endif %}
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card total">
             <div class="stats-icon"><i class="fas fa-list"></i></div>
             <div class="stats-label">TOTAL DE RESERVAS</div>
-            <div class="stats-value">{{ data.Total_Reservas }}</div>
-            <div class="stats-subtitle">Últimos 12 meses</div>
-            
+            <div class="stats-value">{{ total_compras }}</div>
+            <div class="stats-subtitle">Todas as reservas</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card creditos">
             <div class="stats-icon"><i class="fas fa-wallet"></i></div>
-            <div class="stats-label">Saldo de Créditos</div>
-            <div class="stats-value">€{{ data.Saldo }}</div>
-            <div class="stats-subtitle">Disponível</div>
+            <div class="stats-label">Total Gasto</div>
+            <div class="stats-value">€{{ total_gasto|floatformat:0 }}</div>
+            <div class="stats-subtitle">Em viagens</div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="stats-card atividades">
             <div class="stats-icon"><i class="fas fa-clock"></i></div>
-            <div class="stats-label">Últimas Ativades</div>
+            <div class="stats-label">Feedbacks</div>
+            <div class="stats-value">{{ total_feedbacks }}</div>
+            <div class="stats-subtitle">Avaliações deixadas</div>
         </div>
     </div>
 </div>

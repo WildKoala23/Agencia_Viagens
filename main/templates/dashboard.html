@@ -9,16 +9,20 @@
 {% endblock %}
 
 {% block content %}
-<div class="header-section">
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h4 mb-0">Dashboard</h1>
-            <div class="d-flex align-items-center gap-2"></div>
-        </div>
-    </div>
-</div>
 
 <div class="container">
+
+    <!-- Mensagem de boas-vindas Admin -->
+    <div class="welcome-message mb-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <h4 class="mb-1" style="color: white; font-weight: 600;">
+            {% if user.firstname %}
+                Bem-vindo, {{ user.firstname }}! 🚀
+            {% else %}
+                Bem-vindo, Admin! 🚀
+            {% endif %}
+        </h4>
+        <p class="mb-0" style="color: rgba(255,255,255,0.9);">Painel de controlo e gestão da Atlas Gateways. Aqui pode acompanhar todas as métricas e estatísticas do sistema.</p>
+    </div>
 
     <!-- Cards de estatísticas -->
     {% include 'components/dashboard_cards.html' %}
@@ -53,6 +57,6 @@
 
     <!-- Pacotes Populares -->
     <h4 class="section-title mt-4 mb-3">Pacotes Populares</h4>
-    {% include 'components/package_cards.html' %}
+    {% include 'components/package_cards_admin.html' %}
 </div>
 {% endblock %}

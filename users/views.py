@@ -47,11 +47,21 @@ def registerUser(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
+            # Guardar o novo utilizador
+            user = form.save()
+            
+            # Fazer login automático
             email = form.cleaned_data['email']
             password = form.cleaned_data['password1']
             user = authenticate(request, email=email, password=password)
-            form.save()
-            return redirect('main:dashboard')
+            
+            if user is not None:
+                login(request, user)
+                # Redirecionar para a home page
+                return redirect('main:home')
+            else:
+                # Se autenticação falhar, redirecionar para login
+                return redirect('users:login')
     else:
         form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -94,10 +104,109 @@ def eliminar_cliente(request, cliente_id):
     return redirect('users:inserir_clientes')
 
 def user(req):
-    data = userData.find_one({"Id_User": req.user.user_id})
-    # data = list(userData.find())
-    print(data)
-    return render(req, 'dashboardUser.html', {"data": data, "brand_name": "Atlas Gateways"})
+    from pacotes.models import Feedback, Pacote
+    from pagamentos.models import Compra
+    from datetime import datetime, timedelta
+    
+    user_id = req.user.user_id
+    
+    # Dados básicos do MongoDB (mantém compatibilidade)
+    data = userData.find_one({"Id_User": user_id})
+    if not data:
+        data = {}
+    
+    # Buscar compras/viagens do usuário
+    with connection.cursor() as cursor:
+        # Próximas viagens (futuras)
+        cursor.execute("""
+            SELECT 
+                c.compra_id,
+                p.nome as pacote_nome,
+                p.data_inicio,
+                p.data_fim,
+                c.valor_total,
+                d.nome as destino_nome,
+                d.pais
+            FROM compra c
+            JOIN pacote p ON c.pacote_id = p.pacote_id
+            LEFT JOIN pacote_destino pd ON p.pacote_id = pd.pacote_id
+            LEFT JOIN destino d ON pd.destino_id = d.destino_id
+            WHERE c.user_id = %s 
+            AND p.data_inicio > CURRENT_DATE
+            ORDER BY p.data_inicio
+            LIMIT 3
+        """, [user_id])
+        proximas_viagens = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        
+        # Viagens passadas (para histórico)
+        cursor.execute("""
+            SELECT 
+                c.compra_id,
+                p.nome as pacote_nome,
+                p.data_inicio,
+                p.data_fim,
+                c.valor_total,
+                d.nome as destino_nome
+            FROM compra c
+            JOIN pacote p ON c.pacote_id = p.pacote_id
+            LEFT JOIN pacote_destino pd ON p.pacote_id = pd.pacote_id
+            LEFT JOIN destino d ON pd.destino_id = d.destino_id
+            WHERE c.user_id = %s 
+            AND p.data_fim < CURRENT_DATE
+            ORDER BY p.data_fim DESC
+            LIMIT 3
+        """, [user_id])
+        viagens_passadas = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        
+        # Estatísticas de gastos por mês (últimos 6 meses)
+        cursor.execute("""
+            SELECT 
+                TO_CHAR(c.data_compra, 'Mon') as mes,
+                EXTRACT(MONTH FROM c.data_compra) as mes_num,
+                SUM(c.valor_total) as total
+            FROM compra c
+            WHERE c.user_id = %s 
+            AND c.data_compra >= CURRENT_DATE - INTERVAL '6 months'
+            GROUP BY TO_CHAR(c.data_compra, 'Mon'), EXTRACT(MONTH FROM c.data_compra)
+            ORDER BY mes_num
+        """, [user_id])
+        gastos_mensais = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+    
+    # Feedbacks recentes do usuário
+    feedbacks_recentes = Feedback.objects.filter(user_id=user_id).select_related('pacote').order_by('-data_feedback')[:3]
+    
+    # Estatísticas gerais
+    total_compras = Compra.objects.filter(user_id=user_id).count()
+    total_gasto = Compra.objects.filter(user_id=user_id).aggregate(total=Sum('valor_total'))['total'] or 0
+    total_feedbacks = Feedback.objects.filter(user_id=user_id).count()
+    
+    # Destinos visitados (para recomendações)
+    destinos_visitados = Compra.objects.filter(
+        user_id=user_id,
+        pacote__data_fim__lt=datetime.now().date()
+    ).values_list('pacote__destinos__pais', flat=True).distinct()
+    
+    # Recomendações (pacotes de países não visitados)
+    pacotes_recomendados = Pacote.objects.filter(
+        estado_id=1
+    ).exclude(
+        destinos__pais__in=destinos_visitados
+    ).distinct()[:3]
+    
+    context = {
+        "data": data,
+        "brand_name": "Atlas Gateways",
+        "proximas_viagens": proximas_viagens,
+        "viagens_passadas": viagens_passadas,
+        "gastos_mensais": gastos_mensais,
+        "feedbacks_recentes": feedbacks_recentes,
+        "total_compras": total_compras,
+        "total_gasto": total_gasto,
+        "total_feedbacks": total_feedbacks,
+        "pacotes_recomendados": pacotes_recomendados,
+    }
+    
+    return render(req, 'dashboardUser.html', context)
 
 
 def comprasUser(req):
@@ -171,8 +280,8 @@ def perfilUser(request):
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
+        user.firstname = request.POST.get('firstname', user.firstname)
+        user.lastname = request.POST.get('lastname', user.lastname)
         user.email = request.POST.get('email', user.email)
         telefone = request.POST.get('telefone', '')
         user.telefone = int(telefone) if telefone else None
