@@ -3,6 +3,15 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
 
+<!-- Botão Voltar no topo -->
+{% if pacote %}
+<div class="container mt-3">
+  <a href="{% url 'reserva_pacote' pacote.pacote_id %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+</div>
+{% endif %}
+
 <div class="container my-5 pacote-detalhes">
 
   <!-- Cabeçalho do hotel -->

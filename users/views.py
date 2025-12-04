@@ -111,11 +111,60 @@ def comprasUser(req):
 def feedbacksUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
+    if request.method == 'POST':
+        # Processar novo feedback
+        reserva_id = request.POST.get('reserva_id')
+        avaliacao = request.POST.get('avaliacao')
+        titulo = request.POST.get('titulo')
+        comentario = request.POST.get('comentario')
+        
+        with connection.cursor() as cursor:
+            # Buscar pacote_id da compra
+            cursor.execute(
+                "SELECT pacote_id FROM compra WHERE compra_id = %s",
+                [reserva_id]
+            )
+            result = cursor.fetchone()
+            
+            if result:
+                pacote_id = result[0]
+                # Inserir feedback diretamente
+                cursor.execute("""
+                    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)
+                """, [pacote_id, request.user.user_id, titulo, avaliacao, comentario])
+        
+        return redirect('users:feedbacksUser')
+    
+    # Buscar compras do usuário para o dropdown
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
+    
+    # Buscar feedbacks anteriores do usuário
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                f.feedback_id,
+                f.titulo,
+                f.avaliacao,
+                f.comentario,
+                f.data_feedback,
+                p.nome as pacote_nome
+            FROM feedback f
+            JOIN pacote p ON f.pacote_id = p.pacote_id
+            WHERE f.user_id = %s
+            ORDER BY f.data_feedback DESC
+        """, [request.user.user_id])
+        
+        columns = [col[0] for col in cursor.description]
+        feedbacks = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
+    return render(request, 'feedbacksUser.html', {
+        "compras": compras, 
+        "user": user,
+        "feedbacks": feedbacks
+    })
 
 def perfilUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)

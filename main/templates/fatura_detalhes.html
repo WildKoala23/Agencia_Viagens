@@ -79,27 +79,31 @@
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Pacote</th>
-                        <th>Destino</th>
+                        <th>Tipo</th>
                         <th>Descrição</th>
-                        <th style="text-align: right;">Preço</th>
+                        <th style="text-align: right;">Preço Unitário</th>
+                        <th style="text-align: center;">Quantidade</th>
                         <th style="text-align: right;">Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for linha in linhas %}
                     <tr>
-                        <td>{{ linha.fatura_linha_id }}</td>
-                        <td><strong>{{ linha.nome_pacote }}</strong></td>
-                        <td><span class="badge badge-secondary">{{ linha.destino_nome }}</span></td>
+                        <td>{{ forloop.counter }}</td>
                         <td>
-                            {% if linha.descricao_item %}
-                                {{ linha.descricao_item }}
+                            {% if linha.tipo == 'Pacote Base' %}
+                                <span class="badge badge-info">{{ linha.tipo }}</span>
+                            {% elif linha.tipo == 'Alojamento' %}
+                                <span class="badge badge-success">{{ linha.tipo }}</span>
+                            {% elif linha.tipo == 'Voo' %}
+                                <span class="badge badge-primary" style="background-color: #007bff;">{{ linha.tipo }}</span>
                             {% else %}
-                                <small style="color: #6c757d;">{{ linha.descricao_pacote|truncatewords:10 }}</small>
+                                <span class="badge badge-secondary">{{ linha.tipo }}</span>
                             {% endif %}
                         </td>
-                        <td style="text-align: right;">{{ linha.preco }}€</td>
+                        <td>{{ linha.descricao }}</td>
+                        <td style="text-align: right;">{{ linha.preco_unitario }}€</td>
+                        <td style="text-align: center;">{{ linha.quantidade }}</td>
                         <td style="text-align: right; font-weight: 600;">{{ linha.subtotal }}€</td>
                     </tr>
                     {% empty %}

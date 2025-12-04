@@ -14,7 +14,7 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- Sidebar: visível para staff, ou para utilizadores autenticados em páginas que não sejam a home -->
+    <!-- Sidebar: visível APENAS para staff (administradores) -->
     {% if request.user.is_staff %}
     <nav id="sidebar">
         <div class="sidebar-header">
@@ -39,24 +39,15 @@
             {% endif %}
         </ul>
     </nav>
-    {% else %}
-        {% if request.user.is_authenticated %}
-            {% if request.path != '/' %}
-                <nav id="sidebar">
-                <!-- sidebar for authenticated non-staff on internal pages -->
-                </nav>
-            {% endif %}
-        {% endif %}
     {% endif %}
 
-    {# Se não houver sidebar (nem staff nem utilizador autenticado em página interna), ajustar layout #}
+    {# Ajustar layout quando NÃO há sidebar (clientes normais) #}
     {% if not request.user.is_staff %}
-        {% if not request.user.is_authenticated or request.path == '/' %}
-            <style>
-                .top-navbar { left: 0 !important; }
-                main, .main-content { margin-left: 0 !important; margin-top: 80px; padding: 20px 30px; }
-            </style>
-        {% endif %}
+        <style>
+            #sidebar { display: none !important; }
+            .top-navbar { left: 0 !important; width: 100% !important; }
+            main, .main-content { margin-left: 0 !important; margin-top: 80px; padding: 20px 30px; }
+        </style>
     {% endif %}
 
     <!-- Top Navigation -->
@@ -74,7 +65,8 @@
         </div>
         <div class="user-info d-flex align-items-center gap-2">
             {% if request.user.is_authenticated %}
-                {% if request.user.is_staff or request.path != '/' %}
+                {% if request.user.is_staff %}
+                    <!-- Para administradores: mostrar email, iniciais e botão Log Out -->
                     <p class="mb-0">{{ request.user.email }}</p>
                     <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
                     <form method="post" action="{% url 'users:logout' %}">
@@ -82,12 +74,14 @@
                         <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
                     </form>
                 {% else %}
+                    <!-- Para clientes: mostrar email e iniciais com dropdown na home, sem dropdown nas outras -->
                     <p class="mb-0">{{ request.user.email }}</p>
+                    {% if request.path == '/' or 'user' in request.path %}
                     <div class="dropdown">
-                        <button class="btn btn-light d-flex align-items-center dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="circle-initials me-2">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                        <button class="btn btn-light d-flex align-items-center dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer; border: 1px solid #ddd;">
+                            <div class="circle-initials me-2" style="cursor: pointer;">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="z-index: 9999;">
                             <li>
                                 <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'users:user' %}">
                                     <i class="bi bi-person-circle"></i>
@@ -98,7 +92,7 @@
                             <li>
                                 <form method="post" action="{% url 'users:logout' %}" class="m-0">
                                     {% csrf_token %}
-                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger" style="border:0; background:transparent;">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger" style="border:0; background:transparent; cursor: pointer; width: 100%; text-align: left;">
                                         <i class="bi bi-box-arrow-right"></i>
                                         <span>Sair</span>
                                     </button>
@@ -106,6 +100,9 @@
                             </li>
                         </ul>
                     </div>
+                    {% else %}
+                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+                    {% endif %}
                 {% endif %}
             {% else %}
                 <a href="{% url 'users:login' %}" class="btn btn-outline-primary">Login / Sign Up</a>
@@ -120,9 +117,42 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Garantir que o dropdown funciona
+        document.addEventListener('DOMContentLoaded', function() {
+            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                return new bootstrap.Dropdown(dropdownToggleEl);
+            });
+        });
+    </script>
     <style>
         /* garantir que o dropdown aparece por cima da sidebar */
-        .dropdown-menu.dropdown-menu-end { z-index: 1300; }
+        .dropdown-menu.dropdown-menu-end { 
+            z-index: 9999 !important;
+            position: absolute !important;
+            top: 100% !important;
+            right: 0 !important;
+        }
+        
+        .dropdown {
+            position: relative;
+        }
+        
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            min-width: 200px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 8px 0;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+        }
 
         /* estilos do brand no topo */
         .top-navbar .brand-block { color: inherit; }
@@ -137,35 +167,43 @@
         }
     </style>
     <script>
-        // Fallback simples: ativar dropdown manualmente se o Bootstrap não inicializar
-        (function(){
-            try{
-                var btn = document.getElementById('userMenu');
-                if(!btn) return;
-                var menu = btn && btn.nextElementSibling;
-                if(!menu) return;
-                btn.addEventListener('click', function(e){
-                    e.preventDefault();
-                    var shown = menu.classList.contains('show');
-                    if(shown){
-                        menu.classList.remove('show');
-                        btn.setAttribute('aria-expanded','false');
-                    } else {
-                        menu.classList.add('show');
-                        btn.setAttribute('aria-expanded','true');
-                    }
+        // Dropdown manual (funciona sempre)
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('userMenu');
+            if (!btn) return;
+            
+            var menu = btn.nextElementSibling;
+            if (!menu) return;
+            
+            // Toggle ao clicar no botão
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                var isShown = menu.classList.contains('show');
+                
+                // Fechar todos os dropdowns abertos
+                document.querySelectorAll('.dropdown-menu.show').forEach(function(m) {
+                    m.classList.remove('show');
                 });
-                // fechar ao clicar fora
-                document.addEventListener('click', function(e){
-                    if(!btn.contains(e.target) && !menu.contains(e.target)){
-                        if(menu.classList.contains('show')){
-                            menu.classList.remove('show');
-                            btn.setAttribute('aria-expanded','false');
-                        }
-                    }
-                });
-            }catch(err){ console && console.warn && console.warn('dropdown fallback error', err); }
-        })();
+                
+                if (!isShown) {
+                    menu.classList.add('show');
+                    btn.setAttribute('aria-expanded', 'true');
+                } else {
+                    menu.classList.remove('show');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            // Fechar ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!btn.contains(e.target) && !menu.contains(e.target)) {
+                    menu.classList.remove('show');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
     </script>
     {% block scripts %}{% endblock %}
 </body>

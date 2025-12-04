@@ -25,7 +25,7 @@
                         <th>Valor Total</th>
                         <th>Tipo Pagamento</th>
                         <th>Estado</th>
-                        <th>Ações</th>
+                        <th style="text-align: center;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,8 +54,11 @@
                                 <span class="badge badge-secondary">N/A</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="{% url 'fatura_pdf' f.fatura_id %}" class="edit_btn_utils" style="background-color: #28a745;">
+                        <td style="text-align: center;">
+                            <a href="{% url 'fatura_detalhes' f.fatura_id %}" class="edit_btn_utils" style="background-color: #17a2b8;">
+                                Ver
+                            </a>
+                            <a href="{% url 'fatura_pdf' f.fatura_id %}" class="edit_btn_utils" style="background-color: #28a745; margin-left: 5px;">
                                 PDF
                             </a>
                         </td>

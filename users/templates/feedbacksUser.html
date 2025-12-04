@@ -66,7 +66,6 @@
           class="form-textarea"
           name="comentario"
           placeholder="Partilhe a sua experiência com outros viajantes..."
-          required
         ></textarea>
       </div>
 
@@ -89,17 +88,14 @@
             {{ feedback.data_feedback|date:"d \d\e F \d\e Y" }}
           </div>
         </div>
+        <div class="feedback-rating">
+          {% for i in "12345" %}
+            {% if forloop.counter <= feedback.avaliacao %}★{% else %}☆{% endif %}
+          {% endfor %}
+        </div>
       </div>
       <div class="feedback-package">{{ feedback.pacote_nome }}</div>
-      <div class="feedback-rating">
-        {% for i in "12345" %} {% if forloop.counter <= feedback.avaliacao %}★{%
-        else %}☆{% endif %} {% endfor %} ({{ feedback.avaliacao }}.0)
-      </div>
       <div class="feedback-text">{{ feedback.comentario }}</div>
-      <div class="feedback-actions">
-        <button class="btn-small">Editar</button>
-        <button class="btn-small delete">Eliminar</button>
-      </div>
     </div>
     {% endfor %} {% else %}
     <div class="alert-info-box">

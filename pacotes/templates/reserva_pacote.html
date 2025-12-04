@@ -3,6 +3,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
 <link rel="stylesheet" href="{% static 'cards.css' %}">
+
 <div class="container my-5 pacote-detalhes">
 
   <!-- Cabeçalho -->
@@ -59,6 +60,34 @@
       </div>
     {% endfor %}
   </div>
+
+  <!-- Botão voltar -->
+  <div class="text-center mt-5">
+    <a href="{% url 'pacote_detalhes' pacote.pacote_id %}" class="btn-voltar">
+      ← Voltar para detalhes do pacote
+    </a>
+  </div>
+
 </div>
+
+<style>
+.btn-voltar {
+  background: #004085;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background: #002752;
+  color: white;
+  text-decoration: none;
+}
+</style>
 
 {% endblock %}

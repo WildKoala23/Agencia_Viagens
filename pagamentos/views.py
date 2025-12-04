@@ -335,6 +335,68 @@ def faturas(request):
     })
 
 
+def fatura_detalhes(request, fatura_id):
+    """
+    Exibe detalhes completos de uma fatura
+    """
+    try:
+        fatura = Factura.objects.select_related(
+            'compra_id__user',
+            'compra_id__pacote',
+            'pagamento_id'
+        ).get(fatura_id=fatura_id)
+        
+        # Buscar linhas da fatura
+        linhas = FacturaLinha.objects.filter(fatura=fatura)
+        
+        # Preparar dados da fatura
+        compra = fatura.compra_id
+        pagamento = fatura.pagamento_id
+        
+        fatura_data = {
+            'fatura_id': fatura.fatura_id,
+            'data_emissao': fatura.data_emissao,
+            'valor_total': fatura.valor_total,
+            'estado_pagamento': pagamento.estado if pagamento else 'N/A',
+            'tipo_pagamento': pagamento.metodo if pagamento else None,
+            'compra_id': compra.compra_id if compra else None,
+            'pagamento_id': pagamento.pagamento_id if pagamento else None,
+            'nome_cliente': f"{compra.user.first_name} {compra.user.last_name}".strip() if compra and compra.user else 'N/A',
+            'email': compra.user.email if compra and compra.user else 'N/A',
+            'user_id': compra.user.user_id if compra and compra.user else None,
+        }
+        
+        # Preparar linhas da fatura com informações detalhadas
+        linhas_data = []
+        for linha in linhas:
+            # Extrair tipo de item da descrição
+            tipo_item = "Item"
+            if "Pacote Base" in linha.descricao_item:
+                tipo_item = "Pacote Base"
+            elif "Hotel" in linha.descricao_item:
+                tipo_item = "Alojamento"
+            elif "Voo" in linha.descricao_item:
+                tipo_item = "Voo"
+            
+            linhas_data.append({
+                'tipo': tipo_item,
+                'descricao': linha.descricao_item,
+                'quantidade': 1,
+                'preco_unitario': linha.preco,
+                'subtotal': linha.subtotal
+            })
+        
+        return render(request, 'fatura_detalhes.html', {
+            'fatura': fatura_data,
+            'linhas': linhas_data
+        })
+        
+    except Factura.DoesNotExist:
+        return render(request, 'fatura_detalhes.html', {
+            'error': 'Fatura não encontrada.'
+        })
+
+
 def fatura_pdf(request, fatura_id):
     """Gera PDF com detalhes da fatura."""
     fatura = get_object_or_404(Factura, fatura_id=fatura_id)
