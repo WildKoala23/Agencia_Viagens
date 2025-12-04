@@ -20,7 +20,6 @@
             <table class="faturas-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Cliente</th>
                         <th>Data Emissão</th>
                         <th>Valor Total</th>
@@ -32,7 +31,6 @@
                 <tbody>
                     {% for f in faturas %}
                     <tr>
-                        <td>#{{ f.fatura_id }}</td>
                         <td>{{ f.nome_cliente }}</td>
                         <td>{{ f.data_emissao|date:"d/m/Y" }}</td>
                         <td class="valor-total">{{ f.valor_total }}€</td>
@@ -64,7 +62,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 30px;">
+                        <td colspan="6" style="text-align: center; padding: 30px;">
                             <div class="empty_state_utils">
                                 Nenhuma fatura registada.
                             </div>

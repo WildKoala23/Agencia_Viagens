@@ -2,69 +2,71 @@
 {% load static %}
 
 {% block styles %}
-  <link rel="stylesheet" href="{% static 'comprasUser.css' %}">
+  <link rel="stylesheet" href="{% static 'utils.css' %}">
+  <link rel="stylesheet" href="{% static 'fatura_utils.css' %}">
 {% endblock %}
 
-{% block title %}User Page{% endblock %}
+{% block title %}Minhas Reservas{% endblock %}
 {% block page_title %}Minhas Reservas{% endblock %}
 
 {% block content %}
+<div class="container_utils">
 
-<div class="container">
-  <div class="d-flex align-items-center mb-4 gap-2">
-    <input 
-      type="text" 
-      class="form-control" 
-      id="basic-url" 
-      placeholder="Pesquisar por Destino"
-      aria-describedby="basic-addon3"
-    >
+    <div class="card_utils">
+        <h2>Minhas Reservas</h2>
+        
+        <div style="overflow-x: auto;">
+            <table class="faturas-table">
+                <thead>
+                    <tr>
+                        <th>Pacote</th>
+                        <th>Destino</th>
+                        <th>Data Partida</th>
+                        <th>Data Regresso</th>
+                        <th>Estado</th>
+                        <th>Preço Total</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in data %}
+                    <tr>
+                        <td>{{ i.1 }}</td>
+                        <td>{{ i.2 }}</td>
+                        <td>{{ i.3 }}</td>
+                        <td>{{ i.4 }}</td>
+                        <td>
+                            {% if i.5 == 'Confirmada' %}
+                                <span class="badge badge-success">{{ i.5 }}</span>
+                            {% elif i.5 == 'Pendente' %}
+                                <span class="badge badge-warning">{{ i.5 }}</span>
+                            {% elif i.5 == 'Cancelada' %}
+                                <span class="badge badge-danger">{{ i.5 }}</span>
+                            {% else %}
+                                <span class="badge badge-info">{{ i.5 }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="valor-total">{{ i.6 }}</td>
+                        <td>
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <a href="{% url 'compra_sucesso' i.0 %}" class="edit_btn_utils">Ver</a>
+                                <a href="{% url 'compra_pdf' i.0 %}" class="edit_btn_utils" style="background-color: #28a745;">PDF</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <div class="empty_state_utils">
+                                Nenhuma reserva registada.
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-    <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
-      <i class="bi bi-search"></i>
-      Search
-    </button>
-
-    <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
-      <i class="bi bi-download"></i>
-      Export
-    </button>
-  </div>
-</div>
-
-<div class="table-container">
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">ID Reserva</th>
-        <th scope="col">Pacote</th>
-        <th scope="col">Destino</th>
-        <th scope="col">Data Partida</th>
-        <th scope="col">Data Regresso</th>
-        <th scope="col">Estado</th>
-        <th scope="col">Preço Total</th>
-        <th scope="col">Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for i in data %}
-        <tr>
-          <td>{{ i.0 }}</td>
-          <td>{{ i.1 }}</td>
-          <td>{{ i.2 }}</td>
-          <td>{{ i.3 }}</td>
-          <td>{{ i.4 }}</td>
-          <td>{{ i.5 }}</td>
-          <td>{{ i.6 }}</td>
-          <td>
-            <div class="d-flex justify-content-center gap-2">
-              <a href="{% url 'compra_sucesso' i.0 %}" class="btn btn-outline-primary btn-sm">Ver</a>
-              <a href="{% url 'compra_pdf' i.0 %}" class="btn btn-outline-secondary btn-sm">PDF</a>
-            </div>
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
 </div>
 {% endblock %}
