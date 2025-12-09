@@ -34,8 +34,8 @@ def loginUser(request):
                 if user.is_staff:
                     return redirect('main:dashboard')  # staff
                 else:
-                    # usuários comuns redirecionam para a página pública 'home'
-                    return redirect('main:home')
+                    # usuários comuns redirecionam para a dashboard do cliente
+                    return redirect('users:user')
             else:
                 form.add_error(None, "Email ou senha inválidos")
     else:
@@ -57,8 +57,8 @@ def registerUser(request):
             
             if user is not None:
                 login(request, user)
-                # Redirecionar para a home page
-                return redirect('main:home')
+                # Redirecionar para a dashboard do cliente
+                return redirect('users:user')
             else:
                 # Se autenticação falhar, redirecionar para login
                 return redirect('users:login')

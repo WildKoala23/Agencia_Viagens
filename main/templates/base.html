@@ -14,8 +14,8 @@
     {% block styles %}{% endblock %}
 </head>
 <body>
-    <!-- Sidebar: visível APENAS para staff (administradores) -->
-    {% if request.user.is_staff %}
+    <!-- Sidebar: visível para administradores E clientes autenticados -->
+    {% if request.user.is_authenticated %}
     <nav id="sidebar">
         <div class="sidebar-header">
             <a href="{% url 'main:home' %}" class="brand-link">
@@ -24,25 +24,39 @@
             </a>
         </div>
         <ul class="nav flex-column">
-            <li class="nav-item"><a class="nav-link active" href="{% url 'main:home' %}"><i class="bi bi-house-door-fill"></i>Dashboard</a></li>
-            {# Removido: link público 'Pacotes' para admin; admins têm 'Inserir Pacotes' abaixo #}
-
-            {% if request.user.is_authenticated and request.user.is_staff %}
-                <li class="nav-item"><a class="nav-link" href="{% url 'users:inserir_clientes' %}"><i class="bi bi-people-fill"></i>Clientes</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'destinos' %}"><i class="bi bi-geo-alt-fill"></i>Destinos</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'faturas' %}"><i class="bi bi-receipt"></i>Faturas</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'pacotes' %}"><i class="bi bi-plus-square"></i>Pacotes</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'feedbacks' %}"><i class="bi bi-chat-left-text-fill"></i>Feedbacks</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'pagamentos' %}"><i class="bi bi-credit-card-fill"></i>Pagamentos</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'voos' %}"><i class="bi bi-airplane"></i>Voos</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'hoteis' %}"><i class="bi bi-building"></i>Hotéis</a></li>
+            {% if request.user.is_staff %}
+                {# Menu do Admin #}
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'main:home' %}"><i class="bi bi-house-door-fill"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'inserir_clientes' or request.resolver_match.url_name == 'listar_clientes' %}active{% endif %}" href="{% url 'users:inserir_clientes' %}"><i class="bi bi-people-fill"></i>Clientes</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'destinos' %}active{% endif %}" href="{% url 'destinos' %}"><i class="bi bi-geo-alt-fill"></i>Destinos</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'faturas' %}active{% endif %}" href="{% url 'faturas' %}"><i class="bi bi-receipt"></i>Faturas</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes' %}active{% endif %}" href="{% url 'pacotes' %}"><i class="bi bi-plus-square"></i>Pacotes</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedbacks' %}active{% endif %}" href="{% url 'feedbacks' %}"><i class="bi bi-chat-left-text-fill"></i>Feedbacks</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pagamentos' %}active{% endif %}" href="{% url 'pagamentos' %}"><i class="bi bi-credit-card-fill"></i>Pagamentos</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'voos' %}active{% endif %}" href="{% url 'voos' %}"><i class="bi bi-airplane"></i>Voos</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'hoteis' %}active{% endif %}" href="{% url 'hoteis' %}"><i class="bi bi-building"></i>Hotéis</a></li>
+            {% else %}
+                {# Menu do Cliente - varia conforme a seção #}
+                {% if 'user' in request.path or 'perfil' in request.path or 'compras' in request.path or 'feedbacks' in request.path %}
+                    {# Menu completo da área do cliente #}
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'user' %}active{% endif %}" href="{% url 'users:user' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedbacksUser' %}active{% endif %}" href="{% url 'users:feedbacksUser' %}"><i class="bi bi-chat-left-text"></i>Feedbacks</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'comprasUser' %}active{% endif %}" href="{% url 'users:comprasUser' %}"><i class="bi bi-cart-check"></i>Minhas Compras</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'perfilUser' %}active{% endif %}" href="{% url 'users:perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes_por_pais' %}active{% endif %}" href="{% url 'pacotes_por_pais' %}"><i class="bi bi-compass"></i>Ver + Pacotes</a></li>
+                {% else %}
+                    {# Menu simplificado para páginas públicas (home, pacotes, reservas) #}
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'main:home' %}"><i class="bi bi-house-door"></i>Home</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes_por_pais' %}active{% endif %}" href="{% url 'pacotes_por_pais' %}"><i class="bi bi-compass"></i>Ver + Pacotes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'users:user' %}"><i class="bi bi-person-circle"></i>Minha Conta</a></li>
+                {% endif %}
             {% endif %}
         </ul>
     </nav>
     {% endif %}
 
-    {# Ajustar layout quando NÃO há sidebar (clientes normais) #}
-    {% if not request.user.is_staff %}
+    {# Ajustar layout quando NÃO há sidebar (usuários não autenticados) #}
+    {% if not request.user.is_authenticated %}
         <style>
             #sidebar { display: none !important; }
             .top-navbar { left: 0 !important; width: 100% !important; }
@@ -53,15 +67,17 @@
     <!-- Top Navigation -->
     <nav class="top-navbar d-flex justify-content-between align-items-center px-3 py-2">
         <div class="d-flex align-items-center navbar-left">
-            {% if not request.user.is_staff %}
-            <div class="d-flex align-items-center text-dark me-3 brand-block">
-                <i class="bi bi-airplane-fill fs-4"></i>
-                <span class="ms-2 brand-text">Atlas Gateways</span>
-            </div>
+            {% if not request.user.is_authenticated or request.user.is_authenticated and not request.user.is_staff and 'user' not in request.path and 'perfil' not in request.path and 'compras' not in request.path and 'feedbacks' not in request.path %}
+                {# Não autenticado OU cliente em páginas públicas - mostra marca #}
+                <div class="d-flex align-items-center text-dark me-3 brand-block">
+                    <i class="bi bi-airplane-fill fs-4"></i>
+                    <span class="ms-2 brand-text">Atlas Gateways</span>
+                </div>
             {% else %}
-            <div class="navbar-title">
-                <h1 class="m-0">{% block page_title %}Dashboard{% endblock %}</h1>
-            </div>
+                {# Admin OU Cliente na área da conta - mostra título da página #}
+                <div class="navbar-title">
+                    <h1 class="m-0">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
             {% endif %}
         </div>
         <div class="user-info d-flex align-items-center gap-2">
@@ -75,34 +91,15 @@
                         <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
                     </form>
                 {% else %}
-                    <!-- Para clientes: mostrar email e iniciais com dropdown na home, sem dropdown nas outras -->
+                    <!-- Para clientes: mostrar email e iniciais -->
                     <p class="mb-0">{{ request.user.email }}</p>
-                    {% if request.path == '/' or 'user' in request.path %}
-                    <div class="dropdown">
-                        <button class="btn btn-light d-flex align-items-center dropdown-toggle" type="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer; border: 1px solid #ddd;">
-                            <div class="circle-initials me-2" style="cursor: pointer;">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu" style="z-index: 9999;">
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'users:user' %}">
-                                    <i class="bi bi-person-circle"></i>
-                                    <span>Minha Conta</span>
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form method="post" action="{% url 'users:logout' %}" class="m-0">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger" style="border:0; background:transparent; cursor: pointer; width: 100%; text-align: left;">
-                                        <i class="bi bi-box-arrow-right"></i>
-                                        <span>Sair</span>
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                    {% else %}
                     <div class="circle-initials">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
+                    {# Botão Log Out apenas na área do cliente (dashboard, perfil, compras, feedbacks) #}
+                    {% if 'user' in request.path or 'perfil' in request.path or 'compras' in request.path or 'feedbacks' in request.path %}
+                    <form method="post" action="{% url 'users:logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
+                    </form>
                     {% endif %}
                 {% endif %}
             {% else %}
