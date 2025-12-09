@@ -26,8 +26,8 @@
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'user' %}active{% endif %}" href="{% url 'users:user' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedbacksUser' %}active{% endif %}" href="{% url 'users:feedbacksUser' %}"><i class="bi bi-chat-left-text"></i>Feedbacks</a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'comprasUser' %}active{% endif %}" href="{% url 'users:comprasUser' %}"><i class="bi bi-cart-check"></i>Minhas Compras</a></li>
-            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'perfilUser' %}active{% endif %}" href="{% url 'users:perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
             <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes_por_pais' %}active{% endif %}" href="{% url 'pacotes_por_pais' %}"><i class="bi bi-compass"></i>Ver + Pacotes</a></li>
+            <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'perfilUser' %}active{% endif %}" href="{% url 'users:perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
         </ul>
     </nav>
 

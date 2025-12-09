@@ -31,7 +31,7 @@
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'destinos' %}active{% endif %}" href="{% url 'destinos' %}"><i class="bi bi-geo-alt-fill"></i>Destinos</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'faturas' %}active{% endif %}" href="{% url 'faturas' %}"><i class="bi bi-receipt"></i>Faturas</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes' %}active{% endif %}" href="{% url 'pacotes' %}"><i class="bi bi-plus-square"></i>Pacotes</a></li>
-                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedbacks' %}active{% endif %}" href="{% url 'feedbacks' %}"><i class="bi bi-chat-left-text-fill"></i>Feedbacks</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedback_estatisticas' %}active{% endif %}" href="{% url 'feedback_estatisticas' %}"><i class="bi bi-bar-chart-fill"></i>Feedbacks</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pagamentos' %}active{% endif %}" href="{% url 'pagamentos' %}"><i class="bi bi-credit-card-fill"></i>Pagamentos</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'voos' %}active{% endif %}" href="{% url 'voos' %}"><i class="bi bi-airplane"></i>Voos</a></li>
                 <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'hoteis' %}active{% endif %}" href="{% url 'hoteis' %}"><i class="bi bi-building"></i>Hotéis</a></li>
@@ -42,8 +42,8 @@
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'user' %}active{% endif %}" href="{% url 'users:user' %}"><i class="bi bi-speedometer2"></i>Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'feedbacksUser' %}active{% endif %}" href="{% url 'users:feedbacksUser' %}"><i class="bi bi-chat-left-text"></i>Feedbacks</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'comprasUser' %}active{% endif %}" href="{% url 'users:comprasUser' %}"><i class="bi bi-cart-check"></i>Minhas Compras</a></li>
-                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'perfilUser' %}active{% endif %}" href="{% url 'users:perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'pacotes_por_pais' %}active{% endif %}" href="{% url 'pacotes_por_pais' %}"><i class="bi bi-compass"></i>Ver + Pacotes</a></li>
+                    <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'perfilUser' %}active{% endif %}" href="{% url 'users:perfilUser' %}"><i class="bi bi-person-circle"></i>Perfil</a></li>
                 {% else %}
                     {# Menu simplificado para páginas públicas (home, pacotes, reservas) #}
                     <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'main:home' %}"><i class="bi bi-house-door"></i>Home</a></li>
