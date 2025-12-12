@@ -16,7 +16,7 @@ from openpyxl.styles import Font, PatternFill
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdII_25170"]
 banners = db["banners"]
 capa_hotel = db["capa_hotel"]
 detalhes_hotel = db["detalhes_hotel"]
@@ -293,24 +293,23 @@ def importar_voos(request):
                         preco=preco
                     )
                     
-                    # Guardar também no MongoDB (opcional)
+                    # Guardar também no MongoDB
                     try:
-                        db = globals().get('db')
-                        if db:
-                            voos_collection = db['voos']
-                            voos_collection.insert_one({
-                                'voo_id': voo.voo_id,
-                                'destino_id': destino.destino_id,
-                                'destino_nome': destino.nome,
-                                'companhia': voo.companhia,
-                                'numero_voo': voo.numero_voo,
-                                'data_saida': voo.data_saida.isoformat(),
-                                'data_chegada': voo.data_chegada.isoformat(),
-                                'preco': float(voo.preco),
-                                'importado_em': datetime.now().isoformat()
-                            })
+                        voos_collection = db['voos']
+                        voos_collection.insert_one({
+                            'voo_id': voo.voo_id,
+                            'destino_id': destino.destino_id,
+                            'destino_nome': destino.nome,
+                            'companhia': voo.companhia,
+                            'numero_voo': voo.numero_voo,
+                            'data_saida': voo.data_saida.isoformat(),
+                            'data_chegada': voo.data_chegada.isoformat(),
+                            'preco': float(voo.preco),
+                            'importado_em': datetime.now().isoformat()
+                        })
                     except Exception as mongo_error:
                         # Se falhar no MongoDB, continua (já está no PostgreSQL)
+                        print(f"Erro MongoDB: {mongo_error}")  # Debug
                         pass
                     
                     voos_importados += 1
