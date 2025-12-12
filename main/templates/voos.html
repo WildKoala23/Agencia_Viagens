@@ -77,6 +77,22 @@
                 </div>
             {% endfor %}
         </ul>
+
+        <div style="margin: 1.5rem 1rem; padding: 1.5rem; background-color: #f8f9fa; border-radius: 8px;">
+            <div style="margin-bottom: 1rem;">
+                <a href="{% url 'template_voos' %}" class="btn_search_utils" style="text-decoration: none; padding: 0.7rem 1.5rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    Descarregar Template Excel
+                </a>
+            </div>
+            
+            <form method="post" action="{% url 'importar_voos' %}" enctype="multipart/form-data" style="margin: 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                {% csrf_token %}
+                <input type="file" name="ficheiro_excel" accept=".xlsx,.xls" required style="padding: 0.6rem; border: 2px solid #ddd; border-radius: 4px; font-size: 0.95rem;">
+                <button type="submit" class="btn_save_utils" style="padding: 0.7rem 1.5rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    Importar Excel
+                </button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

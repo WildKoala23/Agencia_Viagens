@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.http import HttpResponse, Http404
 from bson.objectid import ObjectId
 from django.urls import reverse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
 
 
 client = MongoClient("mongodb://localhost:27017/")
@@ -220,6 +222,190 @@ def eliminar_voo(request, voo_id):
     if request.method == 'POST':
         voo.delete()
     return redirect('voos')
+
+
+def importar_voos(request):
+    """
+    Importa voos de um ficheiro Excel para PostgreSQL e MongoDB
+    """
+    if request.method == 'POST' and request.FILES.get('ficheiro_excel'):
+        try:
+            import pandas as pd
+            from datetime import datetime
+            
+            ficheiro = request.FILES['ficheiro_excel']
+            
+            # Ler o Excel
+            df = pd.read_excel(ficheiro)
+            
+            # Validar colunas necessárias
+            colunas_necessarias = ['destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
+            for col in colunas_necessarias:
+                if col not in df.columns:
+                    messages.error(request, f'Coluna "{col}" não encontrada no Excel!')
+                    return redirect('voos')
+            
+            voos_importados = 0
+            erros = []
+            
+            # Processar cada linha
+            for index, row in df.iterrows():
+                try:
+                    # Buscar destino
+                    destino = Destino.objects.get(destino_id=int(row['destino_id']))
+                    
+                    # Converter datas
+                    data_saida = pd.to_datetime(row['data_saida'])
+                    data_chegada = pd.to_datetime(row['data_chegada'])
+                    
+                    # Validar preço
+                    preco = float(row['preco'])
+                    if preco <= 0:
+                        erros.append(f'Linha {index + 2}: Preço deve ser maior que zero')
+                        continue
+                    
+                    # Validar datas
+                    if data_chegada <= data_saida:
+                        erros.append(f'Linha {index + 2}: Data de chegada deve ser posterior à data de saída')
+                        continue
+                    
+                    # Verificar se já existe voo duplicado
+                    companhia = str(row['companhia']).strip()
+                    numero_voo = int(row['numero_voo'])
+                    
+                    voo_existente = Voo.objects.filter(
+                        companhia=companhia,
+                        numero_voo=numero_voo,
+                        data_saida=data_saida
+                    ).exists()
+                    
+                    if voo_existente:
+                        erros.append(f'Linha {index + 2}: Voo duplicado ({companhia} #{numero_voo} em {data_saida.strftime("%Y-%m-%d %H:%M")})')
+                        continue
+                    
+                    # Criar voo no PostgreSQL
+                    voo = Voo.objects.create(
+                        destino=destino,
+                        companhia=companhia,
+                        numero_voo=numero_voo,
+                        data_saida=data_saida,
+                        data_chegada=data_chegada,
+                        preco=preco
+                    )
+                    
+                    # Guardar também no MongoDB (opcional)
+                    try:
+                        db = globals().get('db')
+                        if db:
+                            voos_collection = db['voos']
+                            voos_collection.insert_one({
+                                'voo_id': voo.voo_id,
+                                'destino_id': destino.destino_id,
+                                'destino_nome': destino.nome,
+                                'companhia': voo.companhia,
+                                'numero_voo': voo.numero_voo,
+                                'data_saida': voo.data_saida.isoformat(),
+                                'data_chegada': voo.data_chegada.isoformat(),
+                                'preco': float(voo.preco),
+                                'importado_em': datetime.now().isoformat()
+                            })
+                    except Exception as mongo_error:
+                        # Se falhar no MongoDB, continua (já está no PostgreSQL)
+                        pass
+                    
+                    voos_importados += 1
+                    
+                except Destino.DoesNotExist:
+                    erros.append(f'Linha {index + 2}: Destino ID {row["destino_id"]} não existe')
+                except ValueError as ve:
+                    erros.append(f'Linha {index + 2}: Valor inválido - {str(ve)}')
+                except Exception as e:
+                    erros.append(f'Linha {index + 2}: {str(e)}')
+            
+            # Mensagens de feedback
+            if voos_importados > 0:
+                messages.success(request, f'{voos_importados} voo(s) importado(s) com sucesso!')
+            
+            if erros:
+                for erro in erros[:5]:  # Mostrar apenas os primeiros 5 erros
+                    messages.warning(request, erro)
+                if len(erros) > 5:
+                    messages.warning(request, f'... e mais {len(erros) - 5} erro(s)')
+            
+        except Exception as e:
+            messages.error(request, f'Erro ao processar ficheiro: {str(e)}')
+    
+    return redirect('voos')
+
+
+def descarregar_template_voos(request):
+    """
+    Gera e retorna um ficheiro Excel template para importação de voos
+    """
+    # Criar workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Template Voos"
+    
+    # Definir cabeçalhos
+    headers = ['destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
+    ws.append(headers)
+    
+    # Estilizar cabeçalhos
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+    
+    # Adicionar instruções numa nova aba
+    ws_instrucoes = wb.create_sheet("Instruções")
+    instrucoes = [
+        ['INSTRUÇÕES PARA PREENCHIMENTO'],
+        [''],
+        ['Colunas obrigatórias:'],
+        ['destino_id', 'ID numérico do destino (deve existir na base de dados)'],
+        ['companhia', 'Nome da companhia aérea (máximo 150 caracteres)'],
+        ['numero_voo', 'Número do voo (apenas números inteiros)'],
+        ['data_saida', 'Data e hora de saída (formato: AAAA-MM-DD HH:MM:SS)'],
+        ['data_chegada', 'Data e hora de chegada (formato: AAAA-MM-DD HH:MM:SS)'],
+        ['preco', 'Preço do voo (número decimal, ex: 250.00)'],
+        [''],
+        ['IMPORTANTE:'],
+        ['- Não altere o nome das colunas'],
+        ['- Todos os campos são obrigatórios'],
+        ['- O destino_id deve corresponder a um destino existente'],
+        ['- As datas devem estar no formato indicado'],
+    ]
+    
+    for row in instrucoes:
+        ws_instrucoes.append(row)
+    
+    # Estilizar título das instruções
+    ws_instrucoes['A1'].font = Font(bold=True, size=14, color="4472C4")
+    ws_instrucoes['A3'].font = Font(bold=True)
+    ws_instrucoes['A11'].font = Font(bold=True, color="FF0000")
+    
+    # Ajustar largura das colunas
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions['E'].width = 20
+    ws.column_dimensions['F'].width = 10
+    
+    ws_instrucoes.column_dimensions['A'].width = 20
+    ws_instrucoes.column_dimensions['B'].width = 60
+    
+    # Preparar resposta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=template_voos.xlsx'
+    
+    wb.save(response)
+    return response
 
 
 def hotel(request):
