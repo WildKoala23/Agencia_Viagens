@@ -112,3 +112,26 @@ body {
         font-size: 28px;
     }
 }
+
+/* Price Stats Table styles (aligned with charts/card look) */
+.accent-left-primary { border-left: 4px solid #4e73df !important; }
+.bg-primary-soft { background-color: rgba(78, 115, 223, 0.12) !important; color: #2e59d9; }
+
+.price-stats-table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+    border-top: none;
+}
+
+.price-stats-table tbody tr:hover {
+    background: rgba(78, 115, 223, 0.05);
+}
+
+.price-stats-table td {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.price-stats-table td.fw-semibold { font-weight: 600; }
