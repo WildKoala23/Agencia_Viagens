@@ -459,16 +459,17 @@ def api_pacotes_por_pais(request):
             response_data = {}
             for document in cursor:
                 for key, value in document.items():
-                    if key != '_id':
-                        # ensure numeric type (DB may store strings)
+                    if key in ('_id', 'updated_at'):
+                        continue
+                    # ensure numeric type (DB may store strings)
+                    try:
+                        num = int(value)
+                    except Exception:
                         try:
-                            num = int(value)
+                            num = int(float(value))
                         except Exception:
-                            try:
-                                num = int(float(value))
-                            except Exception:
-                                num = 0
-                        response_data[key] = response_data.get(key, 0) + num
+                            num = 0
+                    response_data[key] = response_data.get(key, 0) + num
             return JsonResponse(response_data)
     except Exception as e:
         print(f"Error fetching data: {e}")

@@ -127,6 +127,8 @@ def sync_admin_charts_to_mongo() -> None:
         logger.warning("Nao foi possivel atualizar dataAdmin no MongoDB: %s", exc)
 
     try:
-        mongodb.dataAdminPais.replace_one({}, pacotes_por_pais, upsert=True)
+        # limpar documentos antigos dispersos (cada país em docs separados)
+        mongodb.dataAdminPais.delete_many({})
+        mongodb.dataAdminPais.insert_one({**pacotes_por_pais, "updated_at": timezone.now()})
     except Exception as exc:  # pragma: no cover - falha externa
         logger.warning("Nao foi possivel atualizar dataAdminPais no MongoDB: %s", exc)
