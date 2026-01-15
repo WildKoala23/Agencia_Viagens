@@ -8,88 +8,28 @@
 <link rel="stylesheet" href="{% static 'pag_pacotes.css' %}">
 {% endblock %}
 
-{% block page_title %}
-{% if pacote_editar %}Editar Pacote{% else %}Gestão de Pacotes{% endif %}
-{% endblock %}
+{% block page_title %}Gestão de Pacotes{% endblock %}
 
 {% block content %}
 <div class="container_utils">
 
     <div class="card_utils">
-        <h1>{% if pacote_editar %}Editar Pacote{% else %}Inserir Pacote{% endif %}</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-
-        {% if form.non_field_errors %}
-            <div class="alert_utils alert-error">
-                {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <form method="post" enctype="multipart/form-data" class="form_utils">
-            {% csrf_token %}
-            
-            {{ form.nome.label_tag }} {{ form.nome }}<br>
-            
-            <!-- Seção Dinâmica de Dias -->
-            <label>Descrição por Dias:</label>
-            <div id="dias-container">
-                {% if dias_existentes %}
-                    {% for descricao in dias_existentes %}
-                    <div class="dia-item" data-dia="{{ forloop.counter }}">
-                        <label>Dia {{ forloop.counter }}:</label>
-                        <textarea name="dia_{{ forloop.counter }}" rows="3" class="form-control mb-2">{{ descricao }}</textarea>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="dia-item" data-dia="1">
-                        <label>Dia 1:</label>
-                        <textarea name="dia_1" rows="3" class="form-control mb-2"></textarea>
-                        <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
-                    </div>
-                {% endif %}
-            </div>
-            <button type="button" class="btn btn-primary" onclick="adicionarDia()"><i class="bi bi-plus-circle"></i> Adicionar Dia</button>
-            <br><br>
-            
-            {{ form.data_inicio.label_tag }} {{ form.data_inicio }}<br>
-            {{ form.data_fim.label_tag }} {{ form.data_fim }}<br>
-            {{ form.preco_total.label_tag }} {{ form.preco_total }}<br>
-            {{ form.estado_id.label_tag }} {{ form.estado_id }}<br>
-            {{ form.destinos.label_tag }} {{ form.destinos }}<br>
-
-            
-
-            <label for="id_imagem">Imagem do Pacote:</label><br>
-            {% if pacote_editar and pacote_editar.imagem %}
-                <p><strong>Imagem atual:</strong></p>
-                <img src="{{ pacote_editar.imagem.url }}" alt="{{ pacote_editar.nome }}" width="200"
-                     style="border-radius:8px; margin-bottom:10px;">
-            {% endif %}
-            {{ form.imagem }}<br>
-
-            <button type="submit" class="btn_save_utils">
-                {% if pacote_editar %}Guardar Alterações{% else %}Guardar Pacote{% endif %}
-            </button>
-        </form>
-    </div>
-
-    <div class="card_utils">
-        <div class="voos_header_utils">
+        <div class="voos_header_utils d-flex align-items-center justify-content-between">
             <h2>Lista de Pacotes</h2>
 
-            <form method="get" class="search_form_utils">
-                <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." 
-                       value="{{ request.GET.q|default:'' }}" class="search_input_utils">
-                <button type="submit" class="btn_search_utils">Procurar</button>
-            </form>
+            <div class="d-flex align-items-center gap-2">
+                <form method="get" class="search_form_utils" style="margin:0;">
+                    <input type="text" name="q" placeholder="Pesquisar por nome ou destino..." 
+                           value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                    <button type="submit" class="btn_search_utils">Procurar</button>
+                </form>
+
+                <button type="button" class="btn_search_utils edit_btn_utils d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#addPacoteModal">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Adicionar</span>
+                </button>
+            </div>
         </div>
 
         <ul class="lista_utils">
@@ -111,11 +51,14 @@
                         </div>
 
                         <div class="voo_acoes_utils">
-                            <a href="{% url 'editar_pacote' pacote.pacote_id %}" class="edit_btn_utils">Editar</a>
-                            <form action="{% url 'eliminar_pacote' pacote.pacote_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="delete_btn_utils">Eliminar</button>
-                            </form>
+                            <button type="button" class="edit_btn_utils" data-bs-toggle="modal" 
+                                data-bs-target="#addPacoteModal" 
+                                data-id="{{ pacote.pacote_id }}"
+                                data-url="{% url 'editar_pacote' pacote.pacote_id %}">Editar</button>
+                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModal" data-id="{{ pacote.pacote_id }}"
+                                data-name="{{ pacote.nome }}"
+                                data-url="{% url 'eliminar_pacote' pacote.pacote_id %}">Eliminar</button>
                         </div>
                     </div>
                 </li>
@@ -124,7 +67,101 @@
             {% endfor %}
         </ul>
     </div>
+
 </div>
+
+<!-- Modal: Adicionar/Editar Pacote -->
+<div class="modal fade" id="addPacoteModal" tabindex="-1" aria-labelledby="addPacoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPacoteModalLabel">Adicionar Pacote</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="alert_utils alert-error">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form id="addPacoteForm" method="post" enctype="multipart/form-data" class="form_utils">
+                    {% csrf_token %}
+                    
+                    {{ form.nome.label_tag }} {{ form.nome }}<br>
+                    
+                    <!-- Seção Dinâmica de Dias -->
+                    <label>Descrição por Dias:</label>
+                    <div id="dias-container">
+                        {% if dias_existentes %}
+                            {% for descricao in dias_existentes %}
+                            <div class="dia-item" data-dia="{{ forloop.counter }}">
+                                <label>Dia {{ forloop.counter }}:</label>
+                                <textarea name="dia_{{ forloop.counter }}" rows="3" class="form-control mb-2">{{ descricao }}</textarea>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="dia-item" data-dia="1">
+                                <label>Dia 1:</label>
+                                <textarea name="dia_1" rows="3" class="form-control mb-2"></textarea>
+                                <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="adicionarDia()"><i class="bi bi-plus-circle"></i> Adicionar Dia</button>
+                    <br><br>
+                    
+                    {{ form.data_inicio.label_tag }} {{ form.data_inicio }}<br>
+                    {{ form.data_fim.label_tag }} {{ form.data_fim }}<br>
+                    {{ form.preco_total.label_tag }} {{ form.preco_total }}<br>
+                    {{ form.estado_id.label_tag }} {{ form.estado_id }}<br>
+                    {{ form.destinos.label_tag }} {{ form.destinos }}<br>
+
+                    <label for="id_imagem">Imagem do Pacote:</label><br>
+                    <div id="imagem-atual-container"></div>
+                    {{ form.imagem }}<br>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="addPacoteSubmit" class="btn_search_utils edit_btn_utils">Guardar Pacote</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminação -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmDeleteText">Tem a certeza que deseja eliminar este pacote?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="confirmDeleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" id="confirmDeleteBtn" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -186,6 +223,138 @@ document.addEventListener("DOMContentLoaded", function() {
     if (window.location.search.includes("q=")) {
         const listaPacotes = document.querySelector(".voos_header_utils");
         if (listaPacotes) listaPacotes.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // Modal de confirmação de exclusão
+    var confirmModal = document.getElementById('confirmDeleteModal');
+    if (confirmModal) {
+        confirmModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var pacoteId = button.getAttribute('data-id');
+            var pacoteName = button.getAttribute('data-name');
+            var deleteUrl = button.getAttribute('data-url');
+
+            var textEl = confirmModal.querySelector('#confirmDeleteText');
+            var form = document.getElementById('confirmDeleteForm');
+
+            if (textEl) textEl.textContent = 'Tem a certeza que deseja eliminar "' + pacoteName + '"?';
+
+            if (deleteUrl && form) {
+                try {
+                    var absolute = deleteUrl.charAt(0) === '/' ? window.location.origin + deleteUrl : window.location.origin + '/' + deleteUrl;
+                    form.action = absolute;
+                } catch (e) {
+                    form.action = deleteUrl;
+                }
+            }
+        });
+    }
+
+    // Modal add/edit behaviour
+    var addModal = document.getElementById('addPacoteModal');
+    if (addModal) {
+        addModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var form = document.getElementById('addPacoteForm');
+            var title = addModal.querySelector('.modal-title');
+            var submitBtn = document.getElementById('addPacoteSubmit');
+
+            // Limpar formulário e resetar estado
+            if (form) form.reset();
+            const container = document.getElementById('dias-container');
+            container.innerHTML = `
+                <div class="dia-item" data-dia="1">
+                    <label>Dia 1:</label>
+                    <textarea name="dia_1" rows="3" class="form-control mb-2"></textarea>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                </div>
+            `;
+            diaCounter = 1;
+
+            // default: add mode
+            if (!button) {
+                if (title) title.textContent = 'Adicionar Pacote';
+                if (form) form.action = '';
+                if (submitBtn) submitBtn.textContent = 'Guardar Pacote';
+                return;
+            }
+
+            var pacoteId = button.getAttribute('data-id');
+            var editUrl = button.getAttribute('data-url');
+
+            if (pacoteId && editUrl) {
+                // Edit mode - carregar dados
+                if (title) title.textContent = 'Editar Pacote';
+                if (submitBtn) submitBtn.textContent = 'Guardar Alterações';
+                if (form) {
+                    try {
+                        var absolute = editUrl.charAt(0) === '/' ? window.location.origin + editUrl : editUrl;
+                        form.action = absolute;
+                    } catch (e) {
+                        form.action = editUrl;
+                    }
+                }
+
+                // Carregar dados do pacote via AJAX
+                fetch(editUrl)
+                    .then(response => response.text())
+                    .then(html => {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Preencher campos
+                        ['nome', 'data_inicio', 'data_fim', 'preco_total', 'estado_id'].forEach(field => {
+                            var source = doc.querySelector('[name="' + field + '"]');
+                            var target = form.querySelector('[name="' + field + '"]');
+                            if (source && target) target.value = source.value;
+                        });
+                        
+                        // Destinos
+                        var sourceSelect = doc.querySelector('[name="destinos"]');
+                        var targetSelect = form.querySelector('[name="destinos"]');
+                        if (sourceSelect && targetSelect) {
+                            Array.from(sourceSelect.options).forEach((opt, idx) => {
+                                if (opt.selected && targetSelect.options[idx]) {
+                                    targetSelect.options[idx].selected = true;
+                                }
+                            });
+                        }
+                        
+                        // Dias
+                        var diasContainer = doc.getElementById('dias-container');
+                        if (diasContainer) {
+                            container.innerHTML = diasContainer.innerHTML;
+                            diaCounter = container.querySelectorAll('.dia-item').length;
+                        }
+                    })
+                    .catch(err => console.error('Erro ao carregar:', err));
+            } else {
+                if (title) title.textContent = 'Adicionar Pacote';
+                if (form) form.action = '';
+                if (submitBtn) submitBtn.textContent = 'Guardar Pacote';
+            }
+        });
+
+        // When modal hidden, reset to default add state
+        addModal.addEventListener('hidden.bs.modal', function () {
+            var form = document.getElementById('addPacoteForm');
+            var title = addModal.querySelector('.modal-title');
+            if (title) title.textContent = 'Adicionar Pacote';
+            if (form) {
+                form.action = '';
+                form.reset();
+            }
+            // Reset dias container
+            const container = document.getElementById('dias-container');
+            container.innerHTML = `
+                <div class="dia-item" data-dia="1">
+                    <label>Dia 1:</label>
+                    <textarea name="dia_1" rows="3" class="form-control mb-2"></textarea>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="removerDia(this)"><i class="bi bi-trash"></i> Remover</button>
+                </div>
+            `;
+            diaCounter = 1;
+        });
     }
 });
 </script>
