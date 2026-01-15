@@ -20,19 +20,17 @@
             <table class="faturas-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Cliente</th>
                         <th>Data Emissão</th>
                         <th>Valor Total</th>
                         <th>Tipo Pagamento</th>
                         <th>Estado</th>
-                        <th>Ações</th>
+                        <th style="text-align: center;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for f in faturas %}
                     <tr>
-                        <td>#{{ f.fatura_id }}</td>
                         <td>{{ f.nome_cliente }}</td>
                         <td>{{ f.data_emissao|date:"d/m/Y" }}</td>
                         <td class="valor-total">{{ f.valor_total }}€</td>
@@ -44,25 +42,30 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if f.estado_pagamento == 'Pago' %}
-                                <span class="badge badge-success">Pago</span>
+                            {% if f.estado_pagamento == 'Aprovado' or f.estado_pagamento == 'Pago' %}
+                                <span class="badge badge-success">{{ f.estado_pagamento }}</span>
                             {% elif f.estado_pagamento == 'Pendente' %}
                                 <span class="badge badge-warning">Pendente</span>
-                            {% elif f.estado_pagamento == 'Falhado' %}
-                                <span class="badge badge-danger">Falhado</span>
+                            {% elif f.estado_pagamento == 'Falhado' or f.estado_pagamento == 'Recusado' %}
+                                <span class="badge badge-danger">{{ f.estado_pagamento }}</span>
+                            {% elif f.estado_pagamento %}
+                                <span class="badge badge-info">{{ f.estado_pagamento }}</span>
                             {% else %}
                                 <span class="badge badge-secondary">N/A</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="{% url 'fatura_detalhes' f.fatura_id %}" class="edit_btn_utils">
-                                Ver Detalhes
+                        <td style="text-align: center;">
+                            <a href="{% url 'fatura_detalhes' f.fatura_id %}" class="edit_btn_utils" style="background-color: #17a2b8;">
+                                Ver
+                            </a>
+                            <a href="{% url 'fatura_pdf' f.fatura_id %}" class="edit_btn_utils" style="background-color: #28a745; margin-left: 5px;">
+                                PDF
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 30px;">
+                        <td colspan="6" style="text-align: center; padding: 30px;">
                             <div class="empty_state_utils">
                                 Nenhuma fatura registada.
                             </div>

@@ -3,6 +3,13 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
 
+<!-- Botão Voltar no topo -->
+<div class="container mt-3">
+  <a href="{% url 'main:home' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left"></i> Voltar
+  </a>
+</div>
+
 <div class="container my-5 pacote-detalhes">
 
   <!-- Cabeçalho do pacote -->

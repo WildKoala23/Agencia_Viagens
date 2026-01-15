@@ -11,10 +11,12 @@ from django.contrib import messages
 from django.http import HttpResponse, Http404
 from bson.objectid import ObjectId
 from django.urls import reverse
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
 
 
 client = MongoClient("mongodb://localhost:27017/")
-db = client["bd2_22598"]
+db = client["bdII_25170"]
 banners = db["banners"]
 capa_hotel = db["capa_hotel"]
 detalhes_hotel = db["detalhes_hotel"]
@@ -57,25 +59,28 @@ def editar_destino(request, destino_id):
 def eliminar_destino(request, destino_id):
     destino = get_object_or_404(Destino, destino_id=destino_id)
     if request.method == 'POST':
-        pacote_exists = Pacote.objects.filter(destinos=destino).exists()
-        voo_exists = Voo.objects.filter(destino_id=destino.destino_id).exists()
-        hotel_exists = Hotel.objects.filter(destino_id=destino.destino_id).exists()
-
-        usado = pacote_exists or voo_exists or hotel_exists
-
-        if usado:
-            reasons = []
-            if pacote_exists:
-                reasons.append('pacotes')
-            if voo_exists:
-                reasons.append('voos')
-            if hotel_exists:
-                reasons.append('hoteis')
-            messages.error(request, 'Não é possível eliminar este destino porque está a ser utilizado em: ' + ', '.join(reasons))
-            return redirect('destinos')
-
-        destino.delete()
+        try:
+            with connection.cursor() as cursor:
+                # Usar a FUNCTION SQL para validar e eliminar
+                cursor.execute("SELECT eliminar_destino(%s)", [destino_id])
+            
+            messages.success(request, "Destino eliminado com sucesso!")
+            
+        except DatabaseError as e:
+            # Capturar erro da função SQL
+            erro_texto = str(e)
+            
+            # Limpar mensagem de erro
+            if "CONTEXT" in erro_texto:
+                erro_texto = erro_texto.split("CONTEXT")[0].strip()
+            
+            erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+            erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+            
+            messages.error(request, erro_texto or "Erro ao eliminar destino.")
+        
         return redirect('destinos')
+    
     return redirect('destinos')
 
 def feedbacks(request):
@@ -83,6 +88,12 @@ def feedbacks(request):
         form = FeedbackForm(request.POST)
         if form.is_valid():
             form.save()
+            # Sincronizar estatísticas com MongoDB
+            try:
+                from main.services.mongo_stats import sync_admin_charts_to_mongo
+                sync_admin_charts_to_mongo()
+            except Exception as e:
+                print(f"Erro ao sincronizar com MongoDB: {e}")
             return redirect('feedbacks')
     else:
         form = FeedbackForm()
@@ -217,6 +228,216 @@ def eliminar_voo(request, voo_id):
     if request.method == 'POST':
         voo.delete()
     return redirect('voos')
+
+
+def importar_voos(request):
+    """
+    Importa voos de um ficheiro Excel para PostgreSQL e MongoDB
+    """
+    if request.method == 'POST' and request.FILES.get('ficheiro_excel'):
+        try:
+            import pandas as pd
+            from datetime import datetime
+            
+            ficheiro = request.FILES['ficheiro_excel']
+            
+            # Ler o Excel
+            df = pd.read_excel(ficheiro)
+            
+            # Validar colunas necessárias
+            colunas_necessarias = ['destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
+            for col in colunas_necessarias:
+                if col not in df.columns:
+                    messages.error(request, f'Coluna "{col}" não encontrada no Excel!')
+                    return redirect('voos')
+            
+            voos_importados = 0
+            erros = []
+            
+            # Processar cada linha
+            for index, row in df.iterrows():
+                try:
+                    # Buscar destino
+                    destino = Destino.objects.get(destino_id=int(row['destino_id']))
+                    
+                    # Converter datas
+                    data_saida = pd.to_datetime(row['data_saida'])
+                    data_chegada = pd.to_datetime(row['data_chegada'])
+                    
+                    # Validar preço
+                    preco = float(row['preco'])
+                    if preco <= 0:
+                        erros.append(f'Linha {index + 2}: Preço deve ser maior que zero')
+                        continue
+                    
+                    # Validar datas
+                    if data_chegada <= data_saida:
+                        erros.append(f'Linha {index + 2}: Data de chegada deve ser posterior à data de saída')
+                        continue
+                    
+                    # Verificar se já existe voo duplicado
+                    companhia = str(row['companhia']).strip()
+                    numero_voo = int(row['numero_voo'])
+                    
+                    voo_existente = Voo.objects.filter(
+                        companhia=companhia,
+                        numero_voo=numero_voo,
+                        data_saida=data_saida
+                    ).exists()
+                    
+                    if voo_existente:
+                        erros.append(f'Linha {index + 2}: Voo duplicado ({companhia} #{numero_voo} em {data_saida.strftime("%Y-%m-%d %H:%M")})')
+                        continue
+                    
+                    # Criar voo no PostgreSQL
+                    voo = Voo.objects.create(
+                        destino=destino,
+                        companhia=companhia,
+                        numero_voo=numero_voo,
+                        data_saida=data_saida,
+                        data_chegada=data_chegada,
+                        preco=preco
+                    )
+                    
+                    # Guardar também no MongoDB
+                    try:
+                        voos_collection = db['voos']
+                        voos_collection.insert_one({
+                            'voo_id': voo.voo_id,
+                            'destino_id': destino.destino_id,
+                            'destino_nome': destino.nome,
+                            'companhia': voo.companhia,
+                            'numero_voo': voo.numero_voo,
+                            'data_saida': voo.data_saida.isoformat(),
+                            'data_chegada': voo.data_chegada.isoformat(),
+                            'preco': float(voo.preco),
+                            'importado_em': datetime.now().isoformat()
+                        })
+                    except Exception as mongo_error:
+                        # Se falhar no MongoDB, continua (já está no PostgreSQL)
+                        print(f"Erro MongoDB: {mongo_error}")  # Debug
+                        pass
+                    
+                    voos_importados += 1
+                    
+                except Destino.DoesNotExist:
+                    erros.append(f'Linha {index + 2}: Destino ID {row["destino_id"]} não existe')
+                except ValueError as ve:
+                    erros.append(f'Linha {index + 2}: Valor inválido - {str(ve)}')
+                except Exception as e:
+                    erros.append(f'Linha {index + 2}: {str(e)}')
+            
+            # Mensagens de feedback
+            if voos_importados > 0:
+                messages.success(request, f'{voos_importados} voo(s) importado(s) com sucesso!')
+            
+            if erros:
+                for erro in erros[:5]:  # Mostrar apenas os primeiros 5 erros
+                    messages.warning(request, erro)
+                if len(erros) > 5:
+                    messages.warning(request, f'... e mais {len(erros) - 5} erro(s)')
+            
+        except Exception as e:
+            messages.error(request, f'Erro ao processar ficheiro: {str(e)}')
+    
+    return redirect('voos')
+
+
+def descarregar_template_voos(request):
+    """
+    Gera e retorna um ficheiro Excel template para importação de voos
+    com dados reais da base de dados
+    """
+    # Criar workbook
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Template Voos"
+    
+    # Definir cabeçalhos
+    headers = ['destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco']
+    ws.append(headers)
+    
+    # Estilizar cabeçalhos
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF")
+    
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+    
+    # Buscar dados reais de voos da base de dados
+    try:
+        voos = Voo.objects.all().values('destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco')
+        
+        # Adicionar dados reais
+        for voo in voos:
+            ws.append([
+                voo['destino_id'],
+                voo['companhia'],
+                voo['numero_voo'],
+                voo['data_saida'].strftime('%Y-%m-%d %H:%M:%S') if voo['data_saida'] else '',
+                voo['data_chegada'].strftime('%Y-%m-%d %H:%M:%S') if voo['data_chegada'] else '',
+                float(voo['preco']) if voo['preco'] else 0
+            ])
+    except Exception as e:
+        # Se houver erro ao buscar dados reais, adicionar exemplos
+        example_data = [
+            [1, 'TAP Air Portugal', 501, '2025-02-15 08:00:00', '2025-02-15 10:30:00', 150.00],
+            [2, 'Ryanair', 502, '2025-02-15 14:00:00', '2025-02-15 16:15:00', 89.99],
+            [3, 'EasyJet', 503, '2025-02-16 09:00:00', '2025-02-16 12:45:00', 125.50],
+        ]
+        
+        for row in example_data:
+            ws.append(row)
+    
+    # Adicionar instruções numa nova aba
+    ws_instrucoes = wb.create_sheet("Instruções")
+    instrucoes = [
+        ['INSTRUÇÕES PARA PREENCHIMENTO'],
+        [''],
+        ['Colunas obrigatórias:'],
+        ['destino_id', 'ID numérico do destino (deve existir na base de dados)'],
+        ['companhia', 'Nome da companhia aérea (máximo 150 caracteres)'],
+        ['numero_voo', 'Número do voo (apenas números inteiros)'],
+        ['data_saida', 'Data e hora de saída (formato: AAAA-MM-DD HH:MM:SS)'],
+        ['data_chegada', 'Data e hora de chegada (formato: AAAA-MM-DD HH:MM:SS)'],
+        ['preco', 'Preço do voo (número decimal, ex: 250.00)'],
+        [''],
+        ['IMPORTANTE:'],
+        ['- Não altere o nome das colunas'],
+        ['- Todos os campos são obrigatórios'],
+        ['- O destino_id deve corresponder a um destino existente'],
+        ['- As datas devem estar no formato indicado'],
+        ['- Os dados existentes estão incluídos como referência (pode eliminá-los se não quiser duplicá-los)'],
+    ]
+    
+    for row in instrucoes:
+        ws_instrucoes.append(row)
+    
+    # Estilizar título das instruções
+    ws_instrucoes['A1'].font = Font(bold=True, size=14, color="4472C4")
+    ws_instrucoes['A3'].font = Font(bold=True)
+    ws_instrucoes['A11'].font = Font(bold=True, color="FF0000")
+    
+    # Ajustar largura das colunas
+    ws.column_dimensions['A'].width = 12
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 20
+    ws.column_dimensions['E'].width = 20
+    ws.column_dimensions['F'].width = 10
+    
+    ws_instrucoes.column_dimensions['A'].width = 20
+    ws_instrucoes.column_dimensions['B'].width = 60
+    
+    # Preparar resposta HTTP
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=template_voos.xlsx'
+    
+    wb.save(response)
+    return response
 
 
 def hotel(request):
@@ -410,6 +631,12 @@ def eliminar_feedback(request, feedback_id):
 
     if request.method == 'POST':
         feedback.delete()
+        # Sincronizar estatísticas com MongoDB
+        try:
+            from main.services.mongo_stats import sync_admin_charts_to_mongo
+            sync_admin_charts_to_mongo()
+        except Exception as e:
+            print(f"Erro ao sincronizar com MongoDB: {e}")
         if pacote_id:
             return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
         return redirect('feedbacks')
@@ -467,36 +694,59 @@ def pacotes(request, pacote_id=None):
     if request.method == "POST":
         form = PacoteForm(request.POST, request.FILES, instance=pacote)
         if form.is_valid():
-            # Coletar descrições dos dias do POST
-            dias_descricao = []
-            i = 1
-            while f'dia_{i}' in request.POST:
-                dias_descricao.append(request.POST[f'dia_{i}'])
-                i += 1
+            try:
+                # Coletar descrições dos dias do POST
+                dias_descricao = []
+                i = 1
+                while f'dia_{i}' in request.POST:
+                    dias_descricao.append(request.POST[f'dia_{i}'])
+                    i += 1
+                
+                pacote = form.save(commit=False, dias_descricao=dias_descricao)
+                pacote.save()
+                form.save_m2m()
+
+                banners.update_one(
+                    {"pacote_id": pacote.pacote_id},
+                    {"$set": {
+                        "nome": pacote.nome,
+                        "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
+                        "preco_total": float(pacote.preco_total),
+                        "data_inicio": str(pacote.data_inicio),
+                        "data_fim": str(pacote.data_fim),
+                        "ativo": True
+                    }},
+                    upsert=True
+                )
+
+                # Sincronizar estatísticas com MongoDB
+                try:
+                    from main.services.mongo_stats import sync_admin_charts_to_mongo
+                    sync_admin_charts_to_mongo()
+                except Exception as e:
+                    print(f"Erro ao sincronizar com MongoDB: {e}")
+
+                if pacote_id:
+                    messages.success(request, "Pacote atualizado com sucesso!")
+                else:
+                    messages.success(request, "Pacote criado com sucesso!")
+
+                return redirect('pacotes')
             
-            pacote = form.save(commit=False, dias_descricao=dias_descricao)
-            pacote.save()
-            form.save_m2m()
-
-            banners.update_one(
-                {"pacote_id": pacote.pacote_id},
-                {"$set": {
-                    "nome": pacote.nome,
-                    "imagem_url": f"/media/{pacote.imagem}" if pacote.imagem else None,
-                    "preco_total": float(pacote.preco_total),
-                    "data_inicio": str(pacote.data_inicio),
-                    "data_fim": str(pacote.data_fim),
-                    "ativo": True
-                }},
-                upsert=True
-            )
-
-            if pacote_id:
-                messages.success(request, "Pacote atualizado com sucesso!")
-            else:
-                messages.success(request, "Pacote criado com sucesso!")
-
-            return redirect('pacotes')
+            except (ProgrammingError, DatabaseError) as e:
+                # Capturar erros dos TRIGGERs SQL
+                erro_texto = str(e)
+                
+                # Limpar mensagem de erro
+                if "CONTEXT" in erro_texto:
+                    erro_texto = erro_texto.split("CONTEXT")[0].strip()
+                
+                erro_texto = re.sub(r"^ERROR:\s*", "", erro_texto, flags=re.IGNORECASE)
+                erro_texto = erro_texto.replace("Erro da base de dados:", "").strip()
+                
+                messages.error(request, erro_texto or "Erro ao salvar pacote.")
+        else:
+            messages.error(request, "Erro ao validar formulário. Verifique os dados.")
 
     else:
         form = PacoteForm(instance=pacote)
@@ -504,7 +754,6 @@ def pacotes(request, pacote_id=None):
     # Processar dias existentes se estiver editando
     dias_existentes = []
     if pacote and pacote.descricao_item:
-        import re
         # Dividir por qualquer formato de dia (1ºDIA, 1º DIA, 1DIA, etc.)
         partes = re.split(r'\s*(\d+)\s*[°º]?\s*DIA\s*:?\s*', pacote.descricao_item, flags=re.IGNORECASE)
         
@@ -532,6 +781,12 @@ def eliminar_pacote(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     if request.method == 'POST':
         pacote.delete()
+        # Sincronizar estatísticas com MongoDB
+        try:
+            from main.services.mongo_stats import sync_admin_charts_to_mongo
+            sync_admin_charts_to_mongo()
+        except Exception as e:
+            print(f"Erro ao sincronizar com MongoDB: {e}")
         return redirect('pacotes')
     return redirect('pacotes')
 
@@ -662,24 +917,24 @@ def reserva_pacote(request, pacote_id):
 
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
 
-    destinos_do_pacote = pacote.destinos.all()
-
-    hoteis = Hotel.objects.filter(destino_id__in=destinos_do_pacote)
+    # Usar a VIEW SQL em vez de ORM
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT hotel_id, hotel_nome, preco_diario, endereco, descricao_item, destino_nome, destino_pais
+            FROM vw_hoteis_por_pacote 
+            WHERE pacote_id = %s
+        """, [pacote_id])
+        
+        columns = [col[0] for col in cursor.description]
+        hoteis_data = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
     # Buscar imagens dos hotéis do MongoDB
     hoteis_com_imagem = []
-    for hotel in hoteis:
-        hotel_dict = {
-            'hotel_id': hotel.hotel_id,
-            'nome': hotel.nome,
-            'endereco': hotel.endereco,
-            'preco_diario': hotel.preco_diario,
-            'descricao_item': hotel.descricao_item,
-            'tem_imagem': False
-        }
+    for hotel_dict in hoteis_data:
+        hotel_dict['tem_imagem'] = False
         
         # Verificar se existe imagem no MongoDB
-        imagem_doc = capa_hotel.find_one({'hotel_id': hotel.hotel_id})
+        imagem_doc = capa_hotel.find_one({'hotel_id': hotel_dict['hotel_id']})
         if imagem_doc:
             hotel_dict['tem_imagem'] = True
         
@@ -729,15 +984,22 @@ def hotel_imagem_detalhe(request, hotel_id, imagem_id):
 def selecionar_voo_view(request, pacote_id, hotel_id):
     """
     Exibe a lista de voos disponíveis para o pacote selecionado.
+    Usa VIEW SQL para otimizar a query.
     """
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     
-    # Buscar destinos do pacote
-    destinos_do_pacote = pacote.destinos.all()
-    
-    # Buscar voos para os destinos do pacote
-    voos = Voo.objects.filter(destino__in=destinos_do_pacote)
+    # Usar a VIEW SQL em vez de ORM
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT voo_id, companhia, numero_voo, data_saida, data_chegada, preco, destino_nome, destino_pais
+            FROM vw_voos_por_pacote 
+            WHERE pacote_id = %s
+            ORDER BY data_saida
+        """, [pacote_id])
+        
+        columns = [col[0] for col in cursor.description]
+        voos = [dict(zip(columns, row)) for row in cursor.fetchall()]
     
     return render(request, "selecionar_voo.html", {
         "pacote": pacote,
@@ -749,35 +1011,28 @@ def selecionar_voo_view(request, pacote_id, hotel_id):
 def confirmar_voo(request, voo_id, pacote_id, hotel_id):
     """
     Processa a seleção do voo e redireciona para a confirmação final.
+    Usa FUNCTION SQL para calcular todos os preços.
     """
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     voo = get_object_or_404(Voo, voo_id=voo_id)
     hotel = get_object_or_404(Hotel, hotel_id=hotel_id)
     
-    # Calcular número de noites
-    num_noites = (pacote.data_fim - pacote.data_inicio).days
-    
-    # Calcular preços
-    preco_hotel_total = hotel.preco_diario * num_noites
-    preco_voo_total = voo.preco
-    preco_base_pacote = pacote.preco_total
-    
-    # Calcular preço total final
-    preco_total_final = preco_base_pacote + preco_hotel_total + preco_voo_total
-    
-    # Aqui você pode salvar a escolha do voo na sessão ou em um modelo
-    # Por exemplo: request.session['voo_selecionado'] = voo_id
-    
-    # Por enquanto, vamos apenas renderizar uma página de confirmação
-    # ou redirecionar para a próxima etapa do processo de reserva
+    # Usar FUNCTION SQL para calcular preços
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT * FROM calcular_preco_reserva(%s, %s, %s)
+        """, [pacote_id, hotel_id, voo_id])
+        
+        columns = [col[0] for col in cursor.description]
+        resultado = dict(zip(columns, cursor.fetchone()))
     
     return render(request, "confirmacao_pacote.html", {
         "pacote": pacote,
         "voo": voo,
         "hotel": hotel,
-        "num_noites": num_noites,
-        "preco_hotel_total": preco_hotel_total,
-        "preco_voo_total": preco_voo_total,
-        "preco_base_pacote": preco_base_pacote,
-        "preco_total_final": preco_total_final,
+        "num_noites": resultado['num_noites'],
+        "preco_hotel_total": resultado['preco_hotel_total'],
+        "preco_voo_total": resultado['preco_voo'],
+        "preco_base_pacote": resultado['preco_base'],
+        "preco_total_final": resultado['preco_total'],
     })

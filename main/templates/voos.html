@@ -13,39 +13,22 @@
 <div class="container_utils">
 
     <div class="card_utils">
-        <h1>Inserir Voo</h1>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert_utils alert-{{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-
-        {% if form.non_field_errors %}
-            <div class="alert_utils alert-error">
-                {% for error in form.non_field_errors %}
-                    <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-
-        <form method="post" class="form_utils">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn_save_utils">Guardar Voo</button>
-        </form>
-    </div>
-
-    <div class="card_utils">
-        <div class="voos_header_utils">
+        <div class="voos_header_utils d-flex align-items-center justify-content-between">
             <h2>Lista de Voos</h2>
 
-            <form method="get" class="search_form_utils">
-                <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
-                <button type="submit" class="btn_search_utils">Procurar</button>
-            </form>
+            <div class="d-flex align-items-center gap-2">
+                <form method="get" class="search_form_utils" style="margin:0;">
+                    <input type="text" name="q" placeholder="Pesquisar por origem ou destino..." 
+                           value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                    <button type="submit" class="btn_search_utils">Procurar</button>
+                </form>
+
+                <button type="button" class="btn_search_utils edit_btn_utils d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#addVooModal">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Adicionar</span>
+                </button>
+            </div>
         </div>
 
         <ul class="lista_utils">
@@ -62,12 +45,14 @@
                         </div>
 
                         <div class="voo_acoes_utils">
-                            <a href="{% url 'editar_voo' voo.voo_id %}" class="edit_btn_utils">Editar</a>
-
-                            <form action="{% url 'eliminar_voo' voo.voo_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="delete_btn_utils">Eliminar</button>
-                            </form>
+                            <button type="button" class="edit_btn_utils" data-bs-toggle="modal" 
+                                data-bs-target="#addVooModal" 
+                                data-id="{{ voo.voo_id }}"
+                                data-url="{% url 'editar_voo' voo.voo_id %}">Editar</button>
+                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal"
+                                data-bs-target="#confirmDeleteModal" data-id="{{ voo.voo_id }}"
+                                data-name="{{ voo.companhia }} - {{ voo.destino_nome }}"
+                                data-url="{% url 'eliminar_voo' voo.voo_id %}">Eliminar</button>
                         </div>
                     </div>
                 </li>
@@ -77,8 +62,83 @@
                 </div>
             {% endfor %}
         </ul>
+
+        <div style="margin: 1.5rem 1rem; padding: 1.5rem; background-color: #f8f9fa; border-radius: 8px;">
+            <div style="margin-bottom: 1rem;">
+                <a href="{% url 'template_voos' %}" class="btn_search_utils" style="text-decoration: none; padding: 0.7rem 1.5rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    Descarregar Template Excel
+                </a>
+            </div>
+            
+            <form method="post" action="{% url 'importar_voos' %}" enctype="multipart/form-data" style="margin: 0; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                {% csrf_token %}
+                <input type="file" name="ficheiro_excel" accept=".xlsx,.xls" required style="padding: 0.6rem; border: 2px solid #ddd; border-radius: 4px; font-size: 0.95rem;">
+                <button type="submit" class="btn_save_utils" style="padding: 0.7rem 1.5rem; white-space: nowrap; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    Importar Excel
+                </button>
+            </form>
+        </div>
     </div>
 </div>
+
+<!-- Modal: Adicionar/Editar Voo -->
+<div class="modal fade" id="addVooModal" tabindex="-1" aria-labelledby="addVooModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addVooModalLabel">Adicionar Voo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% if messages %}
+                {% for message in messages %}
+                <div class="alert_utils alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="alert_utils alert-error">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form id="addVooForm" method="post" class="form_utils">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="addVooSubmit" class="btn_search_utils edit_btn_utils">Guardar Voo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirmar Eliminação -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteLabel">Confirmar Eliminação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmDeleteText">Tem a certeza que deseja eliminar este voo?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="confirmDeleteForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" id="confirmDeleteBtn" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -89,6 +149,116 @@ document.addEventListener("DOMContentLoaded", function() {
         if (listaVoos) {
             listaVoos.scrollIntoView({ behavior: "smooth" });
         }
+    }
+
+    // Modal de confirmação de exclusão
+    var confirmModal = document.getElementById('confirmDeleteModal');
+    if (confirmModal) {
+        confirmModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var vooId = button.getAttribute('data-id');
+            var vooName = button.getAttribute('data-name');
+            var deleteUrl = button.getAttribute('data-url');
+
+            var textEl = confirmModal.querySelector('#confirmDeleteText');
+            var form = document.getElementById('confirmDeleteForm');
+
+            if (textEl) textEl.textContent = 'Tem a certeza que deseja eliminar "' + vooName + '"?';
+
+            if (deleteUrl && form) {
+                try {
+                    var absolute = deleteUrl.charAt(0) === '/' ? window.location.origin + deleteUrl : window.location.origin + '/' + deleteUrl;
+                    form.action = absolute;
+                } catch (e) {
+                    form.action = deleteUrl;
+                }
+            }
+        });
+    }
+
+    // Modal add/edit behaviour
+    var addModal = document.getElementById('addVooModal');
+    if (addModal) {
+        addModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var form = document.getElementById('addVooForm');
+            var title = addModal.querySelector('.modal-title');
+            var submitBtn = document.getElementById('addVooSubmit');
+
+            // Limpar formulário
+            if (form) form.reset();
+
+            // default: add mode
+            if (!button) {
+                if (title) title.textContent = 'Adicionar Voo';
+                if (form) form.action = '';
+                if (submitBtn) submitBtn.textContent = 'Guardar Voo';
+                return;
+            }
+
+            var vooId = button.getAttribute('data-id');
+            var editUrl = button.getAttribute('data-url');
+
+            if (vooId && editUrl) {
+                // Edit mode - carregar dados
+                if (title) title.textContent = 'Editar Voo';
+                if (submitBtn) submitBtn.textContent = 'Guardar Alterações';
+                if (form) {
+                    try {
+                        var absolute = editUrl.charAt(0) === '/' ? window.location.origin + editUrl : editUrl;
+                        form.action = absolute;
+                    } catch (e) {
+                        form.action = editUrl;
+                    }
+                }
+
+                // Carregar dados do voo via AJAX
+                fetch(editUrl)
+                    .then(response => response.text())
+                    .then(html => {
+                        var parser = new DOMParser();
+                        var doc = parser.parseFromString(html, 'text/html');
+                        
+                        // Procurar por todos os inputs, selects e textareas
+                        var inputs = doc.querySelectorAll('input[type="text"], input[type="datetime-local"], input[type="date"], input[type="time"], input[type="number"], select, textarea');
+                        
+                        inputs.forEach(input => {
+                            var name = input.name;
+                            if (name && name !== 'csrfmiddlewaretoken') {
+                                var targetInput = form.querySelector('[name="' + name + '"]');
+                                if (targetInput) {
+                                    if (input.type === 'checkbox') {
+                                        targetInput.checked = input.checked;
+                                    } else if (input.tagName === 'SELECT') {
+                                        targetInput.value = input.value;
+                                    } else {
+                                        targetInput.value = input.value;
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => {
+                        console.error('Erro ao carregar:', err);
+                        alert('Erro ao carregar dados do voo. Verifique a consola.');
+                    });
+            } else {
+                if (title) title.textContent = 'Adicionar Voo';
+                if (form) form.action = '';
+                if (submitBtn) submitBtn.textContent = 'Guardar Voo';
+            }
+        });
+
+        // When modal hidden, reset to default add state
+        addModal.addEventListener('hidden.bs.modal', function () {
+            var form = document.getElementById('addVooForm');
+            var title = addModal.querySelector('.modal-title');
+            if (title) title.textContent = 'Adicionar Voo';
+            if (form) {
+                form.action = '';
+                form.reset();
+            }
+        });
     }
 });
 </script>

@@ -13,12 +13,17 @@
 <div class="container_utils">
 
     <div class="card_utils">
-        <h2>Lista de Clientes</h2>
+        <div class="voos_header_utils d-flex align-items-center justify-content-between">
+            <h2>Lista de Clientes</h2>
 
-        <form method="get" class="search_form_utils" style="margin-bottom: 1rem;">
-            <input type="text" name="q" placeholder="Pesquisar por nome ou email..." value="{{ request.GET.q|default:'' }}" class="search_input_utils">
-            <button type="submit" class="btn_search_utils">Procurar</button>
-        </form>
+            <div class="d-flex align-items-center gap-2">
+                <form method="get" class="search_form_utils" style="margin:0;">
+                    <input type="text" name="q" placeholder="Pesquisar por nome ou email..." 
+                           value="{{ request.GET.q|default:'' }}" class="search_input_utils">
+                    <button type="submit" class="btn_search_utils">Procurar</button>
+                </form>
+            </div>
+        </div>
 
         <ul class="lista_utils">
             {% for cliente in clientes %}
@@ -26,7 +31,7 @@
                 <li>
                     <div class="voo_info_utils">
                         <div class="voo_detalhes_utils">
-                            <span class="voo_nome_utils">{{ cliente.first_name }} {{ cliente.last_name }}</span>
+                            <span class="voo_nome_utils">{{ cliente.firstname }} {{ cliente.lastname }}</span>
                             <span class="voo_extra_utils">{{ cliente.email }}</span>
                         </div>
 
@@ -34,7 +39,7 @@
                             {# Edit link: assumes a view `users:editar_cliente` exists (can implement if needed) #}
                             <a href="{% url 'users:editar_cliente' cliente.user_id %}" class="edit_btn_utils">Editar</a>
 
-                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ cliente.user_id }}" data-name="{{ cliente.first_name }} {{ cliente.last_name }}">Eliminar</button>
+                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ cliente.user_id }}" data-name="{{ cliente.firstname }} {{ cliente.lastname }}">Eliminar</button>
                         </div>
                     </div>
                 </li>

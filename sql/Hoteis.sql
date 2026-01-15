@@ -91,3 +91,25 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION eliminar_hotel(INTEGER) IS 
 'Elimina um hotel se não estiver associado a nenhum pacote. Lança exceção caso contrário.';
 
+-- VIEW: Hotéis disponíveis por pacote
+CREATE OR REPLACE VIEW vw_hoteis_por_pacote AS
+SELECT 
+    p.pacote_id,
+    p.nome AS pacote_nome,
+    h.hotel_id,
+    h.nome AS hotel_nome,
+    h.preco_diario,
+    h.endereco,
+    h.descricao_item,
+    d.destino_id,
+    d.nome AS destino_nome,
+    d.pais AS destino_pais
+FROM pacote p
+JOIN pacote_destino pd ON pd.pacote_id = p.pacote_id
+JOIN destino d ON d.destino_id = pd.destino_id
+JOIN hotel h ON h.destino_id = d.destino_id
+ORDER BY p.pacote_id, h.nome;
+
+COMMENT ON VIEW vw_hoteis_por_pacote IS 
+'Lista todos os hotéis disponíveis para cada pacote, baseado nos destinos do pacote';
+

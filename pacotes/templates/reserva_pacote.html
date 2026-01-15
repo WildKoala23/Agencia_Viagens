@@ -3,6 +3,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'pacote_detalhes.css' %}">
 <link rel="stylesheet" href="{% static 'cards.css' %}">
+
 <div class="container my-5 pacote-detalhes">
 
   <!-- Cabeçalho -->
@@ -22,7 +23,7 @@
       <div class="package-card shadow-sm rounded-3 border-0" style="overflow:hidden;">
         <div class="package-image">
           {% if hotel.tem_imagem %}
-            <img src="{% url 'hotel_imagem' hotel.hotel_id %}" alt="{{ hotel.nome }}"
+            <img src="{% url 'hotel_imagem' hotel.hotel_id %}" alt="{{ hotel.hotel_nome }}"
                  class="img-fluid rounded-top" style="width:100%; height:220px; object-fit:cover;">
           {% else %}
             <img src="https://via.placeholder.com/400x220?text=Sem+Imagem" alt="Sem imagem"
@@ -31,7 +32,7 @@
         </div>
 
         <div class="package-body p-3">
-          <h5 class="package-title mb-1">{{ hotel.nome }}</h5>
+          <h5 class="package-title mb-1">{{ hotel.hotel_nome }}</h5>
           {% if hotel.endereco %}
             <p class="package-location text-muted mb-2">{{ hotel.endereco }}</p>
           {% endif %}
@@ -59,6 +60,34 @@
       </div>
     {% endfor %}
   </div>
+
+  <!-- Botão voltar -->
+  <div class="text-center mt-5">
+    <a href="{% url 'pacote_detalhes' pacote.pacote_id %}" class="btn-voltar">
+      ← Voltar para detalhes do pacote
+    </a>
+  </div>
+
 </div>
+
+<style>
+.btn-voltar {
+  background: #004085;
+  color: white;
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.btn-voltar:hover {
+  background: #002752;
+  color: white;
+  text-decoration: none;
+}
+</style>
 
 {% endblock %}

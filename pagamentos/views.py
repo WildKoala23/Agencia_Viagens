@@ -13,6 +13,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from io import BytesIO
 from django.http import HttpResponse
+from django.db.models import Q
 
 # Create your views here.
 def processar_pagamento(request, pacote_id, hotel_id, voo_id):
@@ -258,31 +259,248 @@ def compra_pdf(request, compra_id):
 
 
 def pagamentos(request):
-    if request.method == "POST":
-        form = PagamentoForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('pagamentos')
-    else:
-        form = PagamentoForm()
-
-    pagamentos = Pagamento.objects.all()
+    """
+    Lista todos os pagamentos com informação do cliente que pagou
+    """
+    # Buscar todos os pagamentos
+    pagamentos_list = Pagamento.objects.all()
+    
+    # Preparar lista com dados estruturados
+    pagamentos_data = []
+    for pag in pagamentos_list:
+        # Buscar compra relacionada pelo IntegerField compra_id
+        compra = Compra.objects.filter(compra_id=pag.compra_id).select_related('user').first()
+        cliente_nome = "N/A"
+        if compra and compra.user:
+            cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+            if not cliente_nome:
+                cliente_nome = compra.user.email
+        
+        pagamentos_data.append({
+            'pagamento_id': pag.pagamento_id,
+            'cliente_nome': cliente_nome,
+            'valor': pag.valor,
+            'data_pagamento': pag.data_pagamento,
+            'estado': pag.estado,
+            'metodo': pag.metodo,
+        })
+    
+    # Filtrar por query param 'q' (nome do cliente)
+    q = request.GET.get('q', '').strip()
+    if q:
+        pagamentos_data = [
+            p for p in pagamentos_data 
+            if q.lower() in p['cliente_nome'].lower()
+        ]
+    
     return render(request, 'pagamentos.html', {
-        'form': form,
-        'pagamentos': pagamentos
+        'pagamentos': pagamentos_data
     })
 #---------------------------------------------------------------#
 
 def faturas(request):
-    # Buscar faturas usando a VIEW criada na BD (SQL DIRETO - SUA PARTE)
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM view_faturas_completas")
-        columns = [col[0] for col in cursor.description]
-        faturas = [dict(zip(columns, row)) for row in cursor.fetchall()]
-
+    """
+    Lista todas as faturas com informações completas
+    """
+    # Buscar faturas com relacionamentos
+    faturas_list = Factura.objects.select_related(
+        'compra_id__user',
+        'pagamento_id'
+    ).all()
+    
+    # Preparar lista com dados estruturados
+    faturas_data = []
+    for fatura in faturas_list:
+        compra = fatura.compra_id
+        pagamento = fatura.pagamento_id
+        
+        # Nome do cliente
+        cliente_nome = "N/A"
+        if compra and compra.user:
+            cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+            if not cliente_nome:
+                cliente_nome = compra.user.email
+        
+        faturas_data.append({
+            'fatura_id': fatura.fatura_id,
+            'nome_cliente': cliente_nome,
+            'data_emissao': fatura.data_emissao,
+            'valor_total': fatura.valor_total,
+            'tipo_pagamento': pagamento.metodo if pagamento else None,
+            'estado_pagamento': pagamento.estado if pagamento else None,
+        })
+    
     return render(request, 'faturas.html', {
-        'faturas': faturas
+        'faturas': faturas_data
     })
+
+
+def fatura_detalhes(request, fatura_id):
+    """
+    Exibe detalhes completos de uma fatura
+    """
+    try:
+        fatura = Factura.objects.select_related(
+            'compra_id__user',
+            'compra_id__pacote',
+            'pagamento_id'
+        ).get(fatura_id=fatura_id)
+        
+        # Buscar linhas da fatura
+        linhas = FacturaLinha.objects.filter(fatura=fatura)
+        
+        # Preparar dados da fatura
+        compra = fatura.compra_id
+        pagamento = fatura.pagamento_id
+        
+        fatura_data = {
+            'fatura_id': fatura.fatura_id,
+            'data_emissao': fatura.data_emissao,
+            'valor_total': fatura.valor_total,
+            'estado_pagamento': pagamento.estado if pagamento else 'N/A',
+            'tipo_pagamento': pagamento.metodo if pagamento else None,
+            'compra_id': compra.compra_id if compra else None,
+            'pagamento_id': pagamento.pagamento_id if pagamento else None,
+            'nome_cliente': f"{compra.user.firstname} {compra.user.lastname}".strip() if compra and compra.user else 'N/A',
+            'email': compra.user.email if compra and compra.user else 'N/A',
+            'user_id': compra.user.user_id if compra and compra.user else None,
+        }
+        
+        # Preparar linhas da fatura com informações detalhadas
+        linhas_data = []
+        for linha in linhas:
+            # Extrair tipo de item da descrição
+            tipo_item = "Item"
+            if "Pacote Base" in linha.descricao_item:
+                tipo_item = "Pacote Base"
+            elif "Hotel" in linha.descricao_item:
+                tipo_item = "Alojamento"
+            elif "Voo" in linha.descricao_item:
+                tipo_item = "Voo"
+            
+            linhas_data.append({
+                'tipo': tipo_item,
+                'descricao': linha.descricao_item,
+                'quantidade': 1,
+                'preco_unitario': linha.preco,
+                'subtotal': linha.subtotal
+            })
+        
+        return render(request, 'fatura_detalhes.html', {
+            'fatura': fatura_data,
+            'linhas': linhas_data
+        })
+        
+    except Factura.DoesNotExist:
+        return render(request, 'fatura_detalhes.html', {
+            'error': 'Fatura não encontrada.'
+        })
+
+
+def fatura_pdf(request, fatura_id):
+    """Gera PDF com detalhes da fatura."""
+    fatura = get_object_or_404(Factura, fatura_id=fatura_id)
+    
+    linhas_fatura = FacturaLinha.objects.filter(fatura=fatura)
+    pagamento = fatura.pagamento_id
+    compra = fatura.compra_id
+
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, leftMargin=40, rightMargin=40, topMargin=50, bottomMargin=40)
+    styles = getSampleStyleSheet()
+    elements = []
+
+    title_style = styles['Title']
+    title_style.fontSize = 20
+    title_style.leading = 24
+    elements.append(Paragraph(f'Fatura #{fatura.fatura_id}', title_style))
+    elements.append(Spacer(1, 12))
+
+    info_style = styles['Normal']
+    info_style.fontSize = 11
+    
+    # Informações do cliente
+    cliente_nome = "N/A"
+    if compra and compra.user:
+        cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+        if not cliente_nome:
+            cliente_nome = compra.user.email
+    
+    fatura_info = (
+        f"<b>Cliente:</b> {cliente_nome}<br/>"
+        f"<b>Data de Emissão:</b> {fatura.data_emissao.strftime('%d/%m/%Y %H:%M')}<br/>"
+        f"<b>ID Compra:</b> {compra.compra_id if compra else 'N/A'}<br/>"
+        f"<b>Data da Compra:</b> {compra.data_compra if compra else 'N/A'}"
+    )
+    elements.append(Paragraph(fatura_info, info_style))
+    elements.append(Spacer(1, 14))
+
+    if pagamento:
+        elements.append(Paragraph('<b>Informações de Pagamento</b>', styles['Heading3']))
+        pay_info = (
+            f"<b>Método:</b> {pagamento.metodo}<br/>"
+            f"<b>Estado:</b> {pagamento.estado}<br/>"
+            f"<b>Data Pagamento:</b> {pagamento.data_pagamento}<br/>"
+            f"<b>Valor Pago:</b> €{pagamento.valor}"
+        )
+        elements.append(Paragraph(pay_info, info_style))
+        elements.append(Spacer(1, 12))
+
+    # Tabela de linhas da fatura
+    elements.append(Paragraph('<b>Detalhes da Fatura</b>', styles['Heading3']))
+    elements.append(Spacer(1, 6))
+
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.lib.enums import TA_RIGHT
+
+    header = ["Descrição", "Preço Unit.", "Subtotal"]
+    table_rows = [header]
+
+    normal_style = styles['Normal']
+    right_style = ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)
+    bold_right = ParagraphStyle('BoldRight', parent=right_style, fontName='Helvetica-Bold')
+
+    for linha in linhas_fatura:
+        table_rows.append([
+            Paragraph(linha.descricao_item, normal_style),
+            Paragraph(f"€{linha.preco}", right_style),
+            Paragraph(f"€{linha.subtotal}", right_style)
+        ])
+    
+    table_rows.append([
+        Paragraph("", normal_style),
+        Paragraph("Total:", bold_right),
+        Paragraph(f"€{fatura.valor_total}", bold_right)
+    ])
+
+    tbl = Table(table_rows, colWidths=[260, 100, 100])
+    tbl.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 11),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 1), (-1, -2), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
+        ('ALIGN', (1, 1), (-1, -2), 'RIGHT'),
+        ('ALIGN', (1, -1), (-1, -1), 'RIGHT'),
+    ]))
+    elements.append(tbl)
+    elements.append(Spacer(1, 18))
+
+    elements.append(Paragraph('Documento gerado automaticamente.', styles['Italic']))
+
+    doc.build(elements)
+    pdf_value = buffer.getvalue()
+    buffer.close()
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="fatura_{fatura.fatura_id}.pdf"'
+    response.write(pdf_value)
+    return response
 
 
 # def fatura_detalhes(request, fatura_id):

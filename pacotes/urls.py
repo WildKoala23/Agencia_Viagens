@@ -11,6 +11,8 @@ urlpatterns = [
     path('voos/', views.voos, name='voos'),
     path('voos/<int:voo_id>/', views.voos, name='editar_voo'),
     path('voos/eliminar/<int:voo_id>/', views.eliminar_voo, name='eliminar_voo'),
+    path('voos/importar/', views.importar_voos, name='importar_voos'),
+    path('voos/template/', views.descarregar_template_voos, name='template_voos'),
     #hoteis
     path("hoteis/", views.hotel, name="hoteis"),
     path("hoteis/editar/<int:hotel_id>/", views.editar_hotel, name="editar_hotel"),

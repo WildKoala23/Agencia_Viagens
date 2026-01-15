@@ -70,3 +70,27 @@ CREATE OR REPLACE TRIGGER trigger_insertVoos
 AFTER INSERT OR UPDATE OR DELETE ON voo
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_voos();
+
+-- VIEW: Voos disponíveis por pacote
+CREATE OR REPLACE VIEW vw_voos_por_pacote AS
+SELECT 
+    p.pacote_id,
+    p.nome AS pacote_nome,
+    v.voo_id,
+    v.companhia,
+    v.numero_voo,
+    v.data_saida,
+    v.data_chegada,
+    v.preco,
+    d.destino_id,
+    d.nome AS destino_nome,
+    d.pais AS destino_pais
+FROM pacote p
+JOIN pacote_destino pd ON pd.pacote_id = p.pacote_id
+JOIN destino d ON d.destino_id = pd.destino_id
+JOIN voo v ON v.destino_id = d.destino_id
+ORDER BY p.pacote_id, v.data_saida;
+
+COMMENT ON VIEW vw_voos_por_pacote IS 
+'Lista todos os voos disponíveis para cada pacote, baseado nos destinos do pacote';
+

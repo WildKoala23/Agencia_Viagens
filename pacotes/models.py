@@ -155,6 +155,13 @@ class Feedback(models.Model):
         on_delete=models.CASCADE,
         db_column='pacote_id'
     )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        db_column='user_id',
+        null=True
+    )
+    titulo = models.CharField(max_length=200, null=True, blank=True)
     avaliacao = models.IntegerField()
     comentario = models.CharField(max_length=500)
     data_feedback = models.DateField()

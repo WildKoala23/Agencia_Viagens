@@ -117,8 +117,8 @@
 
   <!-- Botões de ação -->
   <div class="text-center mt-5">
-    <a href="{% url 'pacotes_por_pais' %}" class="btn-voltar btn-lg me-3">
-      ← Voltar aos Pacotes
+    <a href="{% url 'selecionar_voo' pacote.pacote_id hotel.hotel_id %}" class="btn-voltar btn-lg me-3">
+      ← Voltar à seleção de voos
     </a>
     <a href="{% url 'processar_pagamento' pacote.pacote_id hotel.hotel_id voo.voo_id %}" class="btn btn-success btn-lg">
       Continuar para Pagamento →

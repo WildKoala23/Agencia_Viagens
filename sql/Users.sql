@@ -21,7 +21,7 @@ BEGIN
         P.data_inicio, 
         P.data_fim, 
         C.estado, 
-        P.preco_total,
+        C.valor_total,
         C.data_compra
     FROM public.compra C 
     JOIN public.pacote P ON C.pacote_id = P.pacote_id 

@@ -34,8 +34,8 @@ def loginUser(request):
                 if user.is_staff:
                     return redirect('main:dashboard')  # staff
                 else:
-                    # usuários comuns redirecionam para a página pública 'home'
-                    return redirect('main:home')
+                    # usuários comuns redirecionam para a dashboard do cliente
+                    return redirect('users:user')
             else:
                 form.add_error(None, "Email ou senha inválidos")
     else:
@@ -47,11 +47,21 @@ def registerUser(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
+            # Guardar o novo utilizador
+            user = form.save()
+            
+            # Fazer login automático
             email = form.cleaned_data['email']
             password = form.cleaned_data['password1']
             user = authenticate(request, email=email, password=password)
-            form.save()
-            return redirect('main:dashboard')
+            
+            if user is not None:
+                login(request, user)
+                # Redirecionar para a dashboard do cliente
+                return redirect('users:user')
+            else:
+                # Se autenticação falhar, redirecionar para login
+                return redirect('users:login')
     else:
         form = RegisterForm()
     return render(request, 'registration/register.html', {'form': form})
@@ -94,10 +104,109 @@ def eliminar_cliente(request, cliente_id):
     return redirect('users:inserir_clientes')
 
 def user(req):
-    data = userData.find_one({"Id_User": req.user.user_id})
-    # data = list(userData.find())
-    print(data)
-    return render(req, 'dashboardUser.html', {"data": data, "brand_name": "Atlas Gateways"})
+    from pacotes.models import Feedback, Pacote
+    from pagamentos.models import Compra
+    from datetime import datetime, timedelta
+    
+    user_id = req.user.user_id
+    
+    # Dados básicos do MongoDB (mantém compatibilidade)
+    data = userData.find_one({"Id_User": user_id})
+    if not data:
+        data = {}
+    
+    # Buscar compras/viagens do usuário
+    with connection.cursor() as cursor:
+        # Próximas viagens (futuras)
+        cursor.execute("""
+            SELECT 
+                c.compra_id,
+                p.nome as pacote_nome,
+                p.data_inicio,
+                p.data_fim,
+                c.valor_total,
+                d.nome as destino_nome,
+                d.pais
+            FROM compra c
+            JOIN pacote p ON c.pacote_id = p.pacote_id
+            LEFT JOIN pacote_destino pd ON p.pacote_id = pd.pacote_id
+            LEFT JOIN destino d ON pd.destino_id = d.destino_id
+            WHERE c.user_id = %s 
+            AND p.data_inicio > CURRENT_DATE
+            ORDER BY p.data_inicio
+            LIMIT 3
+        """, [user_id])
+        proximas_viagens = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        
+        # Viagens passadas (para histórico)
+        cursor.execute("""
+            SELECT 
+                c.compra_id,
+                p.nome as pacote_nome,
+                p.data_inicio,
+                p.data_fim,
+                c.valor_total,
+                d.nome as destino_nome
+            FROM compra c
+            JOIN pacote p ON c.pacote_id = p.pacote_id
+            LEFT JOIN pacote_destino pd ON p.pacote_id = pd.pacote_id
+            LEFT JOIN destino d ON pd.destino_id = d.destino_id
+            WHERE c.user_id = %s 
+            AND p.data_fim < CURRENT_DATE
+            ORDER BY p.data_fim DESC
+            LIMIT 3
+        """, [user_id])
+        viagens_passadas = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+        
+        # Estatísticas de gastos por mês (últimos 6 meses)
+        cursor.execute("""
+            SELECT 
+                TO_CHAR(c.data_compra, 'Mon') as mes,
+                EXTRACT(MONTH FROM c.data_compra) as mes_num,
+                SUM(c.valor_total) as total
+            FROM compra c
+            WHERE c.user_id = %s 
+            AND c.data_compra >= CURRENT_DATE - INTERVAL '6 months'
+            GROUP BY TO_CHAR(c.data_compra, 'Mon'), EXTRACT(MONTH FROM c.data_compra)
+            ORDER BY mes_num
+        """, [user_id])
+        gastos_mensais = [dict(zip([col[0] for col in cursor.description], row)) for row in cursor.fetchall()]
+    
+    # Feedbacks recentes do usuário
+    feedbacks_recentes = Feedback.objects.filter(user_id=user_id).select_related('pacote').order_by('-data_feedback')[:3]
+    
+    # Estatísticas gerais
+    total_compras = Compra.objects.filter(user_id=user_id).count()
+    total_gasto = Compra.objects.filter(user_id=user_id).aggregate(total=Sum('valor_total'))['total'] or 0
+    total_feedbacks = Feedback.objects.filter(user_id=user_id).count()
+    
+    # Destinos visitados (para recomendações)
+    destinos_visitados = Compra.objects.filter(
+        user_id=user_id,
+        pacote__data_fim__lt=datetime.now().date()
+    ).values_list('pacote__destinos__pais', flat=True).distinct()
+    
+    # Recomendações (pacotes de países não visitados)
+    pacotes_recomendados = Pacote.objects.filter(
+        estado_id=1
+    ).exclude(
+        destinos__pais__in=destinos_visitados
+    ).distinct()[:3]
+    
+    context = {
+        "data": data,
+        "brand_name": "Atlas Gateways",
+        "proximas_viagens": proximas_viagens,
+        "viagens_passadas": viagens_passadas,
+        "gastos_mensais": gastos_mensais,
+        "feedbacks_recentes": feedbacks_recentes,
+        "total_compras": total_compras,
+        "total_gasto": total_gasto,
+        "total_feedbacks": total_feedbacks,
+        "pacotes_recomendados": pacotes_recomendados,
+    }
+    
+    return render(req, 'dashboardUser.html', context)
 
 
 def comprasUser(req):
@@ -111,19 +220,68 @@ def comprasUser(req):
 def feedbacksUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
+    if request.method == 'POST':
+        # Processar novo feedback
+        reserva_id = request.POST.get('reserva_id')
+        avaliacao = request.POST.get('avaliacao')
+        titulo = request.POST.get('titulo')
+        comentario = request.POST.get('comentario')
+        
+        with connection.cursor() as cursor:
+            # Buscar pacote_id da compra
+            cursor.execute(
+                "SELECT pacote_id FROM compra WHERE compra_id = %s",
+                [reserva_id]
+            )
+            result = cursor.fetchone()
+            
+            if result:
+                pacote_id = result[0]
+                # Inserir feedback diretamente
+                cursor.execute("""
+                    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
+                    VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)
+                """, [pacote_id, request.user.user_id, titulo, avaliacao, comentario])
+        
+        return redirect('users:feedbacksUser')
+    
+    # Buscar compras do usuário para o dropdown
     with connection.cursor() as cursor:
         cursor.execute("SELECT * FROM comprasUtilizador(%s)", [request.user.user_id])
         compras = cursor.fetchall()
+    
+    # Buscar feedbacks anteriores do usuário
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT 
+                f.feedback_id,
+                f.titulo,
+                f.avaliacao,
+                f.comentario,
+                f.data_feedback,
+                p.nome as pacote_nome
+            FROM feedback f
+            JOIN pacote p ON f.pacote_id = p.pacote_id
+            WHERE f.user_id = %s
+            ORDER BY f.data_feedback DESC
+        """, [request.user.user_id])
+        
+        columns = [col[0] for col in cursor.description]
+        feedbacks = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-    return render(request, 'feedbacksUser.html', {"compras": compras, "user": user})
+    return render(request, 'feedbacksUser.html', {
+        "compras": compras, 
+        "user": user,
+        "feedbacks": feedbacks
+    })
 
 def perfilUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        user.first_name = request.POST.get('first_name', user.first_name)
-        user.last_name = request.POST.get('last_name', user.last_name)
+        user.firstname = request.POST.get('firstname', user.firstname)
+        user.lastname = request.POST.get('lastname', user.lastname)
         user.email = request.POST.get('email', user.email)
         telefone = request.POST.get('telefone', '')
         user.telefone = int(telefone) if telefone else None
@@ -280,6 +438,17 @@ def dashboard(request):
         'aval4': aval4,
         'aval5': aval5,
     }
+    
+    # Buscar estatísticas de preços usando a VIEW SQL
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT * FROM vw_estatisticas_precos")
+            columns = [col[0] for col in cursor.description]
+            estatisticas_precos = [dict(zip(columns, row)) for row in cursor.fetchall()]
+            context['estatisticas_precos'] = estatisticas_precos
+    except Exception:
+        context['estatisticas_precos'] = []
+    
     return render(request, 'dashboard.html', context)
 
 def api_pacotes_por_pais(request):
@@ -290,16 +459,17 @@ def api_pacotes_por_pais(request):
             response_data = {}
             for document in cursor:
                 for key, value in document.items():
-                    if key != '_id':
-                        # ensure numeric type (DB may store strings)
+                    if key in ('_id', 'updated_at'):
+                        continue
+                    # ensure numeric type (DB may store strings)
+                    try:
+                        num = int(value)
+                    except Exception:
                         try:
-                            num = int(value)
+                            num = int(float(value))
                         except Exception:
-                            try:
-                                num = int(float(value))
-                            except Exception:
-                                num = 0
-                        response_data[key] = response_data.get(key, 0) + num
+                            num = 0
+                    response_data[key] = response_data.get(key, 0) + num
             return JsonResponse(response_data)
     except Exception as e:
         print(f"Error fetching data: {e}")

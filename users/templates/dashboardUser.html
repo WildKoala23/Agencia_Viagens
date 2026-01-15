@@ -3,17 +3,159 @@
 
 {% block styles %}
   <link rel="stylesheet" href="{% static 'dashboardUser.css' %}">
+  <style>
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 1rem;
+      margin-top: 2rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .viagem-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      transition: box-shadow 0.2s;
+      background: white;
+    }
+    .viagem-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .feedback-item-dash {
+      background: #f8f9fa;
+      border-left: 4px solid #17a2b8;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+    }
+    .pacote-recomendado {
+      border: 2px solid #667eea;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      transition: transform 0.2s;
+    }
+    .pacote-recomendado:hover {
+      transform: translateY(-2px);
+    }
+  </style>
 {% endblock %}
 
-{% block title %}User Page{% endblock %}
+{% block title %}Dashboard - Atlas Gateways{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 
 {% block content %}
 
+<div class="container" style="margin-top: -20px;">
 
-<div class="container">
+  <!-- Mensagem de boas-vindas -->
+  <div class="welcome-message mb-4" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+    <h4 class="mb-1" style="color: #2c3e50; font-weight: 600;">
+      {% if user.firstname %}
+        Olá, {{ user.firstname }}! 👋
+      {% else %}
+        Olá! 👋
+      {% endif %}
+    </h4>
+    <p class="mb-0 text-muted">Bem-vindo à tua área pessoal. Aqui podes acompanhar as tuas viagens e descobrir novos destinos.</p>
+  </div>
 
+  <!-- Cards originais do topo (estatísticas + explorar pacotes) -->
   {% include 'components/cardsUser.html' %}
+
+  <!-- Próximas Viagens -->
+  {% if proximas_viagens %}
+  <div class="section-title">
+    <i class="fas fa-plane-departure me-2"></i>Próximas Viagens
+  </div>
+  <div class="row">
+    {% for viagem in proximas_viagens %}
+    <div class="col-md-4">
+      <div class="viagem-card">
+        <h6 class="mb-2 text-primary fw-bold">{{ viagem.pacote_nome }}</h6>
+        <p class="mb-1 small"><i class="fas fa-map-marker-alt me-1 text-danger"></i>{{ viagem.destino_nome }}, {{ viagem.pais }}</p>
+        <p class="mb-1 small"><i class="fas fa-calendar me-1 text-info"></i>{{ viagem.data_inicio|date:"d/m/Y" }} - {{ viagem.data_fim|date:"d/m/Y" }}</p>
+        <p class="mb-0 fw-bold text-success">{{ viagem.valor_total }}€</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="row">
+    <!-- Últimas Atividades -->
+    <div class="col-md-6">
+      <div class="section-title">
+        <i class="fas fa-history me-2"></i>Atividade Recente
+      </div>
+      
+      {% if feedbacks_recentes %}
+      <h6 class="small text-muted mb-2 fw-bold">Feedbacks Deixados</h6>
+      {% for feedback in feedbacks_recentes %}
+      <div class="feedback-item-dash">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <strong class="small">{{ feedback.pacote.nome }}</strong>
+            <p class="mb-0 small text-muted">{{ feedback.data_feedback|date:"d/m/Y" }}</p>
+          </div>
+          <span class="badge bg-warning text-dark">
+            <i class="fas fa-star"></i> {{ feedback.avaliacao }}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="text-muted small">Ainda não deixou nenhum feedback.</p>
+      {% endif %}
+
+      {% if viagens_passadas %}
+      <h6 class="small text-muted mb-2 mt-3 fw-bold">Viagens Anteriores</h6>
+      {% for viagem in viagens_passadas %}
+      <div class="viagem-card" style="border-left: 3px solid #6c757d;">
+        <h6 class="mb-1 small fw-bold">{{ viagem.pacote_nome }}</h6>
+        <p class="mb-0 small text-muted">
+          <i class="fas fa-map-marker-alt me-1"></i>{{ viagem.destino_nome }} • 
+          {{ viagem.data_inicio|date:"d/m/Y" }}
+        </p>
+      </div>
+      {% endfor %}
+      {% else %}
+      <h6 class="small text-muted mb-2 mt-3 fw-bold">Viagens Anteriores</h6>
+      <p class="text-muted small">Ainda não realizou nenhuma viagem.</p>
+      {% endif %}
+    </div>
+
+    <!-- Recomendações -->
+    <div class="col-md-6">
+      <div class="section-title">
+        <i class="fas fa-lightbulb me-2"></i>Recomendações para Si
+      </div>
+      {% if pacotes_recomendados %}
+      {% for pacote in pacotes_recomendados %}
+      <div class="pacote-recomendado">
+        <h6 class="mb-2 fw-bold">{{ pacote.nome }}</h6>
+        <p class="mb-2 small text-muted">{{ pacote.descricao_item|truncatewords:15 }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="fw-bold text-success fs-5">{{ pacote.preco_total }}€</span>
+          <a href="{% url 'pacote_detalhes' pacote.pacote_id %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-eye me-1"></i>Ver Detalhes
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>
+        Explore nossos pacotes para descobrir novos destinos incríveis!
+      </div>
+      {% endif %}
+      
+    </div>
+  </div>
 
 </div>
 
