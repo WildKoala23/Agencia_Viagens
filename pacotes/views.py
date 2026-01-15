@@ -88,6 +88,12 @@ def feedbacks(request):
         form = FeedbackForm(request.POST)
         if form.is_valid():
             form.save()
+            # Sincronizar estatísticas com MongoDB
+            try:
+                from main.services.mongo_stats import sync_admin_charts_to_mongo
+                sync_admin_charts_to_mongo()
+            except Exception as e:
+                print(f"Erro ao sincronizar com MongoDB: {e}")
             return redirect('feedbacks')
     else:
         form = FeedbackForm()
@@ -625,6 +631,12 @@ def eliminar_feedback(request, feedback_id):
 
     if request.method == 'POST':
         feedback.delete()
+        # Sincronizar estatísticas com MongoDB
+        try:
+            from main.services.mongo_stats import sync_admin_charts_to_mongo
+            sync_admin_charts_to_mongo()
+        except Exception as e:
+            print(f"Erro ao sincronizar com MongoDB: {e}")
         if pacote_id:
             return redirect('feedbacks_por_pacote', pacote_id=pacote_id)
         return redirect('feedbacks')
@@ -707,6 +719,13 @@ def pacotes(request, pacote_id=None):
                     upsert=True
                 )
 
+                # Sincronizar estatísticas com MongoDB
+                try:
+                    from main.services.mongo_stats import sync_admin_charts_to_mongo
+                    sync_admin_charts_to_mongo()
+                except Exception as e:
+                    print(f"Erro ao sincronizar com MongoDB: {e}")
+
                 if pacote_id:
                     messages.success(request, "Pacote atualizado com sucesso!")
                 else:
@@ -762,6 +781,12 @@ def eliminar_pacote(request, pacote_id):
     pacote = get_object_or_404(Pacote, pacote_id=pacote_id)
     if request.method == 'POST':
         pacote.delete()
+        # Sincronizar estatísticas com MongoDB
+        try:
+            from main.services.mongo_stats import sync_admin_charts_to_mongo
+            sync_admin_charts_to_mongo()
+        except Exception as e:
+            print(f"Erro ao sincronizar com MongoDB: {e}")
         return redirect('pacotes')
     return redirect('pacotes')
 
