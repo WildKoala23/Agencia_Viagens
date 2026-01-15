@@ -340,6 +340,7 @@ def importar_voos(request):
 def descarregar_template_voos(request):
     """
     Gera e retorna um ficheiro Excel template para importação de voos
+    com dados reais da base de dados
     """
     # Criar workbook
     wb = Workbook()
@@ -357,6 +358,31 @@ def descarregar_template_voos(request):
     for cell in ws[1]:
         cell.fill = header_fill
         cell.font = header_font
+    
+    # Buscar dados reais de voos da base de dados
+    try:
+        voos = Voo.objects.all().values('destino_id', 'companhia', 'numero_voo', 'data_saida', 'data_chegada', 'preco')
+        
+        # Adicionar dados reais
+        for voo in voos:
+            ws.append([
+                voo['destino_id'],
+                voo['companhia'],
+                voo['numero_voo'],
+                voo['data_saida'].strftime('%Y-%m-%d %H:%M:%S') if voo['data_saida'] else '',
+                voo['data_chegada'].strftime('%Y-%m-%d %H:%M:%S') if voo['data_chegada'] else '',
+                float(voo['preco']) if voo['preco'] else 0
+            ])
+    except Exception as e:
+        # Se houver erro ao buscar dados reais, adicionar exemplos
+        example_data = [
+            [1, 'TAP Air Portugal', 501, '2025-02-15 08:00:00', '2025-02-15 10:30:00', 150.00],
+            [2, 'Ryanair', 502, '2025-02-15 14:00:00', '2025-02-15 16:15:00', 89.99],
+            [3, 'EasyJet', 503, '2025-02-16 09:00:00', '2025-02-16 12:45:00', 125.50],
+        ]
+        
+        for row in example_data:
+            ws.append(row)
     
     # Adicionar instruções numa nova aba
     ws_instrucoes = wb.create_sheet("Instruções")
@@ -376,6 +402,7 @@ def descarregar_template_voos(request):
         ['- Todos os campos são obrigatórios'],
         ['- O destino_id deve corresponder a um destino existente'],
         ['- As datas devem estar no formato indicado'],
+        ['- Os dados existentes estão incluídos como referência (pode eliminá-los se não quiser duplicá-los)'],
     ]
     
     for row in instrucoes:
