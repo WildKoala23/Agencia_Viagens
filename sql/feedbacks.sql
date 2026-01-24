@@ -260,3 +260,86 @@ COMMENT ON VIEW view_estatisticas_pacotes IS 'Estatísticas de avaliação para 
 COMMENT ON FUNCTION get_feedbacks_por_avaliacao IS 'Retorna feedbacks filtrados por número de estrelas';
 COMMENT ON FUNCTION get_top_pacotes_avaliados IS 'Retorna os pacotes mais bem avaliados';
 COMMENT ON FUNCTION get_estatisticas_feedbacks IS 'Retorna estatísticas gerais de todos os feedbacks';
+
+-- =====================================================
+-- NOVA PROCEDURE: Inserir Feedback Validado
+-- =====================================================
+DROP FUNCTION IF EXISTS inserir_feedback_validado CASCADE;
+
+CREATE OR REPLACE FUNCTION inserir_feedback_validado(
+    p_user_id INT,
+    p_compra_id INT,
+    p_avaliacao INT,
+    p_titulo TEXT,
+    p_comentario TEXT
+)
+RETURNS TABLE (
+    sucesso BOOLEAN,
+    feedback_id INT,
+    mensagem TEXT
+) AS $$
+DECLARE
+    v_pacote_id INT;
+    v_data_fim DATE;
+    v_estado_compra TEXT;
+    v_feedback_existente INT;
+    v_new_feedback_id INT;
+BEGIN
+    -- Buscar informações da compra
+    SELECT c.pacote_id, p.data_fim, c.estado
+    INTO v_pacote_id, v_data_fim, v_estado_compra
+    FROM compra c
+    JOIN pacote p ON c.pacote_id = p.pacote_id
+    WHERE c.compra_id = p_compra_id AND c.user_id = p_user_id;
+    
+    -- Validação 1: Verificar se compra existe e pertence ao utilizador
+    IF NOT FOUND THEN
+        RETURN QUERY SELECT FALSE, NULL::INT, 'Compra não encontrada ou não pertence a este utilizador'::TEXT;
+        RETURN;
+    END IF;
+    
+    -- Validação 2: Verificar se compra não está cancelada
+    IF v_estado_compra = 'cancelada' THEN
+        RETURN QUERY SELECT FALSE, NULL::INT, 'Não pode avaliar uma reserva cancelada'::TEXT;
+        RETURN;
+    END IF;
+    
+    -- Validação 3: Verificar se a viagem já aconteceu
+    IF v_data_fim > CURRENT_DATE THEN
+        RETURN QUERY SELECT FALSE, NULL::INT, 
+            format('Só pode avaliar após a viagem terminar (Data término: %s)', v_data_fim)::TEXT;
+        RETURN;
+    END IF;
+    
+    -- Validação 4: Verificar avaliação entre 1 e 5
+    IF p_avaliacao < 1 OR p_avaliacao > 5 THEN
+        RETURN QUERY SELECT FALSE, NULL::INT, 'Avaliação deve ser entre 1 e 5 estrelas'::TEXT;
+        RETURN;
+    END IF;
+    
+    -- Validação 5: Verificar se já existe feedback para este pacote deste utilizador
+    SELECT f.feedback_id INTO v_feedback_existente
+    FROM feedback f
+    JOIN compra c ON f.pacote_id = c.pacote_id
+    WHERE c.compra_id = p_compra_id AND f.user_id = p_user_id;
+    
+    IF v_feedback_existente IS NOT NULL THEN
+        RETURN QUERY SELECT FALSE, NULL::INT, 'Já submeteu um feedback para esta viagem'::TEXT;
+        RETURN;
+    END IF;
+    
+    -- Inserir feedback
+    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
+    VALUES (v_pacote_id, p_user_id, p_titulo, p_avaliacao, p_comentario, CURRENT_DATE)
+    RETURNING feedback.feedback_id INTO v_new_feedback_id;
+    
+    -- Retornar sucesso
+    RETURN QUERY SELECT 
+        TRUE, 
+        v_new_feedback_id,
+        'Feedback submetido com sucesso! Obrigado pela sua avaliação.'::TEXT;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION inserir_feedback_validado(INT, INT, INT, TEXT, TEXT) IS 
+'Insere feedback com validações: utilizador comprou, viagem terminou, sem duplicados';

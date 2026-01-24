@@ -51,6 +51,16 @@
                             <div style="display: flex; gap: 8px; justify-content: center;">
                                 <a href="{% url 'compra_sucesso' i.0 %}" class="edit_btn_utils">Ver</a>
                                 <a href="{% url 'compra_pdf' i.0 %}" class="edit_btn_utils" style="background-color: #28a745;">PDF</a>
+                                
+                                {% if i.5 != 'Cancelada' and i.5 != 'cancelada' %}
+                                <form method="POST" action="{% url 'users:cancelar_reserva' i.0 %}" style="display: inline;" 
+                                      onsubmit="return confirm('Tem certeza que deseja cancelar esta reserva? O reembolso será calculado automaticamente.')">
+                                    {% csrf_token %}
+                                    <button type="submit" class="edit_btn_utils" style="background-color: #dc3545; border: none; cursor: pointer;">
+                                        Cancelar
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

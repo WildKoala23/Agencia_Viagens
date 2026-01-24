@@ -251,4 +251,123 @@ EXECUTE FUNCTION validar_datas_pacote();
 COMMENT ON VIEW vw_estatisticas_precos IS 
 'Estatísticas agregadas de preços de pacotes, hotéis e voos';
 
+-- =====================================================
+-- NOVA PROCEDURE: Obter Pacotes Disponíveis com Vagas
+-- =====================================================
+DROP FUNCTION IF EXISTS get_pacotes_disponiveis CASCADE;
+
+CREATE OR REPLACE FUNCTION get_pacotes_disponiveis(
+    p_data_minima DATE DEFAULT CURRENT_DATE,
+    p_preco_max DECIMAL DEFAULT NULL,
+    p_pais TEXT DEFAULT NULL,
+    p_limite INT DEFAULT 20
+)
+RETURNS TABLE (
+    pacote_id INT,
+    nome TEXT,
+    descricao TEXT,
+    preco_total DECIMAL(10,2),
+    data_inicio DATE,
+    data_fim DATE,
+    duracao_dias INT,
+    destinos_json JSONB,
+    vagas_disponiveis INT,
+    percentagem_ocupacao DECIMAL(5,2),
+    avaliacao_media DECIMAL(3,2),
+    total_avaliacoes BIGINT,
+    estado TEXT
+) AS $$
+DECLARE
+    v_limite_vagas INT := 50; -- Limite padrão de vagas por pacote
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.pacote_id,
+        p.nome::TEXT,
+        p.descricao_item::TEXT,
+        p.preco_total,
+        p.data_inicio,
+        p.data_fim,
+        (p.data_fim - p.data_inicio)::INT AS duracao_dias,
+        
+        -- Agregar destinos em JSONB
+        COALESCE(
+            (SELECT jsonb_agg(
+                jsonb_build_object(
+                    'destino_id', d.destino_id,
+                    'nome', d.nome,
+                    'pais', d.pais
+                )
+            )
+            FROM pacote_destino pd
+            JOIN destino d ON pd.destino_id = d.destino_id
+            WHERE pd.pacote_id = p.pacote_id),
+            '[]'::jsonb
+        ) AS destinos_json,
+        
+        -- Calcular vagas disponíveis
+        (v_limite_vagas - COALESCE(
+            (SELECT COUNT(*)::INT
+             FROM compra c
+             WHERE c.pacote_id = p.pacote_id 
+             AND c.estado != 'cancelada'),
+            0
+        ))::INT AS vagas_disponiveis,
+        
+        -- Calcular percentagem de ocupação
+        (COALESCE(
+            (SELECT COUNT(*)::DECIMAL
+             FROM compra c
+             WHERE c.pacote_id = p.pacote_id 
+             AND c.estado != 'cancelada'),
+            0
+        ) / v_limite_vagas * 100)::DECIMAL(5,2) AS percentagem_ocupacao,
+        
+        -- Avaliação média
+        COALESCE(
+            (SELECT AVG(f.avaliacao)::DECIMAL(3,2)
+             FROM feedback f
+             WHERE f.pacote_id = p.pacote_id),
+            0::DECIMAL(3,2)
+        ) AS avaliacao_media,
+        
+        -- Total de avaliações
+        COALESCE(
+            (SELECT COUNT(*)::BIGINT
+             FROM feedback f
+             WHERE f.pacote_id = p.pacote_id),
+            0::BIGINT
+        ) AS total_avaliacoes,
+        
+        pe.desc::TEXT AS estado
+        
+    FROM pacote p
+    JOIN pacote_estado pe ON p.estado_id = pe.estado_id
+    
+    WHERE pe.desc = 'Ativo'  -- Apenas pacotes ativos
+      AND p.data_inicio >= p_data_minima  -- Data futura
+      AND (p_preco_max IS NULL OR p.preco_total <= p_preco_max)  -- Filtro de preço
+      AND (p_pais IS NULL OR EXISTS (  -- Filtro de país
+          SELECT 1 
+          FROM pacote_destino pd
+          JOIN destino d ON pd.destino_id = d.destino_id
+          WHERE pd.pacote_id = p.pacote_id 
+          AND d.pais ILIKE '%' || p_pais || '%'
+      ))
+      AND (v_limite_vagas - COALESCE(  -- Tem vagas disponíveis
+          (SELECT COUNT(*)::INT
+           FROM compra c
+           WHERE c.pacote_id = p.pacote_id 
+           AND c.estado != 'cancelada'),
+          0
+      )) > 0
+    
+    ORDER BY p.data_inicio ASC, p.preco_total ASC
+    LIMIT p_limite;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION get_pacotes_disponiveis(DATE, DECIMAL, TEXT, INT) IS 
+'Retorna pacotes disponíveis com cálculo de vagas, ocupação e filtros de preço/destino';
+
 

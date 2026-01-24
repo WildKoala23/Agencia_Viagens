@@ -6,6 +6,8 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.db.models import Sum
 from django.contrib.auth import authenticate, login
+from django.contrib import messages
+import json
 from .forms import *
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
@@ -47,20 +49,43 @@ def registerUser(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            # Guardar o novo utilizador
-            user = form.save()
-            
-            # Fazer login automático
+            # Usar a procedure para registar com validações
             email = form.cleaned_data['email']
             password = form.cleaned_data['password1']
-            user = authenticate(request, email=email, password=password)
+            firstname = form.cleaned_data.get('firstname', '')
+            lastname = form.cleaned_data.get('lastname', '')
             
+            # Hash da password usando Django
+            from django.contrib.auth.hashers import make_password
+            password_hash = make_password(password)
+            
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    SELECT * FROM registar_utilizador_validado(%s, %s, %s, %s, NULL)
+                """, [email, password_hash, firstname, lastname])
+                
+                result = cursor.fetchone()
+                if result:
+                    sucesso, user_id, mensagem = result
+                    
+                    if sucesso:
+                        # Login automático
+                        user = authenticate(request, email=email, password=password)
+                        if user is not None:
+                            login(request, user)
+                            messages.success(request, mensagem)
+                            return redirect('users:user')
+                    else:
+                        messages.error(request, mensagem)
+                        return render(request, 'registration/register.html', {'form': form})
+            
+            # Fallback: se procedure não existir, usar método antigo
+            user = form.save()
+            user = authenticate(request, email=email, password=password)
             if user is not None:
                 login(request, user)
-                # Redirecionar para a dashboard do cliente
                 return redirect('users:user')
             else:
-                # Se autenticação falhar, redirecionar para login
                 return redirect('users:login')
     else:
         form = RegisterForm()
@@ -180,18 +205,18 @@ def user(req):
     total_gasto = Compra.objects.filter(user_id=user_id).aggregate(total=Sum('valor_total'))['total'] or 0
     total_feedbacks = Feedback.objects.filter(user_id=user_id).count()
     
-    # Destinos visitados (para recomendações)
-    destinos_visitados = Compra.objects.filter(
-        user_id=user_id,
-        pacote__data_fim__lt=datetime.now().date()
-    ).values_list('pacote__destinos__pais', flat=True).distinct()
-    
-    # Recomendações (pacotes de países não visitados)
-    pacotes_recomendados = Pacote.objects.filter(
-        estado_id=1
-    ).exclude(
-        destinos__pais__in=destinos_visitados
-    ).distinct()[:3]
+    # USAR A NOVA PROCEDURE: Pacotes disponíveis com vagas
+    with connection.cursor() as cursor:
+        cursor.execute("""
+            SELECT * FROM get_pacotes_disponiveis(
+                p_data_minima := CURRENT_DATE,
+                p_preco_max := NULL,
+                p_pais := NULL,
+                p_limite := 6
+            )
+        """)
+        columns = [col[0] for col in cursor.description]
+        pacotes_recomendados = [dict(zip(columns, row)) for row in cursor.fetchall()]
     
     context = {
         "data": data,
@@ -217,31 +242,55 @@ def comprasUser(req):
         data = cursor.fetchall()
     return render(req, 'comprasUser.html', {"data": data, "user": user})
 
+def cancelar_reserva(request, compra_id):
+    """Cancela uma reserva usando a procedure cancelar_reserva_utilizador"""
+    if request.method == 'POST':
+        user_id = request.user.user_id
+        
+        with connection.cursor() as cursor:
+            # Chamar a procedure de cancelamento
+            cursor.execute(
+                "SELECT cancelar_reserva_utilizador(%s, %s)",
+                [compra_id, user_id]
+            )
+            result = cursor.fetchone()[0]  # JSON result
+            
+            if result.get('sucesso'):
+                messages.success(
+                    request,
+                    f"{result['mensagem']}. Reembolso: {result['valor_reembolso']}€ ({result['percentagem_reembolso']})"
+                )
+            else:
+                messages.error(request, result['mensagem'])
+        
+        return redirect('users:comprasUser')
+    
+    # Se não for POST, redirecionar
+    return redirect('users:comprasUser')
+
 def feedbacksUser(request):
     user = get_object_or_404(Utilizador, user_id=request.user.user_id)
 
     if request.method == 'POST':
-        # Processar novo feedback
+        # Processar novo feedback usando a procedure validada
         reserva_id = request.POST.get('reserva_id')
         avaliacao = request.POST.get('avaliacao')
         titulo = request.POST.get('titulo')
         comentario = request.POST.get('comentario')
         
         with connection.cursor() as cursor:
-            # Buscar pacote_id da compra
-            cursor.execute(
-                "SELECT pacote_id FROM compra WHERE compra_id = %s",
-                [reserva_id]
-            )
-            result = cursor.fetchone()
+            # Usar procedure com validações
+            cursor.execute("""
+                SELECT * FROM inserir_feedback_validado(%s, %s, %s, %s, %s)
+            """, [request.user.user_id, reserva_id, avaliacao, titulo, comentario])
             
+            result = cursor.fetchone()
             if result:
-                pacote_id = result[0]
-                # Inserir feedback diretamente
-                cursor.execute("""
-                    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
-                    VALUES (%s, %s, %s, %s, %s, CURRENT_DATE)
-                """, [pacote_id, request.user.user_id, titulo, avaliacao, comentario])
+                sucesso, feedback_id, mensagem = result
+                if sucesso:
+                    messages.success(request, mensagem)
+                else:
+                    messages.error(request, mensagem)
         
         return redirect('users:feedbacksUser')
     
