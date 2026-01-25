@@ -8,6 +8,7 @@ from django.db.models import Sum
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
 import json
+from datetime import datetime
 from .forms import *
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserCreationForm
@@ -205,18 +206,17 @@ def user(req):
     total_gasto = Compra.objects.filter(user_id=user_id).aggregate(total=Sum('valor_total'))['total'] or 0
     total_feedbacks = Feedback.objects.filter(user_id=user_id).count()
     
-    # USAR A NOVA PROCEDURE: Pacotes disponíveis com vagas
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT * FROM get_pacotes_disponiveis(
-                p_data_minima := CURRENT_DATE,
-                p_preco_max := NULL,
-                p_pais := NULL,
-                p_limite := 6
-            )
-        """)
-        columns = [col[0] for col in cursor.description]
-        pacotes_recomendados = [dict(zip(columns, row)) for row in cursor.fetchall()]
+    # Recomendações: pacotes de países não visitados
+    destinos_visitados = Compra.objects.filter(
+        user_id=user_id,
+        pacote__data_fim__lt=datetime.now().date()
+    ).values_list('pacote__destinos__pais', flat=True).distinct()
+    
+    pacotes_recomendados = Pacote.objects.filter(
+        estado_id=1
+    ).exclude(
+        destinos__pais__in=destinos_visitados
+    ).distinct()[:3]
     
     context = {
         "data": data,
