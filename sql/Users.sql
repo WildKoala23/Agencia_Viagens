@@ -56,24 +56,26 @@ $$ LANGUAGE plpgsql;
 -- =====================================================
 -- NOVA PROCEDURE: Cancelar Reserva com Validação
 -- =====================================================
-DROP FUNCTION IF EXISTS cancelar_reserva_utilizador CASCADE;
+DROP PROCEDURE IF EXISTS cancelar_reserva_utilizador CASCADE;
 
-CREATE OR REPLACE FUNCTION cancelar_reserva_utilizador(
+CREATE OR REPLACE PROCEDURE cancelar_reserva_utilizador(
     p_compra_id INT,
-    p_user_id INT
-)
-RETURNS TABLE (
-    sucesso BOOLEAN,
-    mensagem TEXT,
-    reembolso DECIMAL(10,2)
+    p_user_id INT,
+    OUT sucesso BOOLEAN,
+    OUT mensagem TEXT,
+    OUT reembolso DECIMAL(10,2)
 ) AS $$
 DECLARE
     v_estado_atual TEXT;
     v_data_inicio DATE;
     v_valor_total DECIMAL(10,2);
     v_dias_antecedencia INT;
-    v_reembolso DECIMAL(10,2);
 BEGIN
+    -- Inicializar valores de saída
+    sucesso := FALSE;
+    mensagem := '';
+    reembolso := 0;
+    
     -- Buscar informações da compra
     SELECT c.estado, p.data_inicio, c.valor_total
     INTO v_estado_atual, v_data_inicio, v_valor_total
@@ -83,13 +85,13 @@ BEGIN
     
     -- Validar se compra existe e pertence ao utilizador
     IF NOT FOUND THEN
-        RETURN QUERY SELECT FALSE, 'Compra não encontrada ou não pertence a este utilizador'::TEXT, 0::DECIMAL(10,2);
+        mensagem := 'Compra não encontrada ou não pertence a este utilizador';
         RETURN;
     END IF;
     
     -- Validar se já está cancelada
     IF v_estado_atual = 'cancelada' THEN
-        RETURN QUERY SELECT FALSE, 'Esta reserva já está cancelada'::TEXT, 0::DECIMAL(10,2);
+        mensagem := 'Esta reserva já está cancelada';
         RETURN;
     END IF;
     
@@ -98,19 +100,19 @@ BEGIN
     
     -- Verificar se a viagem já passou
     IF v_dias_antecedencia < 0 THEN
-        RETURN QUERY SELECT FALSE, 'Não é possível cancelar uma viagem que já passou'::TEXT, 0::DECIMAL(10,2);
+        mensagem := 'Não é possível cancelar uma viagem que já passou';
         RETURN;
     END IF;
     
     -- Calcular reembolso baseado na antecedência
     IF v_dias_antecedencia >= 30 THEN
-        v_reembolso := v_valor_total;  -- 100% de reembolso
+        reembolso := v_valor_total;  -- 100% de reembolso
     ELSIF v_dias_antecedencia >= 15 THEN
-        v_reembolso := v_valor_total * 0.75;  -- 75% de reembolso
+        reembolso := v_valor_total * 0.75;  -- 75% de reembolso
     ELSIF v_dias_antecedencia >= 7 THEN
-        v_reembolso := v_valor_total * 0.50;  -- 50% de reembolso
+        reembolso := v_valor_total * 0.50;  -- 50% de reembolso
     ELSE
-        v_reembolso := v_valor_total * 0.25;  -- 25% de reembolso
+        reembolso := v_valor_total * 0.25;  -- 25% de reembolso
     END IF;
     
     -- Atualizar estado da compra
@@ -118,24 +120,51 @@ BEGIN
     SET estado = 'cancelada'
     WHERE compra_id = p_compra_id;
     
-    -- Retornar sucesso com informações
-    RETURN QUERY SELECT 
-        TRUE, 
-        format('Reserva cancelada com sucesso. Reembolso: %.2f€ (%s%% do valor)', 
-               v_reembolso, 
-               CASE 
-                   WHEN v_dias_antecedencia >= 30 THEN '100'
-                   WHEN v_dias_antecedencia >= 15 THEN '75'
-                   WHEN v_dias_antecedencia >= 7 THEN '50'
-                   ELSE '25'
-               END
-        )::TEXT,
-        v_reembolso;
+    -- Definir sucesso e mensagem
+    sucesso := TRUE;
+    mensagem := 'Reserva cancelada com sucesso. Reembolso: ' || 
+                ROUND(reembolso, 2)::TEXT || '€ (' ||
+                CASE 
+                    WHEN v_dias_antecedencia >= 30 THEN '100'
+                    WHEN v_dias_antecedencia >= 15 THEN '75'
+                    WHEN v_dias_antecedencia >= 7 THEN '50'
+                    ELSE '25'
+                END || '% do valor)';
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION cancelar_reserva_utilizador(INT, INT) IS 
+COMMENT ON PROCEDURE cancelar_reserva_utilizador(INT, INT, OUT BOOLEAN, OUT TEXT, OUT DECIMAL) IS 
 'Cancela uma reserva com cálculo automático de reembolso baseado na antecedência';
+
+-- =====================================================
+-- FUNÇÃO WRAPPER: Chama a procedure e retorna resultado
+-- =====================================================
+DROP FUNCTION IF EXISTS fn_cancelar_reserva_utilizador CASCADE;
+
+CREATE OR REPLACE FUNCTION fn_cancelar_reserva_utilizador(
+    p_compra_id INT,
+    p_user_id INT
+)
+RETURNS TABLE (
+    sucesso BOOLEAN,
+    mensagem TEXT,
+    reembolso DECIMAL(10,2)
+) AS $$
+DECLARE
+    v_sucesso BOOLEAN;
+    v_mensagem TEXT;
+    v_reembolso DECIMAL(10,2);
+BEGIN
+    -- Chamar a procedure
+    CALL cancelar_reserva_utilizador(p_compra_id, p_user_id, v_sucesso, v_mensagem, v_reembolso);
+    
+    -- Retornar os valores
+    RETURN QUERY SELECT v_sucesso, v_mensagem, v_reembolso;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION fn_cancelar_reserva_utilizador(INT, INT) IS 
+'Função wrapper para chamar cancelar_reserva_utilizador procedure e retornar resultado';
 
 -- =====================================================
 -- NOVA PROCEDURE: Registar Utilizador Validado

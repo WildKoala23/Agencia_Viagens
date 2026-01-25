@@ -247,21 +247,27 @@ def cancelar_reserva(request, compra_id):
     if request.method == 'POST':
         user_id = request.user.user_id
         
-        with connection.cursor() as cursor:
-            # Chamar a procedure de cancelamento
-            cursor.execute(
-                "SELECT cancelar_reserva_utilizador(%s, %s)",
-                [compra_id, user_id]
-            )
-            result = cursor.fetchone()[0]  # JSON result
-            
-            if result.get('sucesso'):
-                messages.success(
-                    request,
-                    f"{result['mensagem']}. Reembolso: {result['valor_reembolso']}€ ({result['percentagem_reembolso']})"
+        try:
+            with connection.cursor() as cursor:
+                # Chamar a função wrapper que executa a procedure
+                cursor.execute(
+                    "SELECT * FROM fn_cancelar_reserva_utilizador(%s, %s)",
+                    [compra_id, user_id]
                 )
-            else:
-                messages.error(request, result['mensagem'])
+                result = cursor.fetchone()
+                
+                if result:
+                    sucesso, mensagem, reembolso = result
+                    
+                    if sucesso:
+                        messages.success(request, mensagem)
+                    else:
+                        messages.error(request, mensagem)
+                else:
+                    messages.error(request, "Erro ao processar cancelamento")
+        except Exception as e:
+            messages.error(request, f"Erro ao cancelar reserva: {str(e)}")
+            print(f"ERRO CANCELAMENTO: {str(e)}")  # Debug
         
         return redirect('users:comprasUser')
     
