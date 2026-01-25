@@ -11,10 +11,26 @@
 {% endblock %}
 {% block content %}
 <div class="content-wrapper">
+  
+  <!-- Mensagens de feedback -->
+  {% if messages %}
+  <div style="margin-bottom: 20px;">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}" style="padding: 15px; margin-bottom: 10px; border-radius: 5px; 
+         {% if message.tags == 'success' %}background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724;
+         {% elif message.tags == 'error' %}background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24;
+         {% elif message.tags == 'warning' %}background-color: #fff3cd; border: 1px solid #ffeaa7; color: #856404;
+         {% else %}background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460;{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   <!-- Formulário de Novo Feedback -->
   <div class="section-title">Deixar um Novo Feedback</div>
   <div class="form-section">
-    <form method="POST" action="" enctype="multipart/form-data">
+    <form method="POST" action="{% url 'users:feedbacksUser' %}" enctype="multipart/form-data">
       {% csrf_token %}
 
       <div class="form-group">

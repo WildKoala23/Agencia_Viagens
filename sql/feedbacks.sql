@@ -310,7 +310,7 @@ BEGIN
     
     -- Validação 3: Verificar se a viagem já aconteceu
     IF v_data_fim > CURRENT_DATE THEN
-        p_mensagem := format('Só pode avaliar após a viagem terminar (Data término: %s)', v_data_fim);
+        p_mensagem := format('Só pode avaliar após a viagem terminar (Data de fim: %s)', v_data_fim);
         RETURN;
     END IF;
     
