@@ -264,9 +264,93 @@ COMMENT ON FUNCTION get_estatisticas_feedbacks IS 'Retorna estatísticas gerais 
 -- =====================================================
 -- NOVA PROCEDURE: Inserir Feedback Validado
 -- =====================================================
-DROP FUNCTION IF EXISTS inserir_feedback_validado CASCADE;
+DROP PROCEDURE IF EXISTS inserir_feedback_validado CASCADE;
 
-CREATE OR REPLACE FUNCTION inserir_feedback_validado(
+CREATE OR REPLACE PROCEDURE inserir_feedback_validado(
+    p_user_id INT,
+    p_compra_id INT,
+    p_avaliacao INT,
+    p_titulo TEXT,
+    p_comentario TEXT,
+    OUT p_sucesso BOOLEAN,
+    OUT p_feedback_id INT,
+    OUT p_mensagem TEXT
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_pacote_id INT;
+    v_data_fim DATE;
+    v_estado_compra TEXT;
+    v_feedback_existente INT;
+BEGIN
+    -- Inicializar valores de saída
+    p_sucesso := FALSE;
+    p_feedback_id := NULL;
+    p_mensagem := '';
+    
+    -- Buscar informações da compra
+    SELECT c.pacote_id, p.data_fim, c.estado
+    INTO v_pacote_id, v_data_fim, v_estado_compra
+    FROM compra c
+    JOIN pacote p ON c.pacote_id = p.pacote_id
+    WHERE c.compra_id = p_compra_id AND c.user_id = p_user_id;
+    
+    -- Validação 1: Verificar se compra existe e pertence ao utilizador
+    IF NOT FOUND THEN
+        p_mensagem := 'Compra não encontrada ou não pertence a este utilizador';
+        RETURN;
+    END IF;
+    
+    -- Validação 2: Verificar se compra não está cancelada
+    IF v_estado_compra = 'cancelada' THEN
+        p_mensagem := 'Não pode avaliar uma reserva cancelada';
+        RETURN;
+    END IF;
+    
+    -- Validação 3: Verificar se a viagem já aconteceu
+    IF v_data_fim > CURRENT_DATE THEN
+        p_mensagem := format('Só pode avaliar após a viagem terminar (Data término: %s)', v_data_fim);
+        RETURN;
+    END IF;
+    
+    -- Validação 4: Verificar avaliação entre 1 e 5
+    IF p_avaliacao < 1 OR p_avaliacao > 5 THEN
+        p_mensagem := 'Avaliação deve ser entre 1 e 5 estrelas';
+        RETURN;
+    END IF;
+    
+    -- Validação 5: Verificar se já existe feedback para este pacote deste utilizador
+    SELECT f.feedback_id INTO v_feedback_existente
+    FROM feedback f
+    JOIN compra c ON f.pacote_id = c.pacote_id
+    WHERE c.compra_id = p_compra_id AND f.user_id = p_user_id;
+    
+    IF v_feedback_existente IS NOT NULL THEN
+        p_mensagem := 'Já submeteu um feedback para esta viagem';
+        RETURN;
+    END IF;
+    
+    -- Inserir feedback
+    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
+    VALUES (v_pacote_id, p_user_id, p_titulo, p_avaliacao, p_comentario, CURRENT_DATE)
+    RETURNING feedback.feedback_id INTO p_feedback_id;
+    
+    -- Definir sucesso
+    p_sucesso := TRUE;
+    p_mensagem := 'Feedback submetido com sucesso! Obrigado pela sua avaliação.';
+END;
+$$;
+
+COMMENT ON PROCEDURE inserir_feedback_validado(INT, INT, INT, TEXT, TEXT, BOOLEAN, INT, TEXT) IS 
+'Insere feedback com validações: utilizador comprou, viagem terminou, sem duplicados';
+
+-- =====================================================
+-- FUNCTION WRAPPER: Chamar procedure e retornar resultado
+-- =====================================================
+DROP FUNCTION IF EXISTS executar_inserir_feedback CASCADE;
+
+CREATE OR REPLACE FUNCTION executar_inserir_feedback(
     p_user_id INT,
     p_compra_id INT,
     p_avaliacao INT,
@@ -279,67 +363,26 @@ RETURNS TABLE (
     mensagem TEXT
 ) AS $$
 DECLARE
-    v_pacote_id INT;
-    v_data_fim DATE;
-    v_estado_compra TEXT;
-    v_feedback_existente INT;
-    v_new_feedback_id INT;
+    v_sucesso BOOLEAN;
+    v_feedback_id INT;
+    v_mensagem TEXT;
 BEGIN
-    -- Buscar informações da compra
-    SELECT c.pacote_id, p.data_fim, c.estado
-    INTO v_pacote_id, v_data_fim, v_estado_compra
-    FROM compra c
-    JOIN pacote p ON c.pacote_id = p.pacote_id
-    WHERE c.compra_id = p_compra_id AND c.user_id = p_user_id;
+    -- Chamar a procedure
+    CALL inserir_feedback_validado(
+        p_user_id, 
+        p_compra_id, 
+        p_avaliacao, 
+        p_titulo, 
+        p_comentario,
+        v_sucesso,
+        v_feedback_id,
+        v_mensagem
+    );
     
-    -- Validação 1: Verificar se compra existe e pertence ao utilizador
-    IF NOT FOUND THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Compra não encontrada ou não pertence a este utilizador'::TEXT;
-        RETURN;
-    END IF;
-    
-    -- Validação 2: Verificar se compra não está cancelada
-    IF v_estado_compra = 'cancelada' THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Não pode avaliar uma reserva cancelada'::TEXT;
-        RETURN;
-    END IF;
-    
-    -- Validação 3: Verificar se a viagem já aconteceu
-    IF v_data_fim > CURRENT_DATE THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 
-            format('Só pode avaliar após a viagem terminar (Data término: %s)', v_data_fim)::TEXT;
-        RETURN;
-    END IF;
-    
-    -- Validação 4: Verificar avaliação entre 1 e 5
-    IF p_avaliacao < 1 OR p_avaliacao > 5 THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Avaliação deve ser entre 1 e 5 estrelas'::TEXT;
-        RETURN;
-    END IF;
-    
-    -- Validação 5: Verificar se já existe feedback para este pacote deste utilizador
-    SELECT f.feedback_id INTO v_feedback_existente
-    FROM feedback f
-    JOIN compra c ON f.pacote_id = c.pacote_id
-    WHERE c.compra_id = p_compra_id AND f.user_id = p_user_id;
-    
-    IF v_feedback_existente IS NOT NULL THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Já submeteu um feedback para esta viagem'::TEXT;
-        RETURN;
-    END IF;
-    
-    -- Inserir feedback
-    INSERT INTO feedback (pacote_id, user_id, titulo, avaliacao, comentario, data_feedback)
-    VALUES (v_pacote_id, p_user_id, p_titulo, p_avaliacao, p_comentario, CURRENT_DATE)
-    RETURNING feedback.feedback_id INTO v_new_feedback_id;
-    
-    -- Retornar sucesso
-    RETURN QUERY SELECT 
-        TRUE, 
-        v_new_feedback_id,
-        'Feedback submetido com sucesso! Obrigado pela sua avaliação.'::TEXT;
+    -- Retornar os valores
+    RETURN QUERY SELECT v_sucesso, v_feedback_id, v_mensagem;
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION inserir_feedback_validado(INT, INT, INT, TEXT, TEXT) IS 
-'Insere feedback com validações: utilizador comprou, viagem terminou, sem duplicados';
+COMMENT ON FUNCTION executar_inserir_feedback(INT, INT, INT, TEXT, TEXT) IS 
+'Função wrapper para chamar a procedure inserir_feedback_validado e retornar os resultados';

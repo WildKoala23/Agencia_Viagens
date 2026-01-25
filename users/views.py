@@ -278,19 +278,30 @@ def feedbacksUser(request):
         titulo = request.POST.get('titulo')
         comentario = request.POST.get('comentario')
         
-        with connection.cursor() as cursor:
-            # Usar procedure com validações
-            cursor.execute("""
-                SELECT * FROM inserir_feedback_validado(%s, %s, %s, %s, %s)
-            """, [request.user.user_id, reserva_id, avaliacao, titulo, comentario])
-            
-            result = cursor.fetchone()
-            if result:
-                sucesso, feedback_id, mensagem = result
-                if sucesso:
-                    messages.success(request, mensagem)
+        print(f"DEBUG - Dados recebidos: user_id={request.user.user_id}, reserva_id={reserva_id}, avaliacao={avaliacao}, titulo={titulo}")
+        
+        try:
+            with connection.cursor() as cursor:
+                # Usar função wrapper que chama a procedure com validações
+                cursor.execute("""
+                    SELECT * FROM executar_inserir_feedback(%s, %s, %s, %s, %s)
+                """, [request.user.user_id, reserva_id, avaliacao, titulo, comentario])
+                
+                result = cursor.fetchone()
+                print(f"DEBUG - Resultado da função: {result}")
+                
+                if result:
+                    sucesso, feedback_id, mensagem = result
+                    print(f"DEBUG - Sucesso: {sucesso}, ID: {feedback_id}, Mensagem: {mensagem}")
+                    if sucesso:
+                        messages.success(request, mensagem)
+                    else:
+                        messages.error(request, mensagem)
                 else:
-                    messages.error(request, mensagem)
+                    messages.error(request, "Nenhum resultado retornado da função")
+        except Exception as e:
+            print(f"DEBUG - Erro: {str(e)}")
+            messages.error(request, f"Erro ao processar feedback: {str(e)}")
         
         return redirect('users:feedbacksUser')
     
