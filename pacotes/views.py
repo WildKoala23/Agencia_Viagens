@@ -226,7 +226,25 @@ def eliminar_voo(request, voo_id):
     """
     voo = get_object_or_404(Voo, voo_id=voo_id)
     if request.method == 'POST':
-        voo.delete()
+        try:
+            with connection.cursor() as cursor:
+                # Chamar o procedimento SQL para eliminar
+                cursor.execute("CALL eliminar_voo(%s)", [voo_id])
+                connection.commit()
+            
+            messages.success(request, "Voo eliminado com sucesso!")
+            
+        except DatabaseError as e:
+            # Capturar erro do procedimento SQL
+            connection.rollback()
+            erro_texto = str(e)
+            
+            # Limpar mensagem de erro
+            if "CONTEXT" in erro_texto:
+                erro_texto = erro_texto.split("CONTEXT")[0].strip()
+            
+            messages.error(request, f"Erro ao eliminar voo: {erro_texto}")
+    
     return redirect('voos')
 
 
@@ -590,8 +608,8 @@ def eliminar_hotel(request, hotel_id):
     if request.method == 'POST':
         try:
             with connection.cursor() as cursor:
-                # Chamar a função SQL para eliminar
-                cursor.execute("SELECT eliminar_hotel(%s)", [hotel_id])
+                # Chamar o procedimento SQL para eliminar
+                cursor.execute("CALL eliminar_hotel(%s)", [hotel_id])
                 
             # Eliminar a imagem do MongoDB
             capa_hotel.delete_one({'hotel_id': hotel_id})

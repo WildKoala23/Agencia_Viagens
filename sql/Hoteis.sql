@@ -56,9 +56,9 @@ AFTER INSERT OR UPDATE OR DELETE ON hotel
 FOR EACH STATEMENT
 EXECUTE FUNCTION refresh_mv_hoteis();
 
--- Função para eliminar hotel com validações
-CREATE OR REPLACE FUNCTION eliminar_hotel(p_hotel_id INTEGER)
-RETURNS BOOLEAN AS $$
+-- Stored Procedure para eliminar hotel com validações
+CREATE OR REPLACE PROCEDURE eliminar_hotel(p_hotel_id INTEGER)
+LANGUAGE plpgsql AS $$
 DECLARE
     v_pacote_exists BOOLEAN;
 BEGIN
@@ -76,19 +76,16 @@ BEGIN
     -- Eliminar o hotel
     DELETE FROM hotel WHERE hotel_id = p_hotel_id;
     
-    -- Retornar sucesso
-    RETURN TRUE;
-    
 EXCEPTION
     WHEN foreign_key_violation THEN
         RAISE EXCEPTION 'Não é possível eliminar este hotel porque está a ser utilizado por outros registos.';
     WHEN OTHERS THEN
         RAISE EXCEPTION 'Erro ao eliminar hotel: %', SQLERRM;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
--- Comentário da função
-COMMENT ON FUNCTION eliminar_hotel(INTEGER) IS 
+-- Comentário do procedimento
+COMMENT ON PROCEDURE eliminar_hotel(INTEGER) IS 
 'Elimina um hotel se não estiver associado a nenhum pacote. Lança exceção caso contrário.';
 
 -- VIEW: Hotéis disponíveis por pacote

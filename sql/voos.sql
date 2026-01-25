@@ -94,3 +94,35 @@ ORDER BY p.pacote_id, v.data_saida;
 COMMENT ON VIEW vw_voos_por_pacote IS 
 'Lista todos os voos disponíveis para cada pacote, baseado nos destinos do pacote';
 
+-- Stored Procedure para eliminar voo com validações
+CREATE OR REPLACE PROCEDURE eliminar_voo(p_voo_id INTEGER)
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_pacote_exists BOOLEAN;
+BEGIN
+    -- Verificar se o voo está associado a algum pacote
+    SELECT EXISTS(
+        SELECT 1 FROM pacote_voo 
+        WHERE voo_id = p_voo_id
+    ) INTO v_pacote_exists;
+    
+    -- Se estiver associado a pacotes, lançar erro
+    IF v_pacote_exists THEN
+        RAISE EXCEPTION 'Não é possível eliminar este voo porque está associado a pacotes existentes.';
+    END IF;
+    
+    -- Eliminar o voo
+    DELETE FROM voo WHERE voo_id = p_voo_id;
+    
+EXCEPTION
+    WHEN foreign_key_violation THEN
+        RAISE EXCEPTION 'Não é possível eliminar este voo porque está a ser utilizado por outros registos.';
+    WHEN OTHERS THEN
+        RAISE EXCEPTION 'Erro ao eliminar voo: %', SQLERRM;
+END;
+$$;
+
+-- Comentário do procedimento
+COMMENT ON PROCEDURE eliminar_voo(INTEGER) IS 
+'Elimina um voo se não estiver associado a nenhum pacote. Lança exceção caso contrário.';
+
