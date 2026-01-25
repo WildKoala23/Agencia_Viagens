@@ -52,6 +52,7 @@ BEGIN
            p.data_inicio,
            p.data_fim,
            p.imagem,
+           p.estado_id,
            COALESCE(jsonb_agg(jsonb_build_object(
                ''destino_id'', d.destino_id,
                ''nome'', d.nome,
@@ -60,7 +61,7 @@ BEGIN
     FROM pacote p
     LEFT JOIN pacote_destino pd ON pd.pacote_id = p.pacote_id
     LEFT JOIN destino d ON d.destino_id = pd.destino_id
-    GROUP BY p.pacote_id, p.nome, p.descricao_item, p.preco_total, p.data_inicio, p.data_fim;
+    GROUP BY p.pacote_id, p.nome, p.descricao_item, p.preco_total, p.data_inicio, p.data_fim, p.estado_id;
     ';
 END $$;
 
@@ -370,4 +371,114 @@ $$ LANGUAGE plpgsql;
 COMMENT ON FUNCTION get_pacotes_disponiveis(DATE, DECIMAL, TEXT, INT) IS 
 'Retorna pacotes disponíveis com cálculo de vagas, ocupação e filtros de preço/destino';
 
+-- =====================================================
+-- STORED PROCEDURE: Atualizar Pacotes Expirados
+-- =====================================================
+DROP PROCEDURE IF EXISTS atualizar_pacotes_expirados CASCADE;
 
+CREATE OR REPLACE PROCEDURE atualizar_pacotes_expirados()
+AS $$
+DECLARE
+    v_pacotes_atualizados INT;
+BEGIN
+    -- Atualizar pacotes que já passaram da data de início para 'Esgotado'
+    UPDATE pacote
+    SET estado_id = 2  -- 2 = 'Esgotado'
+    WHERE estado_id = 1  -- 1 = 'Ativo'
+      AND data_inicio < CURRENT_DATE;
+    
+    GET DIAGNOSTICS v_pacotes_atualizados = ROW_COUNT;
+    
+    -- Log da operação (opcional)
+    RAISE NOTICE 'Pacotes atualizados para Esgotado: %', v_pacotes_atualizados;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON PROCEDURE atualizar_pacotes_expirados() IS 
+'Atualiza pacotes que já passaram da data de início para estado Esgotado';
+
+-- =====================================================
+-- FUNÇÃO: Retorna apenas pacotes ativos e futuros
+-- =====================================================
+DROP FUNCTION IF EXISTS get_pacotes_visiveis CASCADE;
+
+CREATE OR REPLACE FUNCTION get_pacotes_visiveis(
+    p_limite INT DEFAULT 100
+)
+RETURNS TABLE (
+    pacote_id INT,
+    nome TEXT,
+    descricao_item TEXT,
+    data_inicio DATE,
+    data_fim DATE,
+    preco_total DECIMAL(10,2),
+    imagem TEXT,
+    destinos TEXT,
+    vagas_disponiveis INT,
+    vagas_totais INT,
+    avaliacao_media DECIMAL(3,2),
+    total_avaliacoes BIGINT,
+    estado TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.pacote_id,
+        p.nome::TEXT,
+        p.descricao_item::TEXT,
+        p.data_inicio,
+        p.data_fim,
+        p.preco_total,
+        p.imagem::TEXT,
+        
+        -- Agregação de destinos
+        COALESCE(
+            (SELECT STRING_AGG(d.nome || ', ' || d.pais, ' | ')
+             FROM pacote_destino pd
+             JOIN destino d ON pd.destino_id = d.destino_id
+             WHERE pd.pacote_id = p.pacote_id),
+            'N/A'
+        )::TEXT AS destinos,
+        
+        -- Vagas disponíveis
+        (p.limite_vagas - COALESCE(
+            (SELECT COUNT(*)::INT
+             FROM compra c
+             WHERE c.pacote_id = p.pacote_id 
+             AND c.estado != 'cancelada'),
+            0
+        ))::INT AS vagas_disponiveis,
+        
+        p.limite_vagas::INT AS vagas_totais,
+        
+        -- Avaliação média
+        COALESCE(
+            (SELECT AVG(f.avaliacao)::DECIMAL(3,2)
+             FROM feedback f
+             WHERE f.pacote_id = p.pacote_id),
+            0::DECIMAL(3,2)
+        ) AS avaliacao_media,
+        
+        -- Total de avaliações
+        COALESCE(
+            (SELECT COUNT(*)::BIGINT
+             FROM feedback f
+             WHERE f.pacote_id = p.pacote_id),
+            0::BIGINT
+        ) AS total_avaliacoes,
+        
+        pe.desc::TEXT AS estado
+        
+    FROM pacote p
+    JOIN pacote_estado pe ON p.estado_id = pe.estado_id
+    
+    WHERE pe.desc = 'Ativo'  -- Apenas pacotes ativos
+      AND p.data_inicio >= CURRENT_DATE  -- Apenas pacotes futuros
+    
+    ORDER BY p.data_inicio ASC, p.preco_total ASC
+    LIMIT p_limite;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION get_pacotes_visiveis(INT) IS 
+'Retorna apenas pacotes Ativos com data futura (invisível para Esgotados/Cancelados)';

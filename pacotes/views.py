@@ -772,7 +772,7 @@ def pacotes(request, pacote_id=None):
         'form': form,
         'pacote_editar': pacote,  
         'data': pacotes_data,
-        'pacotes': Pacote.objects.all(),
+        'pacotes': Pacote.objects.all(),  # Admin vê todos os pacotes
         'dias_existentes': dias_existentes,
     })
 
@@ -792,7 +792,16 @@ def eliminar_pacote(request, pacote_id):
 
 
 def pacote_detalhes(request, pacote_id):
+    # Atualizar pacotes expirados antes de mostrar
+    with connection.cursor() as cursor:
+        cursor.execute("CALL atualizar_pacotes_expirados()")
+    
     pacote = get_object_or_404(Pacote, pk=pacote_id)
+    
+    # Verificar se o pacote está esgotado e bloquear acesso (exceto para staff/admin)
+    if pacote.estado_id == 2 and not (request.user.is_authenticated and request.user.is_staff):
+        messages.error(request, 'Este pacote não está mais disponível.')
+        return redirect('pacotes_por_pais')
 
     # Tenta ir buscar o banner correspondente ao pacote
     banner = banners.find_one({"pacote_id": pacote_id, "ativo": True})
@@ -820,6 +829,10 @@ def pacote_detalhes(request, pacote_id):
     })
 
 def pacotes_por_pais(request):
+    # Atualizar pacotes expirados automaticamente
+    with connection.cursor() as cursor:
+        cursor.execute("CALL atualizar_pacotes_expirados()")
+    
     # Usar a materialized view mv_pacotes_full com filtros SQL diretos para aproveitar os índices
     destinos = Destino.objects.all()
     q = request.GET.get("q", "").strip()
@@ -830,7 +843,9 @@ def pacotes_por_pais(request):
     pacotes = []
     import json as _json
     
-    sql_query = "SELECT row_to_json(p) FROM mv_pacotes_full p WHERE 1=1"
+    sql_query = """SELECT row_to_json(p) FROM mv_pacotes_full p 
+                   JOIN pacote_estado pe ON p.estado_id = pe.estado_id
+                   WHERE pe.desc = 'Ativo' AND p.data_inicio >= CURRENT_DATE"""
     params = []
     
     # Filtro de pesquisa de texto
