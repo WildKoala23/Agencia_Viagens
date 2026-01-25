@@ -55,8 +55,8 @@
   <!-- Mensagem de boas-vindas -->
   <div class="welcome-message mb-4" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); padding: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
     <h4 class="mb-1" style="color: #2c3e50; font-weight: 600;">
-      {% if user.firstname %}
-        Olá, {{ user.firstname }}! 👋
+      {% if user.first_name %}
+        Olá, {{ user.first_name }}! 👋
       {% else %}
         Olá! 👋
       {% endif %}

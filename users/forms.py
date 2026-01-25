@@ -8,11 +8,11 @@ class ClienteForm(forms.ModelForm):
     
     class Meta:
         model = Utilizador
-        fields = ['email', 'firstname', 'lastname', 'telefone', 'password']
+        fields = ['email', 'first_name', 'last_name', 'telefone', 'password']
         labels = {
             'email': 'Email',
-            'firstname': 'Primeiro Nome',
-            'lastname': 'Último Nome',
+            'first_name': 'Primeiro Nome',
+            'last_name': 'Último Nome',
             'telefone': 'Telefone',
         }
    
@@ -20,11 +20,11 @@ class EditClienteForm(forms.ModelForm):
     # Do not include password in the edit form — password cannot be changed here
     class Meta:
         model = Utilizador
-        fields = ['email', 'firstname', 'lastname', 'telefone']
+        fields = ['email', 'first_name', 'last_name', 'telefone']
         labels = {
             'email': 'Email',
-            'firstname': 'Primeiro Nome',
-            'lastname': 'Último Nome',
+            'first_name': 'Primeiro Nome',
+            'last_name': 'Último Nome',
             'telefone': 'Telefone',
         }
    
@@ -44,12 +44,12 @@ class RegisterForm(UserCreationForm):
         max_length=150,
         widget=forms.EmailInput(attrs={'placeholder': 'Email'})
     )
-    firstname = forms.CharField(
+    first_name = forms.CharField(
         label='Nome',
         max_length=150,
         widget=forms.TextInput(attrs={'placeholder': 'Nome'})
     )
-    lastname = forms.CharField(
+    last_name = forms.CharField(
         label='Apelido',
         max_length=150,
         widget=forms.TextInput(attrs={'placeholder': 'Apelido'})
@@ -57,5 +57,5 @@ class RegisterForm(UserCreationForm):
 
     class Meta:
         model = Utilizador
-        fields = ['email', 'firstname', 'lastname', 'password1', 'password2']
+        fields = ['email', 'first_name', 'last_name', 'password1', 'password2']
 

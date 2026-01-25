@@ -140,19 +140,18 @@ COMMENT ON FUNCTION cancelar_reserva_utilizador(INT, INT) IS
 -- =====================================================
 -- NOVA PROCEDURE: Registar Utilizador Validado
 -- =====================================================
+DROP PROCEDURE IF EXISTS registar_utilizador_validado CASCADE;
 DROP FUNCTION IF EXISTS registar_utilizador_validado CASCADE;
 
-CREATE OR REPLACE FUNCTION registar_utilizador_validado(
+CREATE OR REPLACE PROCEDURE registar_utilizador_validado(
     p_email VARCHAR(255),
     p_password VARCHAR(255),
     p_firstname VARCHAR(150),
     p_lastname VARCHAR(150),
+    OUT p_sucesso BOOLEAN,
+    OUT p_user_id INT,
+    OUT p_mensagem TEXT,
     p_telefone INTEGER DEFAULT NULL
-)
-RETURNS TABLE (
-    sucesso BOOLEAN,
-    user_id INT,
-    mensagem TEXT
 ) AS $$
 DECLARE
     v_email_existe INT;
@@ -160,13 +159,17 @@ DECLARE
 BEGIN
     -- Validação 1: Email não pode estar vazio
     IF p_email IS NULL OR TRIM(p_email) = '' THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Email é obrigatório'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Email é obrigatório';
         RETURN;
     END IF;
     
     -- Validação 2: Email deve ter formato válido
     IF p_email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Email com formato inválido'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Email com formato inválido';
         RETURN;
     END IF;
     
@@ -176,32 +179,42 @@ BEGIN
     WHERE LOWER(email) = LOWER(p_email);
     
     IF v_email_existe > 0 THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Este email já está registado'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Este email já está registado';
         RETURN;
     END IF;
     
     -- Validação 4: Password deve ter no mínimo 8 caracteres (hash Django)
     IF LENGTH(p_password) < 8 THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Password deve ter no mínimo 8 caracteres'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Password deve ter no mínimo 8 caracteres';
         RETURN;
     END IF;
     
     -- Validação 5: Nome obrigatório
     IF p_firstname IS NULL OR TRIM(p_firstname) = '' THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Nome é obrigatório'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Nome é obrigatório';
         RETURN;
     END IF;
     
     -- Validação 6: Apelido obrigatório
     IF p_lastname IS NULL OR TRIM(p_lastname) = '' THEN
-        RETURN QUERY SELECT FALSE, NULL::INT, 'Apelido é obrigatório'::TEXT;
+        p_sucesso := FALSE;
+        p_user_id := NULL;
+        p_mensagem := 'Apelido é obrigatório';
         RETURN;
     END IF;
     
     -- Validação 7: Telefone (se fornecido, validar formato português)
     IF p_telefone IS NOT NULL THEN
         IF p_telefone < 200000000 OR p_telefone > 999999999 THEN
-            RETURN QUERY SELECT FALSE, NULL::INT, 'Telefone inválido (deve ter 9 dígitos)'::TEXT;
+            p_sucesso := FALSE;
+            p_user_id := NULL;
+            p_mensagem := 'Telefone inválido (deve ter 9 dígitos)';
             RETURN;
         END IF;
     END IF;
@@ -210,8 +223,8 @@ BEGIN
     INSERT INTO utilizador (
         email,
         password,
-        firstname,
-        lastname,
+        first_name,
+        last_name,
         telefone,
         is_active,
         is_staff,
@@ -232,13 +245,42 @@ BEGIN
     RETURNING user_id INTO v_new_user_id;
     
     -- Retornar sucesso
-    RETURN QUERY SELECT 
-        TRUE, 
-        v_new_user_id,
-        format('Bem-vindo, %s! Registo efetuado com sucesso.', p_firstname)::TEXT;
+    p_sucesso := TRUE;
+    p_user_id := v_new_user_id;
+    p_mensagem := format('Bem-vindo, %s! Registo efetuado com sucesso.', p_firstname);
 END;
 $$ LANGUAGE plpgsql;
 
-COMMENT ON FUNCTION registar_utilizador_validado(VARCHAR, VARCHAR, VARCHAR, VARCHAR, INTEGER) IS 
+COMMENT ON PROCEDURE registar_utilizador_validado(VARCHAR, VARCHAR, VARCHAR, VARCHAR, BOOLEAN, INT, TEXT, INTEGER) IS 
 'Regista novo utilizador com validações: email único, formato válido, campos obrigatórios';
 
+-- =====================================================
+-- Wrapper Function para chamar a PROCEDURE
+-- =====================================================
+DROP FUNCTION IF EXISTS registar_utilizador_validado_wrapper CASCADE;
+
+CREATE OR REPLACE FUNCTION registar_utilizador_validado_wrapper(
+    p_email VARCHAR(255),
+    p_password VARCHAR(255),
+    p_firstname VARCHAR(150),
+    p_lastname VARCHAR(150),
+    p_telefone INTEGER DEFAULT NULL
+)
+RETURNS TABLE (
+    sucesso BOOLEAN,
+    user_id INT,
+    mensagem TEXT
+) AS $$
+DECLARE
+    v_sucesso BOOLEAN;
+    v_user_id INT;
+    v_mensagem TEXT;
+BEGIN
+    CALL registar_utilizador_validado(
+        p_email, p_password, p_firstname, p_lastname,
+        v_sucesso, v_user_id, v_mensagem, p_telefone
+    );
+    
+    RETURN QUERY SELECT v_sucesso, v_user_id, v_mensagem;
+END;
+$$ LANGUAGE plpgsql;

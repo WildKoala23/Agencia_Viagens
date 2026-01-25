@@ -15,8 +15,8 @@
     <!-- Mensagem de boas-vindas Admin -->
     <div class="welcome-message mb-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <h4 class="mb-1" style="color: white; font-weight: 600;">
-            {% if user.firstname %}
-                Bem-vindo, {{ user.firstname }}! 
+            {% if user.first_name %}
+                Bem-vindo, {{ user.first_name }}! 
             {% else %}
                 Bem-vindo, Admin!
             {% endif %}

@@ -272,7 +272,7 @@ def pagamentos(request):
         compra = Compra.objects.filter(compra_id=pag.compra_id).select_related('user').first()
         cliente_nome = "N/A"
         if compra and compra.user:
-            cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+            cliente_nome = f"{compra.user.first_name} {compra.user.last_name}".strip()
             if not cliente_nome:
                 cliente_nome = compra.user.email
         
@@ -317,7 +317,7 @@ def faturas(request):
         # Nome do cliente
         cliente_nome = "N/A"
         if compra and compra.user:
-            cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+            cliente_nome = f"{compra.user.first_name} {compra.user.last_name}".strip()
             if not cliente_nome:
                 cliente_nome = compra.user.email
         
@@ -361,7 +361,7 @@ def fatura_detalhes(request, fatura_id):
             'tipo_pagamento': pagamento.metodo if pagamento else None,
             'compra_id': compra.compra_id if compra else None,
             'pagamento_id': pagamento.pagamento_id if pagamento else None,
-            'nome_cliente': f"{compra.user.firstname} {compra.user.lastname}".strip() if compra and compra.user else 'N/A',
+            'nome_cliente': f"{compra.user.first_name} {compra.user.last_name}".strip() if compra and compra.user else 'N/A',
             'email': compra.user.email if compra and compra.user else 'N/A',
             'user_id': compra.user.user_id if compra and compra.user else None,
         }
@@ -422,7 +422,7 @@ def fatura_pdf(request, fatura_id):
     # Informações do cliente
     cliente_nome = "N/A"
     if compra and compra.user:
-        cliente_nome = f"{compra.user.firstname} {compra.user.lastname}".strip()
+        cliente_nome = f"{compra.user.first_name} {compra.user.last_name}".strip()
         if not cliente_nome:
             cliente_nome = compra.user.email
     

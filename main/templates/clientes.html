@@ -31,7 +31,7 @@
                 <li>
                     <div class="voo_info_utils">
                         <div class="voo_detalhes_utils">
-                            <span class="voo_nome_utils">{{ cliente.firstname }} {{ cliente.lastname }}</span>
+                            <span class="voo_nome_utils">{{ cliente.first_name }} {{ cliente.last_name }}</span>
                             <span class="voo_extra_utils">{{ cliente.email }}</span>
                         </div>
 
@@ -39,7 +39,7 @@
                             {# Edit link: assumes a view `users:editar_cliente` exists (can implement if needed) #}
                             <a href="{% url 'users:editar_cliente' cliente.user_id %}" class="edit_btn_utils">Editar</a>
 
-                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ cliente.user_id }}" data-name="{{ cliente.firstname }} {{ cliente.lastname }}">Eliminar</button>
+                            <button type="button" class="delete_btn_utils" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal" data-id="{{ cliente.user_id }}" data-name="{{ cliente.first_name }} {{ cliente.last_name }}">Eliminar</button>
                         </div>
                     </div>
                 </li>

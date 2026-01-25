@@ -40,7 +40,7 @@
         <div class="user-info d-flex align-items-center gap-2">
             <p>{{ user.email }}</p>
             <div class="circle-initials">
-                {{ user.firstname|slice:":1"|upper }}{{ user.lastname|slice:":1"|upper }}
+                {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
             </div>
             <form method="post" action="{% url 'users:logout' %}">
                 {% csrf_token %}

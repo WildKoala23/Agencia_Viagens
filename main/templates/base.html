@@ -85,7 +85,7 @@
                 {% if request.user.is_staff %}
                     <!-- Para administradores: mostrar email, iniciais e botão Log Out -->
                     <p class="mb-0">{{ request.user.email }}</p>
-                    <div class="circle-initials">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
+                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
                     <form method="post" action="{% url 'users:logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-danger btn-sm">Log Out</button>
@@ -93,7 +93,7 @@
                 {% else %}
                     <!-- Para clientes: mostrar email e iniciais -->
                     <p class="mb-0">{{ request.user.email }}</p>
-                    <div class="circle-initials">{{ request.user.firstname|slice:":1"|upper }}{{ request.user.lastname|slice:":1"|upper }}</div>
+                    <div class="circle-initials">{{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
                     {# Botão Log Out apenas na área do cliente (dashboard, perfil, compras, feedbacks) #}
                     {% if 'user' in request.path or 'perfil' in request.path or 'compras' in request.path or 'feedbacks' in request.path %}
                     <form method="post" action="{% url 'users:logout' %}">

@@ -52,8 +52,8 @@ def registerUser(request):
             # Usar a procedure para registar com validações
             email = form.cleaned_data['email']
             password = form.cleaned_data['password1']
-            firstname = form.cleaned_data.get('firstname', '')
-            lastname = form.cleaned_data.get('lastname', '')
+            firstname = form.cleaned_data.get('first_name', '')
+            lastname = form.cleaned_data.get('last_name', '')
             
             # Hash da password usando Django
             from django.contrib.auth.hashers import make_password
@@ -61,7 +61,7 @@ def registerUser(request):
             
             with connection.cursor() as cursor:
                 cursor.execute("""
-                    SELECT * FROM registar_utilizador_validado(%s, %s, %s, %s, NULL)
+                    SELECT * FROM registar_utilizador_validado_wrapper(%s, %s, %s, %s, NULL)
                 """, [email, password_hash, firstname, lastname])
                 
                 result = cursor.fetchone()
@@ -329,8 +329,8 @@ def perfilUser(request):
 
     if request.method == "POST":
         # Atualizar dados do perfil
-        user.firstname = request.POST.get('firstname', user.firstname)
-        user.lastname = request.POST.get('lastname', user.lastname)
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
         user.email = request.POST.get('email', user.email)
         telefone = request.POST.get('telefone', '')
         user.telefone = int(telefone) if telefone else None
